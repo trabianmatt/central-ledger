@@ -1,0 +1,10 @@
+{
+    "defaultEnv": "local",
+    "local": {
+        "driver": "pg",
+        "user": "",
+        "password": "",
+        "host": "localhost",
+        "database": "ist_ledger"
+    }
+}

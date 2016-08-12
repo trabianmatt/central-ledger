@@ -1,0 +1,40 @@
+{
+  "name": "@leveloneproject/ist-ledger",
+  "version": "1.0.0",
+  "description": "Central ledger hosted by a scheme to record and settle transfers.",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:LevelOneProject/ist-ledger.git"
+  },
+  "config": {
+    "db": "--config ./config/database.json"
+  },
+  "scripts": {
+    "start": "node src/app.js",
+    "test": "standard && tape ./test/*.test.js | faucet",
+    "test:xunit": "standard && tape ./test/*.test.js | tap-xunit",
+    "db:create": "db-migrate db:create ist_ledger $npm_package_config_db",
+    "migrate": "db-migrate up $npm_package_config_db",
+    "migrate:down": "db-migrate down $npm_package_config_db",
+    "migrate:create": "db-migrate create $npm_package_config_db"
+  },
+  "dependencies": {
+    "blipp": "^2.3.0",
+    "boom": "^3.2.2",
+    "db-migrate": "^0.10.0-beta.15",
+    "db-migrate-pg": "^0.1.10",
+    "good": "^7.0.1",
+    "good-console": "^6.1.2",
+    "good-squeeze": "^4.0.0",
+    "hapi": "^14.1.0",
+    "joi": "^9.0.4",
+    "pg": "^6.1.0"
+  },
+  "optionalDependencies": {},
+  "devDependencies": {
+    "faucet": "0.0.1",
+    "standard": "^7.1.2",
+    "tap-xunit": "^1.4.0",
+    "tape": "^4.6.0"
+  }
+}
