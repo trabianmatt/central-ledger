@@ -39,7 +39,7 @@ const plugins = [
     }
   },
   {
-    register: require('./api/subscriptions')
+    register: require('./routes/subscriptions')
   }
 ]
 
@@ -57,3 +57,5 @@ server.register(plugins, function (err) {
     server.log('info', 'Server running at: ' + server.info.uri)
   })
 })
+
+module.exports = server

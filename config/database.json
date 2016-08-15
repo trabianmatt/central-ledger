@@ -5,6 +5,6 @@
         "user": "",
         "password": "",
         "host": "localhost",
-        "database": "ist_ledger"
+        "database": "central_ledger"
     }
 }

@@ -1,19 +1,19 @@
 {
-  "name": "@leveloneproject/ist-ledger",
+  "name": "@leveloneproject/central-ledger",
   "version": "1.0.0",
   "description": "Central ledger hosted by a scheme to record and settle transfers.",
   "repository": {
     "type": "git",
-    "url": "git@github.com:LevelOneProject/ist-ledger.git"
+    "url": "git@github.com:LevelOneProject/central-ledger.git"
   },
   "config": {
     "db": "--config ./config/database.json"
   },
   "scripts": {
     "start": "node src/app.js",
-    "test": "standard && tape ./test/*.test.js | faucet",
-    "test:xunit": "standard && tape ./test/*.test.js | tap-xunit",
-    "db:create": "db-migrate db:create ist_ledger $npm_package_config_db",
+    "test": "standard && tape ./test/*/*.test.js | faucet",
+    "test:xunit": "standard && tape ./test/*/*.test.js | tap-xunit",
+    "db:create": "db-migrate db:create central_ledger $npm_package_config_db",
     "migrate": "db-migrate up $npm_package_config_db",
     "migrate:down": "db-migrate down $npm_package_config_db",
     "migrate:create": "db-migrate create $npm_package_config_db"
