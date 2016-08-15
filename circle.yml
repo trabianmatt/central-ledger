@@ -4,4 +4,4 @@ machine:
 
 test:
   override:
-    - npm -s run test:xunit > ${CIRCLE_TEST_REPORTS}/tape.xml
+    - set -o pipefail && npm run test:xunit > ${CIRCLE_TEST_REPORTS}/tape.xml
