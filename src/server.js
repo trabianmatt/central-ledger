@@ -39,7 +39,7 @@ const plugins = [
     }
   },
   {
-    register: require('./routes/subscriptions')
+    register: require('./modules/subscriptions')
   }
 ]
 

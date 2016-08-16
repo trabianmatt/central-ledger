@@ -2,8 +2,8 @@
     "defaultEnv": "local",
     "local": {
         "driver": "pg",
-        "user": "",
-        "password": "",
+        "user": "central_ledger",
+        "password": "LMgZ#Xy,33faRr",
         "host": "localhost",
         "database": "central_ledger"
     }
