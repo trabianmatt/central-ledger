@@ -28,11 +28,13 @@
     "good-squeeze": "^4.0.0",
     "hapi": "^14.1.0",
     "joi": "^9.0.4",
+    "massive": "^2.5.0",
     "pg": "^6.1.0"
   },
   "optionalDependencies": {},
   "devDependencies": {
     "faucet": "0.0.1",
+    "sinon": "^1.17.5",
     "standard": "^7.1.2",
     "tap-xunit": "^1.4.0",
     "tape": "^4.6.0"

@@ -1,9 +1,10 @@
 {
     "defaultEnv": "local",
+    "sql-file" : true,
     "local": {
         "driver": "pg",
         "user": "central_ledger",
-        "password": "LMgZ#Xy,33faRr",
+        "password": "cVq8iFqaLuHy8jjKuA",
         "host": "localhost",
         "database": "central_ledger"
     }

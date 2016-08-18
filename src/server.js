@@ -1,11 +1,12 @@
 'use strict'
 
 const Hapi = require('hapi')
+const Massive = require('massive')
 
-const server = new Hapi.Server()
+let server = new Hapi.Server()
 server.connection({ port: 3000 })
 
-const plugins = [
+let plugins = [
   {
     register: require('blipp')
   },
@@ -54,6 +55,9 @@ server.register(plugins, function (err) {
       server.log(['error', 'server'], err)
       throw err
     }
+
+    server.app.db = Massive.connectSync({ connectionString: 'postgres://central_ledger:cVq8iFqaLuHy8jjKuA@localhost:5432/central_ledger' })
+
     server.log('info', 'Server running at: ' + server.info.uri)
   })
 })
