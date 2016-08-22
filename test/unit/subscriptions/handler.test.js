@@ -7,7 +7,7 @@ const Base = require('../base')
 
 Test('create and return subscription', function (assert) {
   let payload = { url: 'http://test.com', secret: 'my-secret' }
-  let inserted = { subscription_uuid: Uuid(), url: payload.url, created_date: new Date().toISOString() }
+  let inserted = { subscriptionUuid: Uuid(), url: payload.url, createdDate: new Date().toISOString() }
 
   let fixtures = Base.setup()
 
@@ -19,9 +19,9 @@ Test('create and return subscription', function (assert) {
 
   fixtures.server.inject(req, function (res) {
     assert.equal(res.statusCode, 201)
-    assert.equal(res.result.id, inserted.subscription_uuid)
+    assert.equal(res.result.id, inserted.subscriptionUuid)
     assert.equal(res.result.url, inserted.url)
-    assert.equal(res.result.created, inserted.created_date)
+    assert.equal(res.result.created, inserted.createdDate)
     assert.ok(mockSave.calledOnce)
     assert.ok(mockSave.calledWith(Sinon.match(payload)))
     assert.end()
@@ -77,7 +77,7 @@ Test('return error if invalid url', function (assert) {
 })
 
 Test('get subscription by id', function (assert) {
-  let record = { subscription_uuid: Uuid(), url: 'http://test.com', created_date: new Date().toISOString() }
+  let record = { subscriptionUuid: Uuid(), url: 'http://test.com', createdDate: new Date().toISOString() }
 
   let fixtures = Base.setup()
 
@@ -85,15 +85,15 @@ Test('get subscription by id', function (assert) {
     cb(null, record)
   })
 
-  let req = Base.buildRequest('/subscriptions/' + record.subscription_uuid, 'GET')
+  let req = Base.buildRequest('/subscriptions/' + record.subscriptionUuid, 'GET')
 
   fixtures.server.inject(req, function (res) {
     assert.equal(res.statusCode, 200)
-    assert.equal(res.result.id, record.subscription_uuid)
+    assert.equal(res.result.id, record.subscriptionUuid)
     assert.equal(res.result.url, record.url)
-    assert.equal(res.result.created, record.created_date)
+    assert.equal(res.result.created, record.createdDate)
     assert.ok(mockFindOne.calledOnce)
-    assert.ok(mockFindOne.calledWith({ subscription_uuid: record.subscription_uuid, deleted: 0 }))
+    assert.ok(mockFindOne.calledWith({ subscriptionUuid: record.subscriptionUuid, deleted: 0 }))
     assert.end()
   })
 })
@@ -127,7 +127,7 @@ Test('return error if subscription not found by id', function (assert) {
   fixtures.server.inject(req, function (res) {
     Base.assertNotFoundError(assert, res)
     assert.ok(mockFindOne.calledOnce)
-    assert.ok(mockFindOne.calledWith({ subscription_uuid: subscriptionUuid, deleted: 0 }))
+    assert.ok(mockFindOne.calledWith({ subscriptionUuid: subscriptionUuid, deleted: 0 }))
     assert.end()
   })
 })
@@ -145,7 +145,7 @@ Test('return error if database error retrieving subscription', function (assert)
   fixtures.server.inject(req, function (res) {
     Base.assertServerError(assert, res)
     assert.ok(mockFindOne.calledOnce)
-    assert.ok(mockFindOne.calledWith({ subscription_uuid: subscriptionUuid, deleted: 0 }))
+    assert.ok(mockFindOne.calledWith({ subscriptionUuid: subscriptionUuid, deleted: 0 }))
     assert.end()
   })
 })

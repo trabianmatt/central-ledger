@@ -4,7 +4,7 @@ const Boom = require('boom')
 const Uuid = require('uuid4')
 
 exports.getSubscriptionById = function (request, reply) {
-  request.server.app.db.subscriptions.findOne({ subscription_uuid: request.params.id, deleted: 0 }, function (err, subscription) {
+  request.server.app.db.subscriptions.findOne({ subscriptionUuid: request.params.id, deleted: 0 }, function (err, subscription) {
     if (err) {
       request.server.log(['error'], err)
       return reply(Boom.wrap(err))
@@ -20,7 +20,7 @@ exports.getSubscriptionById = function (request, reply) {
 
 exports.createSubscription = function (request, reply) {
   request.server.app.db.subscriptions.save({
-    subscription_uuid: Uuid(),
+    subscriptionUuid: Uuid(),
     url: request.payload.url,
     secret: request.payload.secret
   },
@@ -36,8 +36,8 @@ exports.createSubscription = function (request, reply) {
 
 function buildResponseSubscription (record) {
   return {
-    id: record.subscription_uuid,
+    id: record.subscriptionUuid,
     url: record.url,
-    created: record.created_date
+    created: record.createdDate
   }
 }
