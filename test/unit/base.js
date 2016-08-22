@@ -36,9 +36,15 @@ function assertNotFoundError (assert, response) {
   assert.equal(response.result.error, 'Not Found')
 }
 
+function assertBadRequestError (assert, response) {
+  assert.equal(response.statusCode, 400)
+  assert.equal(response.result.error, 'Bad Request')
+}
+
 module.exports = {
   setup,
   buildRequest,
   assertServerError,
-  assertNotFoundError
+  assertNotFoundError,
+  assertBadRequestError
 }

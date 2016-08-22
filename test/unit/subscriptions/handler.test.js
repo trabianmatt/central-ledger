@@ -51,13 +51,28 @@ Test('return error if required field missing', function (assert) {
   let req = Base.buildRequest('/subscriptions', 'POST', { url: 'http://test.com' })
 
   let mockSave = setupMockSave(fixtures, function (obj, cb) {
-    cb(new Error('Error connecting to database.'), null)
+    cb(new Error('Test should not get here.'), null)
   })
 
   fixtures.server.inject(req, function (res) {
-    assert.equal(res.statusCode, 400)
-    assert.equal(res.result.error, 'Bad Request')
+    Base.assertBadRequestError(assert, res)
     assert.ok(res.result.message.includes('secret'))
+    assert.equal(mockSave.callCount, 0)
+    assert.end()
+  })
+})
+
+Test('return error if invalid url', function (assert) {
+  let fixtures = Base.setup()
+  let req = Base.buildRequest('/subscriptions', 'POST', { url: 'test.com' })
+
+  let mockSave = setupMockSave(fixtures, function (obj, cb) {
+    cb(new Error('Test should not get here.'), null)
+  })
+
+  fixtures.server.inject(req, function (res) {
+    Base.assertBadRequestError(assert, res)
+    assert.ok(res.result.message.includes('url'))
     assert.equal(mockSave.callCount, 0)
     assert.end()
   })
@@ -81,6 +96,23 @@ Test('get subscription by id', function (assert) {
     assert.equal(res.result.created, record.created_date)
     assert.ok(mockFindOne.calledOnce)
     assert.ok(mockFindOne.calledWith({ subscription_uuid: record.subscription_uuid, deleted: 0 }))
+    assert.end()
+  })
+})
+
+Test('return error if subscription not found by id', function (assert) {
+  let fixtures = Base.setup()
+
+  let mockFindOne = setupMockFindOne(fixtures, function (obj, cb) {
+    cb(new Error('Test should not get here.'), null)
+  })
+
+  let req = Base.buildRequest('/subscriptions/abcd', 'GET')
+
+  fixtures.server.inject(req, function (res) {
+    Base.assertBadRequestError(assert, res)
+    assert.ok(res.result.message.includes('id'))
+    assert.equal(mockFindOne.callCount, 0)
     assert.end()
   })
 })

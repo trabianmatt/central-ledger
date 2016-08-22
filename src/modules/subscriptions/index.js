@@ -3,13 +3,21 @@
 const handler = require('./handler')
 const Joi = require('joi')
 
+const tags = ['api', 'subscriptions']
+
 exports.register = function (server, options, next) {
   server.route({
     method: 'GET',
     path: '/subscriptions/{id}',
     handler: handler.getSubscriptionById,
     config: {
-      description: 'Retrieve a subscription\'s details by id'
+      tags: tags,
+      description: 'Retrieve a subscription\'s details by id',
+      validate: {
+        params: {
+          id: Joi.string().guid().required().description('Id of subscription to retrieve')
+        }
+      }
     }
   })
 
@@ -18,11 +26,12 @@ exports.register = function (server, options, next) {
     path: '/subscriptions',
     handler: handler.createSubscription,
     config: {
+      tags: tags,
       description: 'Create a subscription to be notified of transfer events',
       validate: {
         payload: {
-          url: Joi.string().required().description('Url to be notified at'),
-          secret: Joi.string().required().description('Secret that will be used to sign notification')
+          url: Joi.string().trim().uri().max(512).required().description('Url to be notified at'),
+          secret: Joi.string().trim().max(128).required().description('Secret that will be used to sign notification')
         }
       }
     }

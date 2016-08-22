@@ -1,12 +1,27 @@
 'use strict'
 
 const Hapi = require('hapi')
+const Inert = require('inert')
+const Vision = require('vision')
+const HapiSwagger = require('hapi-swagger')
 const Massive = require('massive')
+const Pack = require('../package')
 
 let server = new Hapi.Server()
 server.connection({ port: 3000 })
 
 let plugins = [
+  Inert,
+  Vision,
+  {
+    register: HapiSwagger,
+    options: {
+      info: {
+        'title': 'Central Ledger API Documentation',
+        'version': Pack.version
+      }
+    }
+  },
   {
     register: require('blipp')
   },

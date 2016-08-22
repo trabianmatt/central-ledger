@@ -11,8 +11,10 @@
   },
   "scripts": {
     "start": "node src/server.js",
-    "test": "standard && tape ./test/**/*.test.js | faucet",
-    "test:xunit": "tape ./test/**/*.test.js | tap-xunit",
+    "test": "tape test/**/*.test.js | faucet",
+    "test:xunit": "tape test/**/*.test.js | tap-xunit",
+    "test:coverage": "istanbul cover tape -- test/**/*.test.js",
+    "pretest": "standard",
     "db:create": "db-migrate db:create central_ledger $npm_package_config_db",
     "migrate": "db-migrate up $npm_package_config_db",
     "migrate:down": "db-migrate down $npm_package_config_db",
@@ -27,13 +29,17 @@
     "good-console": "^6.1.2",
     "good-squeeze": "^4.0.0",
     "hapi": "^14.1.0",
+    "hapi-swagger": "^6.2.2",
+    "inert": "^4.0.1",
     "joi": "^9.0.4",
     "massive": "^2.5.0",
-    "pg": "^6.1.0"
+    "pg": "^6.1.0",
+    "vision": "^4.1.0"
   },
   "optionalDependencies": {},
   "devDependencies": {
     "faucet": "0.0.1",
+    "istanbul": "^0.4.5",
     "sinon": "^1.17.5",
     "standard": "^7.1.2",
     "tap-xunit": "^1.4.0",
