@@ -5,7 +5,6 @@ machine:
 test:
   override:
     - set -o pipefail && npm -s run test:xunit > ${CIRCLE_TEST_REPORTS}/tape.xml && npm -s run test:coverage
-
-general:
-  artifacts:
+  post:
+    - mkdir $CIRCLE_ARTIFACTS/coverage
     - mv ./coverage $CIRCLE_ARTIFACTS/coverage
