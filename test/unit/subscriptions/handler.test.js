@@ -55,8 +55,7 @@ Test('return error if required field missing', function (assert) {
   })
 
   fixtures.server.inject(req, function (res) {
-    Base.assertBadRequestError(assert, res)
-    assert.ok(res.result.message.includes('secret'))
+    Base.assertBadRequestError(assert, res, 'child "secret" fails because ["secret" is required]')
     assert.equal(mockSave.callCount, 0)
     assert.end()
   })
@@ -71,8 +70,7 @@ Test('return error if invalid url', function (assert) {
   })
 
   fixtures.server.inject(req, function (res) {
-    Base.assertBadRequestError(assert, res)
-    assert.ok(res.result.message.includes('url'))
+    Base.assertBadRequestError(assert, res, 'child "url" fails because ["url" must be a valid uri]')
     assert.equal(mockSave.callCount, 0)
     assert.end()
   })
@@ -100,7 +98,7 @@ Test('get subscription by id', function (assert) {
   })
 })
 
-Test('return error if subscription not found by id', function (assert) {
+Test('return error if id is not a guid', function (assert) {
   let fixtures = Base.setup()
 
   let mockFindOne = setupMockFindOne(fixtures, function (obj, cb) {
@@ -110,8 +108,7 @@ Test('return error if subscription not found by id', function (assert) {
   let req = Base.buildRequest('/subscriptions/abcd', 'GET')
 
   fixtures.server.inject(req, function (res) {
-    Base.assertBadRequestError(assert, res)
-    assert.ok(res.result.message.includes('id'))
+    Base.assertBadRequestError(assert, res, 'child "id" fails because ["id" must be a valid GUID]')
     assert.equal(mockFindOne.callCount, 0)
     assert.end()
   })

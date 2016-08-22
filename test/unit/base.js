@@ -13,8 +13,7 @@ function setup () {
     register: require('../../src/modules/subscriptions')
   })
 
-  let mockDb = Sinon.mock({})
-  server.app.db = mockDb
+  server.app.db = Sinon.mock({})
 
   fixtures.server = server
 
@@ -36,9 +35,10 @@ function assertNotFoundError (assert, response) {
   assert.equal(response.result.error, 'Not Found')
 }
 
-function assertBadRequestError (assert, response) {
+function assertBadRequestError (assert, response, message) {
   assert.equal(response.statusCode, 400)
   assert.equal(response.result.error, 'Bad Request')
+  assert.equal(response.result.message, message)
 }
 
 module.exports = {
