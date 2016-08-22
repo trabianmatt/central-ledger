@@ -8,4 +8,4 @@ test:
 
 general:
   artifacts:
-    - ./coverage
+    - mv ./coverage $CIRCLE_ARTIFACTS/coverage
