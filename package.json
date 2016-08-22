@@ -34,6 +34,7 @@
     "joi": "^9.0.4",
     "massive": "^2.5.0",
     "pg": "^6.1.0",
+    "uuid4": "^1.0.0",
     "vision": "^4.1.0"
   },
   "optionalDependencies": {},

@@ -4,4 +4,8 @@ machine:
 
 test:
   override:
-    - set -o pipefail && npm -s run test:xunit > ${CIRCLE_TEST_REPORTS}/tape.xml
+    - set -o pipefail && npm -s run test:xunit > ${CIRCLE_TEST_REPORTS}/tape.xml && npm -s run test:coverage
+
+general:
+  artifacts:
+    - ./coverage
