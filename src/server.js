@@ -6,9 +6,10 @@ const Vision = require('vision')
 const HapiSwagger = require('hapi-swagger')
 const Massive = require('massive')
 const Pack = require('../package')
+const Config = require('./lib/config')
 
 let server = new Hapi.Server()
-server.connection({ port: 3000 })
+server.connection({ port: Config.PORT })
 
 let plugins = [
   Inert,
@@ -71,7 +72,7 @@ server.register(plugins, function (err) {
       throw err
     }
 
-    server.app.db = Massive.connectSync({ connectionString: 'postgres://central_ledger:cVq8iFqaLuHy8jjKuA@localhost:5432/central_ledger' })
+    server.app.db = Massive.connectSync({ connectionString: Config.DATABASE_URI })
 
     server.log('info', 'Server running at: ' + server.info.uri)
   })
