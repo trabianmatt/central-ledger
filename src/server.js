@@ -1,15 +1,16 @@
 'use strict'
 
+const Config = require('./lib/config')
 const Glue = require('glue')
 const Massive = require('massive')
 const manifest = require('./manifest')
 
-const composeOptions = { relativeTo: __dirname };
+const composeOptions = { relativeTo: __dirname }
 
 module.exports = new Promise((resolve, reject) => {
   Glue.compose(manifest, composeOptions, (err, server) => {
     if (err) {
-      server.log(['error', 'plugins'], err)
+      server.log(['error', 'compose'], err)
       throw err
     }
 
@@ -19,9 +20,9 @@ module.exports = new Promise((resolve, reject) => {
         throw err
       }
 
-      server.app.db = Massive.connectSync({ connectionString: 'postgres://central_ledger:cVq8iFqaLuHy8jjKuA@localhost:5432/central_ledger' })
+      server.app.db = Massive.connectSync({ connectionString: Config.DATABASE_URI })
 
       server.log('info', 'Server running at: ' + server.info.uri)
-    });
-  });
-});
+    })
+  })
+})
