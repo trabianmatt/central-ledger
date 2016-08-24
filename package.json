@@ -7,7 +7,7 @@
     "url": "git@github.com:LevelOneProject/central-ledger.git"
   },
   "config": {
-    "db": "--config ./config/database.json"
+    "db": "--config ./config/db-migrate.json"
   },
   "scripts": {
     "start": "node src/server.js",
@@ -34,6 +34,7 @@
     "joi": "^9.0.4",
     "massive": "^2.5.0",
     "pg": "^6.1.0",
+    "rc": "^1.1.6",
     "uuid4": "^1.0.0",
     "vision": "^4.1.0"
   },

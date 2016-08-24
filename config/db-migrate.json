@@ -1,0 +1,5 @@
+{
+    "defaultEnv": "local",
+    "sql-file" : true,
+    "local": "postgres://central_ledger:cVq8iFqaLuHy8jjKuA@localhost:5432/central_ledger"
+}
