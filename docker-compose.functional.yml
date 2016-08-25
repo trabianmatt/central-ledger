@@ -1,0 +1,17 @@
+version: '2'
+services:
+  central-ledger:
+    environment:
+     CLEDG_DATABASE_URI: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/central_ledger_functional"
+    networks:
+     - front
+     - back  
+  functional:
+    build: ./test/functional
+    depends_on:
+     - central-ledger
+    networks:
+     - front
+networks:
+  front: {}
+  back: {}
