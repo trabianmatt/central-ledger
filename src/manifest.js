@@ -19,6 +19,7 @@ module.exports = {
         }
       }
     },
+    { plugin: 'blipp' },
     { plugin: './modules/subscriptions' },
     {
       plugin: {
