@@ -1,4 +1,3 @@
 {
-  "PORT": 3000,
-  "DATABASE_URI": "postgres://central_ledger:cVq8iFqaLuHy8jjKuA@localhost:5432/central_ledger"
+  "PORT": 3000
 }

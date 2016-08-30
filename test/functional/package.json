@@ -1,0 +1,27 @@
+{
+  "name": "@leveloneproject/central-ledger-e2e",
+  "version": "1.0.0",
+  "description": "End-to-end tests for the LevelOne project's central ledger.",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:LevelOneProject/central-ledger.git"
+  },
+  "scripts": {
+    "test": "tape *.test.js | faucet",
+    "test:xunit": "tape *.test.js | tap-xunit",
+    "test:coverage": "istanbul cover tape -- *.test.js",
+    "pretest": "standard"
+  },
+  "dependencies": {},
+  "optionalDependencies": {},
+  "devDependencies": {
+    "faucet": "0.0.1",
+    "istanbul": "^0.4.5",
+    "sinon": "^1.17.5",
+    "standard": "^7.1.2",
+    "supertest": "^2.0.0",
+    "tap-xunit": "^1.4.0",
+    "tape": "^4.6.0"
+  }
+}
