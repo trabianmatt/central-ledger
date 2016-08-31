@@ -9,7 +9,7 @@ function setup () {
   server.connection({port: 8000})
 
   server.register({
-    register: require('../../src/modules/subscriptions')
+    register: require('../../src/modules')
   })
 
   fixtures.server = server
