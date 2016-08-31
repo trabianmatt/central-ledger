@@ -1,7 +1,6 @@
 'use strict'
 
 const Hapi = require('hapi')
-const Sinon = require('sinon')
 
 function setup () {
   const fixtures = {}
@@ -12,8 +11,6 @@ function setup () {
   server.register({
     register: require('../../src/modules/subscriptions')
   })
-
-  server.app.db = Sinon.mock({})
 
   fixtures.server = server
 

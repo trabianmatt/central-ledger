@@ -1,43 +1,35 @@
 'use strict'
 
-const Boom = require('boom')
-const Uuid = require('uuid4')
+const Model = require('./model')
+const Handle = require('../../lib/handler')
 
-exports.getSubscriptionById = function (request, reply) {
-  request.server.app.db.subscriptions.findOne({ subscriptionUuid: request.params.id, deleted: 0 }, function (err, subscription) {
-    if (err) {
-      request.server.log(['error'], err)
-      return reply(Boom.wrap(err))
+var respond = (reply, statusCode) => {
+  let code = statusCode || 200
+  return (entity) => {
+    if (entity) {
+      reply(buildResponseSubscription(entity)).code(code)
+      return entity
     }
-
-    if (!subscription) {
-      return reply(Boom.notFound())
-    }
-
-    reply(buildResponseSubscription(subscription))
-  })
+  }
 }
 
-exports.createSubscription = function (request, reply) {
-  request.server.app.db.subscriptions.save({
-    subscriptionUuid: Uuid(),
-    url: request.payload.url,
-    secret: request.payload.secret
-  },
-  function (err, inserted) {
-    if (err) {
-      request.server.log(['error'], err)
-      return reply(Boom.wrap(err))
-    }
-
-    reply(buildResponseSubscription(inserted)).code(201)
-  })
-}
-
-function buildResponseSubscription (record) {
+var buildResponseSubscription = (record) => {
   return {
     id: record.subscriptionUuid,
     url: record.url,
     created: record.createdDate
   }
+}
+
+exports.getSubscriptionById = function (request, reply) {
+  Model.getById(request.params.id)
+    .then(respond(reply))
+    .then(Handle.notFound(reply))
+    .catch(Handle.error(request, reply))
+}
+
+exports.createSubscription = function (request, reply) {
+  Model.create(request.payload)
+    .then(respond(reply, 201))
+    .catch(Handle.error(request, reply))
 }
