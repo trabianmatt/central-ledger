@@ -1,27 +1,28 @@
 'use strict'
 
-const Base64url = require('base64-url')
+const Base64Url = require('urlsafe-base64')
+const PreimageSha256 = require('./types/preimage-sha256')
 
 function validateCondition (conditionUri) {
   let condition = Condition.fromUri(conditionUri)
   return condition.validate()
 }
 
-function Condition (type, bitmask, fingerprint, maxFulfillmentLength) {
-  this._typeId = type
+function Condition (typeId, bitmask, fingerprint, maxFulfillmentLength) {
+  this._typeId = typeId
   this._bitmask = bitmask
   this._fingerprint = fingerprint
   this._maxFulfillmentLength = maxFulfillmentLength
 }
 
 // We are only supporting type PREIMAGE-SHA-256
-Condition.SUPPORTED_TYPES = [0]
+Condition.SUPPORTED_TYPES = [PreimageSha256.TYPE_ID]
 
 // We are only supporting 32-bit numbers for the bitmask
 Condition.MAX_SAFE_BITMASK = 0xffffffff
 
 // We are only supporting feature suite PREIMAGE-SHA-256 (0x01 | 0x02)
-Condition.SUPPORTED_BITMASK = 0x03
+Condition.SUPPORTED_BITMASK = PreimageSha256.BITMASK
 
 // We are only supporting fulfillments of length up to 65535
 Condition.MAX_FULFILLMENT_LENGTH = 65535
@@ -39,12 +40,12 @@ Condition.fromUri = function (conditionUri) {
 
   let pieces = conditionUri.split(':')
 
-  let type = parseInt(pieces[1], 16)
+  let typeId = parseInt(pieces[1], 16)
   let bitmask = parseInt(pieces[2], 16)
-  let fingerprint = Base64url.decode(pieces[3])
+  let fingerprint = Base64Url.decode(pieces[3])
   let maxFulfillmentLength = parseInt(pieces[4], 10)
 
-  return new Condition(type, bitmask, fingerprint, maxFulfillmentLength)
+  return new Condition(typeId, bitmask, fingerprint, maxFulfillmentLength)
 }
 
 Condition.prototype.getTypeId = function () {
@@ -61,6 +62,14 @@ Condition.prototype.getFingerprint = function () {
 
 Condition.prototype.getMaxFulfillmentLength = function () {
   return this._maxFulfillmentLength
+}
+
+Condition.prototype.toUri = function () {
+  return 'cc' +
+    ':' + this.getTypeId().toString(16) +
+    ':' + this.getBitmask().toString(16) +
+    ':' + Base64Url.encode(this.getFingerprint()) +
+    ':' + this.getMaxFulfillmentLength()
 }
 
 Condition.prototype.validate = function () {
