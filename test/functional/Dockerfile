@@ -1,7 +1,7 @@
-FROM mhart/alpine-node:6.2.1
+FROM mhart/alpine-node:6.5.0
 
-WORKDIR /opt/e2e
-COPY . /opt/e2e
+WORKDIR /opt/functional
+COPY . /opt/functional
 RUN [ "npm", "install" ]
 
 CMD [ "npm", "test" ]
