@@ -38,3 +38,45 @@ Test('post and get a subscription', function (assert) {
         })
     })
 })
+
+Test('register a dfsp', function (assert) {
+  var registration = {
+    identifier: 'dfsp1',
+    name: 'The DFSP'
+  }
+
+  Request.post('/register')
+    .send(registration)
+    .expect('Content-Type', /json/)
+    .expect(201, function (err, res) {
+      if (err) assert.end(err)
+      assert.equal(res.body.identifier, registration.identifier)
+      assert.equal(res.body.name, registration.name)
+      assert.notEqual(res.body.created, undefined)
+      assert.end()
+    })
+})
+
+Test('ensure an identifier can only be registered once', function (assert) {
+  var registration = {
+    identifier: 'dfsp2',
+    name: 'The DFSP'
+  }
+
+  Request.post('/register')
+    .send(registration)
+    .expect('Content-Type', /json/)
+    .expect(201, function (err, res) {
+      if (err) assert.end(err)
+      Request.post('/register')
+        .send(registration)
+        .expect('Content-Type', /json/)
+        .expect(400, function (err, res) {
+          if (err) assert.end(err)
+          assert.equal(res.body.statusCode, 400)
+          assert.equal(res.body.error, 'Bad Request')
+          assert.equal(res.body.message, 'The identifier has already been registered')
+          assert.end()
+        })
+    })
+})
