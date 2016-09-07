@@ -8,7 +8,7 @@ const composeOptions = { relativeTo: __dirname }
 
 module.exports = new Promise((resolve, reject) => {
   var s
-  Db.connect.then(db => {
+  Db.connect().then(db => {
     return Glue.compose(manifest, composeOptions)
   })
   .then(server => {
