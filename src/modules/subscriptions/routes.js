@@ -1,11 +1,11 @@
-let handler = require('./handler')
+const Handler = require('./handler')
 const Joi = require('joi')
 const tags = ['api', 'subscriptions']
 
 module.exports = [{
   method: 'GET',
   path: '/subscriptions/{id}',
-  handler: handler.getSubscriptionById,
+  handler: Handler.getSubscriptionById,
   config: {
     tags: tags,
     description: 'Retrieve a subscription\'s details by id',
@@ -19,7 +19,7 @@ module.exports = [{
 {
   method: 'POST',
   path: '/subscriptions',
-  handler: handler.createSubscription,
+  handler: Handler.createSubscription,
   config: {
     tags: tags,
     description: 'Create a subscription to be notified of transfer events',

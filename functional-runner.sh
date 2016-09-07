@@ -52,7 +52,7 @@ done
 >&2 echo "Postgres is up - creating functional database"
 psql <<'EOSQL'
     DROP DATABASE IF EXISTS "central_ledger_functional";
-	CREATE DATABASE "central_ledger_functional";
+	  CREATE DATABASE "central_ledger_functional";
 EOSQL
 
 >&2 echo "Central-ledger is starting"
@@ -79,7 +79,7 @@ done < <(docker events --filter 'event=start' --filter 'event=die' --filter 'con
 
 event_monitoring_pid=$!
 
->&2 echo "functional tests are starting"
+>&2 echo "Functional tests are starting"
 docker-compose -f $docker_compose_file -f $docker_functional_compose_file up --build -d functional
 
 wait $event_monitoring_pid

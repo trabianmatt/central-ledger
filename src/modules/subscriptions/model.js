@@ -1,3 +1,5 @@
+'use strict'
+
 const Db = require('../../lib/db')
 const Uuid = require('uuid4')
 

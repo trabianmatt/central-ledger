@@ -1,6 +1,6 @@
 {
   "name": "@leveloneproject/central-ledger",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "Central ledger hosted by a scheme to record and settle transfers.",
   "repository": {
     "type": "git",
@@ -18,9 +18,13 @@
     "dev": "docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d",
     "test:functional": "env $(cat .env | xargs) ./functional-runner.sh docker-compose.yml docker-compose.functional.yml",
     "db:create": "db-migrate db:create central_ledger $npm_package_config_db",
+    "db:psql": "docker run -it --net centralledger_back --rm postgres:9.3 sh -c 'exec psql -h postgres -p \"$POSTGRES_PORT_5432_TCP_PORT\" -U central_ledger'",
     "migrate": "db-migrate up $npm_package_config_db",
     "migrate:down": "db-migrate down $npm_package_config_db",
-    "migrate:create": "db-migrate create $npm_package_config_db"
+    "migrate:create": "db-migrate create $npm_package_config_db",
+    "docker:stop": "docker-compose -f docker-compose.yml -f docker-compose.functional.yml stop",
+    "docker:rm": "docker-compose -f docker-compose.yml -f docker-compose.functional.yml rm",
+    "docker:kill": "npm run docker:stop && npm run docker:rm"
   },
   "dependencies": {
     "blipp": "^2.3.0",

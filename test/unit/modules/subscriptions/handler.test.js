@@ -26,12 +26,12 @@ function createRequest (id, payload) {
 Test('subscription handler', function (handlerTest) {
   handlerTest.test('getSubscriptionById should', function (getSubscriptionByIdTest) {
     getSubscriptionByIdTest.test('get subscription by request id', function (t) {
-      var id = 12
-      var subscription = { subscriptionUuid: 'test', url: 'test', secret: 'test', createdDate: new Date() }
-      var model = {
+      let id = 12
+      let subscription = { subscriptionUuid: 'test', url: 'test', secret: 'test', createdDate: new Date() }
+      let model = {
         getById: Sinon.stub().returns(Promise.resolve(subscription))
       }
-      var reply = function (response) {
+      let reply = function (response) {
         t.equal(response.id, subscription.subscriptionUuid)
         t.equal(response.url, subscription.url)
         t.equal(response.created, subscription.createdDate)
@@ -46,10 +46,10 @@ Test('subscription handler', function (handlerTest) {
     })
 
     getSubscriptionByIdTest.test('return 404 if subscription null', function (t) {
-      var model = {
+      let model = {
         getById: Sinon.stub().returns(Promise.resolve(null))
       }
-      var reply = function (response) {
+      let reply = function (response) {
         t.deepEqual(response, Boom.notFound())
         t.end()
       }
@@ -58,12 +58,12 @@ Test('subscription handler', function (handlerTest) {
     })
 
     getSubscriptionByIdTest.test('return error if model throws error', function (t) {
-      var error = new Error()
-      var model = {
+      let error = new Error()
+      let model = {
         getById: function () { return Promise.reject(error) }
       }
 
-      var reply = function (response) {
+      let reply = function (response) {
         t.deepEqual(response, Boom.wrap(error))
         t.end()
       }
@@ -76,13 +76,13 @@ Test('subscription handler', function (handlerTest) {
 
   handlerTest.test('createSubscription should', function (createSubscriptionTest) {
     createSubscriptionTest.test('return created subscription', function (t) {
-      var payload = { url: 'url', secret: 'secret' }
-      var subscription = { subscriptionUuid: 'test', url: 'test', secret: 'test', createdDate: new Date() }
-      var model = {
+      let payload = { url: 'url', secret: 'secret' }
+      let subscription = { subscriptionUuid: 'test', url: 'test', secret: 'test', createdDate: new Date() }
+      let model = {
         create: Sinon.stub().withArgs(payload).returns(Promise.resolve(subscription))
       }
 
-      var reply = function (response) {
+      let reply = function (response) {
         t.equal(response.id, subscription.subscriptionUuid)
         t.equal(response.url, subscription.url)
         t.equal(response.created, subscription.createdDate)
@@ -98,12 +98,12 @@ Test('subscription handler', function (handlerTest) {
     })
 
     createSubscriptionTest.test('return error if model throws error', function (t) {
-      var error = new Error()
-      var model = {
+      let error = new Error()
+      let model = {
         create: function () { return Promise.reject(error) }
       }
 
-      var reply = function (response) {
+      let reply = function (response) {
         t.deepEqual(response, Boom.wrap(error))
         t.end()
       }

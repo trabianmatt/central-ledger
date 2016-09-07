@@ -12,7 +12,7 @@ function createModel (db) {
 }
 
 function setupSubscriptionsDb (subscriptions) {
-  var db = { subscriptions: subscriptions }
+  let db = { subscriptions: subscriptions }
   return {
     connect: Promise.resolve(db)
   }
@@ -21,9 +21,9 @@ function setupSubscriptionsDb (subscriptions) {
 Test('subscription model', function (modelTest) {
   modelTest.test('getByIdShould', function (getByIdTest) {
     getByIdTest.test('return exception if db.connect throws', function (t) {
-      var error = new Error()
-      var db = { connect: Promise.reject(error) }
-      var model = createModel(db)
+      let error = new Error()
+      let db = { connect: Promise.reject(error) }
+      let model = createModel(db)
 
       model.getById(1)
         .then(() => {
@@ -36,10 +36,10 @@ Test('subscription model', function (modelTest) {
     })
 
     getByIdTest.test('return exception if db.findOneAsync throws', function (t) {
-      var error = new Error()
-      var findOneAsync = function () { return Promise.reject(error) }
-      var db = setupSubscriptionsDb({ findOneAsync: findOneAsync })
-      var model = createModel(db)
+      let error = new Error()
+      let findOneAsync = function () { return Promise.reject(error) }
+      let db = setupSubscriptionsDb({ findOneAsync: findOneAsync })
+      let model = createModel(db)
 
       model.getById(1)
         .then(() => {
@@ -52,10 +52,10 @@ Test('subscription model', function (modelTest) {
     })
 
     getByIdTest.test('finds undeleted subscription by subscriptionUuid', function (t) {
-      var id = Uuid()
-      var subscription = { id: id }
-      var findOneAsync = Sinon.stub().returns(Promise.resolve(subscription))
-      var model = createModel(setupSubscriptionsDb({ findOneAsync: findOneAsync }))
+      let id = Uuid()
+      let subscription = { id: id }
+      let findOneAsync = Sinon.stub().returns(Promise.resolve(subscription))
+      let model = createModel(setupSubscriptionsDb({ findOneAsync: findOneAsync }))
 
       model.getById(id)
         .then(d => {
@@ -74,12 +74,12 @@ Test('subscription model', function (modelTest) {
 
   modelTest.test('create should', function (createTest) {
     createTest.test('save payload as new object', function (t) {
-      var saveAsync = Sinon.stub()
-      var model = createModel(setupSubscriptionsDb({ saveAsync: saveAsync }))
-      var payload = { url: 'http://test.com', secret: 'my-secret' }
+      let saveAsync = Sinon.stub()
+      let model = createModel(setupSubscriptionsDb({ saveAsync: saveAsync }))
+      let payload = { url: 'http://test.com', secret: 'my-secret' }
       model.create(payload)
         .then(() => {
-          var saveAsyncArg = saveAsync.firstCall.args[0]
+          let saveAsyncArg = saveAsync.firstCall.args[0]
           t.ok(saveAsyncArg.subscriptionUuid)
           t.notEqual(saveAsyncArg, payload)
           t.equal(saveAsyncArg.url, payload.url)
@@ -89,9 +89,9 @@ Test('subscription model', function (modelTest) {
     })
 
     createTest.test('return newly created subscription', function (t) {
-      var newSubscription = { subscriptionUuid: Uuid() }
-      var saveAsync = Sinon.stub().returns(newSubscription)
-      var model = createModel(setupSubscriptionsDb({ saveAsync: saveAsync }))
+      let newSubscription = { subscriptionUuid: Uuid() }
+      let saveAsync = Sinon.stub().returns(newSubscription)
+      let model = createModel(setupSubscriptionsDb({ saveAsync: saveAsync }))
       model.create({})
         .then(s => {
           t.equal(s, newSubscription)
