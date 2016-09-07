@@ -6,7 +6,7 @@ const Test = require('tape')
 const Boom = require('boom')
 
 function createHandler (model) {
-  return Proxyquire('../../../../src/modules/subscriptions/handler', {
+  return Proxyquire('../../../../src/api/subscriptions/handler', {
     './model': model
   })
 }

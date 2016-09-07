@@ -8,12 +8,12 @@ Test('db', function (dbTest) {
       var fakeDb = {}
       var connectStub = Sinon.stub().yields(null, fakeDb)
       var config = { DATABASE_URI: 'some-data-uri' }
-      var db = Proxyquire('../../src/lib/db', {
+      var db = Proxyquire('../../../src/lib/db', {
         'massive': { connect: connectStub },
         '../lib/config': config
       })
 
-      db.connect
+      db.connect()
         .then(db => {
           t.equal(db, fakeDb)
           t.equal(connectStub.callCount, 1)

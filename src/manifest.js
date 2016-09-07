@@ -20,7 +20,9 @@ module.exports = {
       }
     },
     { plugin: 'blipp' },
-    { plugin: './modules' },
+    { plugin: 'nes' },
+    { plugin: './api' },
+    { plugin: './sockets' },
     {
       plugin: {
         register: 'good',

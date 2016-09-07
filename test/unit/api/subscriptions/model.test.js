@@ -6,7 +6,7 @@ const Sinon = require('sinon')
 const Uuid = require('uuid4')
 
 function createModel (db) {
-  return Proxyquire('../../../../src/modules/subscriptions/model', {
+  return Proxyquire('../../../../src/api/subscriptions/model', {
     '../../lib/db': db
   })
 }
@@ -14,7 +14,7 @@ function createModel (db) {
 function setupSubscriptionsDb (subscriptions) {
   let db = { subscriptions: subscriptions }
   return {
-    connect: Promise.resolve(db)
+    connect: () => Promise.resolve(db)
   }
 }
 
@@ -22,7 +22,7 @@ Test('subscription model', function (modelTest) {
   modelTest.test('getByIdShould', function (getByIdTest) {
     getByIdTest.test('return exception if db.connect throws', function (t) {
       let error = new Error()
-      let db = { connect: Promise.reject(error) }
+      let db = { connect: () => Promise.reject(error) }
       let model = createModel(db)
 
       model.getById(1)
