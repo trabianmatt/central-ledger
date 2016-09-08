@@ -41,6 +41,9 @@ psql() {
 		"$@"
 }
 
+>&2 echo "Stopping any running containers"
+docker-compose -f $docker_compose_file -f $docker_functional_compose_file stop
+
 >&2 echo "Postgres is starting"
 docker-compose -f $docker_compose_file up -d postgres
 
@@ -67,7 +70,7 @@ done
 while read event
 do
     event_type=`echo $event | awk '{print $3}'`
-    
+
     if [[ $event_type == 'start' ]]; then
         log_since=`echo $event | awk '{print $1}'`
     elif [[ $event_type == 'die' ]]; then
