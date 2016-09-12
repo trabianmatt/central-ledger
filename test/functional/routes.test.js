@@ -80,3 +80,18 @@ Test('ensure an identifier can only be registered once', function (assert) {
         })
     })
 })
+
+Test('create a transfer', function (assert) {
+  var transfer = {
+    amount: '11.11'
+  }
+
+  Request.post('/transfers')
+    .send(transfer)
+    .expect('Content-Type', /json/)
+    .expect(201, function (err, res) {
+      if (err) assert.end(err)
+      assert.equal(res.body.amount, transfer.amount)
+      assert.end()
+    })
+})
