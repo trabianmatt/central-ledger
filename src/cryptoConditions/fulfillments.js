@@ -3,13 +3,16 @@
 const Base64Url = require('urlsafe-base64')
 const Condition = require('./conditions').Condition
 const PreimageSha256 = require('./types/preimage-sha256')
+const ParseError = require('../errors/parse-error')
+const ValidationError = require('../errors/validation-error')
+const UnsupportedCryptoTypeError = require('../errors/unsupported-crypto-type-error')
 
 function validateConditionFulfillment (conditionUri, fulfillmentUri) {
   let fulfillment = Fulfillment.fromUri(fulfillmentUri)
 
   let generatedConditionUri = fulfillment.generateConditionUri()
   if (conditionUri !== generatedConditionUri) {
-    throw new Error('Fulfillment does not match condition (expected: ' +
+    throw new ValidationError('Fulfillment does not match condition (expected: ' +
       conditionUri + ', actual: ' + generatedConditionUri + ')')
   }
 
@@ -33,7 +36,7 @@ Fulfillment.fromUri = function (fulfillmentUri) {
   }
 
   if (!Fulfillment.REGEX.exec(fulfillmentUri)) {
-    throw new Error('Invalid fulfillment format')
+    throw new ParseError('Invalid fulfillment format')
   }
 
   let pieces = fulfillmentUri.split(':')
@@ -42,7 +45,7 @@ Fulfillment.fromUri = function (fulfillmentUri) {
   let payload = Base64Url.decode(pieces[2])
 
   if (!(typeId in Fulfillment.SUPPORTED_TYPES)) {
-    throw new Error('Type ' + typeId + ' is not supported')
+    throw new UnsupportedCryptoTypeError('Type ' + typeId + ' is not supported')
   }
 
   let FulfillmentTypeClass = Fulfillment.SUPPORTED_TYPES[typeId]

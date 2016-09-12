@@ -6,6 +6,9 @@ const Base64Url = require('urlsafe-base64')
 const Fulfillments = require('../../../src/cryptoConditions/fulfillments')
 const BaseType = require('../../../src/cryptoConditions/types/base-type')
 const PreimageSha256 = require('../../../src/cryptoConditions/types/preimage-sha256')
+const ParseError = require('../../../src/errors/parse-error')
+const ValidationError = require('../../../src/errors/validation-error')
+const UnsupportedCryptoTypeError = require('../../../src/errors/unsupported-crypto-type-error')
 
 Test('throw error if fulfillment uri is not a string', function (assert) {
   let invalidFulfillmentUri = 1
@@ -14,17 +17,17 @@ Test('throw error if fulfillment uri is not a string', function (assert) {
   assert.end()
 })
 
-Test('throw error if fulfillment does not match regex', function (assert) {
+Test('throw ParseError if fulfillment does not match regex', function (assert) {
   let invalidFulfillmentUri = 'cf:0'
 
-  assert.throws(() => Fulfillments.Fulfillment.fromUri(invalidFulfillmentUri), /Invalid fulfillment format/)
+  assert.throws(() => Fulfillments.Fulfillment.fromUri(invalidFulfillmentUri), ParseError, /Invalid fulfillment format/)
   assert.end()
 })
 
-Test('throw error if type is not supported', function (assert) {
+Test('throw UnsupportedCryptoTypeError if type is not supported', function (assert) {
   let invalidFulfillmentUri = 'cf:1:VGhlIG9ubHkgYmFzaXMgZm9yIGdvb2QgU29jaWV0eSBpcyB1bmxpbWl0ZWQgY3JlZGl0LuKAlE9zY2FyIFdpbGRl'
 
-  assert.throws(() => Fulfillments.Fulfillment.fromUri(invalidFulfillmentUri), /Type 1 is not supported/)
+  assert.throws(() => Fulfillments.Fulfillment.fromUri(invalidFulfillmentUri), UnsupportedCryptoTypeError, /Type 1 is not supported/)
   assert.end()
 })
 
@@ -61,13 +64,13 @@ Test('validates PreimageSha256 fulfillment against condition', function (assert)
   assert.end()
 })
 
-Test('throws error on non-matching hash in PreimageSha256 fulfillment', function (assert) {
+Test('throws ValidationError on non-matching hash in PreimageSha256 fulfillment', function (assert) {
   let conditionUri = 'cc:0:3:dB-8fb14MdO75Brp_Pvh4d7ganckilrRl13RS_UmrXA:66'
   let fulfillmentUri = 'cf:0:' + Base64Url.encode(generateSha256Hash('This hash is different'))
 
   let fulfillment = Fulfillments.Fulfillment.fromUri(fulfillmentUri)
 
-  assert.throws(() => Fulfillments.validateConditionFulfillment(conditionUri, fulfillmentUri), new RegExp('Fulfillment does not match condition \\(expected: ' + conditionUri + ', actual: ' + fulfillment.generateConditionUri() + '\\)'))
+  assert.throws(() => Fulfillments.validateConditionFulfillment(conditionUri, fulfillmentUri), ValidationError, new RegExp('Fulfillment does not match condition \\(expected: ' + conditionUri + ', actual: ' + fulfillment.generateConditionUri() + '\\)'))
   assert.end()
 })
 

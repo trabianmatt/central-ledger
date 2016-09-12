@@ -3,6 +3,9 @@
 const Test = require('tape')
 const Base64Url = require('urlsafe-base64')
 const Conditions = require('../../../src/cryptoConditions/conditions')
+const ParseError = require('../../../src/errors/parse-error')
+const ValidationError = require('../../../src/errors/validation-error')
+const UnsupportedCryptoTypeError = require('../../../src/errors/unsupported-crypto-type-error')
 
 Test('throw error if condition uri is not a string', function (assert) {
   let invalidConditionUri = 1
@@ -15,35 +18,35 @@ Test('throw error if condition uri is not a string', function (assert) {
 Test('throw error if condition does not match regex', function (assert) {
   let invalidConditionUri = 'cc:0'
 
-  assert.throws(() => Conditions.Condition.fromUri(invalidConditionUri), /Invalid condition format/)
+  assert.throws(() => Conditions.Condition.fromUri(invalidConditionUri), ParseError, /Invalid condition format/)
   assert.end()
 })
 
-Test('throw error if type is not supported', function (assert) {
+Test('throw UnsupportedCryptoTypeError if type is not supported', function (assert) {
   let invalidConditionUri = 'cc:1:3:dB-8fb14MdO75Brp_Pvh4d7ganckilrRl13RS_UmrXA:66'
 
-  assert.throws(() => Conditions.validateCondition(invalidConditionUri), /Type 1 is not supported/)
+  assert.throws(() => Conditions.validateCondition(invalidConditionUri), UnsupportedCryptoTypeError, /Type 1 is not supported/)
   assert.end()
 })
 
-Test('throw error if bitmask too large', function (assert) {
+Test('throw ValidationError if bitmask too large', function (assert) {
   let invalidConditionUri = 'cc:0:fffffffff:dB-8fb14MdO75Brp_Pvh4d7ganckilrRl13RS_UmrXA:66'
 
-  assert.throws(() => Conditions.validateCondition(invalidConditionUri), /Bitmask is too large to be safely supported/)
+  assert.throws(() => Conditions.validateCondition(invalidConditionUri), ValidationError, /Bitmask is too large to be safely supported/)
   assert.end()
 })
 
-Test('throw error if bitmask not supported', function (assert) {
+Test('throw ValidationError if bitmask not supported', function (assert) {
   let invalidConditionUri = 'cc:0:5:dB-8fb14MdO75Brp_Pvh4d7ganckilrRl13RS_UmrXA:66'
 
-  assert.throws(() => Conditions.validateCondition(invalidConditionUri), /Condition feature suites are not supported/)
+  assert.throws(() => Conditions.validateCondition(invalidConditionUri), ValidationError, /Condition feature suites are not supported/)
   assert.end()
 })
 
-Test('throw error if max fulfillment length too large', function (assert) {
+Test('throw ValidationError if max fulfillment length too large', function (assert) {
   let invalidConditionUri = 'cc:0:3:dB-8fb14MdO75Brp_Pvh4d7ganckilrRl13RS_UmrXA:65536'
 
-  assert.throws(() => Conditions.validateCondition(invalidConditionUri), /Condition max fulfillment length is too large/)
+  assert.throws(() => Conditions.validateCondition(invalidConditionUri), ValidationError, /Condition max fulfillment length is too large/)
   assert.end()
 })
 

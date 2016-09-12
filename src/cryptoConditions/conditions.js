@@ -2,6 +2,9 @@
 
 const Base64Url = require('urlsafe-base64')
 const PreimageSha256 = require('./types/preimage-sha256')
+const ParseError = require('../errors/parse-error')
+const ValidationError = require('../errors/validation-error')
+const UnsupportedCryptoTypeError = require('../errors/unsupported-crypto-type-error')
 
 function validateCondition (conditionUri) {
   let condition = Condition.fromUri(conditionUri)
@@ -35,7 +38,7 @@ Condition.fromUri = function (conditionUri) {
   }
 
   if (!Condition.REGEX.exec(conditionUri)) {
-    throw new Error('Invalid condition format')
+    throw new ParseError('Invalid condition format')
   }
 
   let pieces = conditionUri.split(':')
@@ -74,19 +77,19 @@ Condition.prototype.toUri = function () {
 
 Condition.prototype.validate = function () {
   if (!(this._typeId in Condition.SUPPORTED_TYPES)) {
-    throw new Error('Type ' + this._typeId + ' is not supported')
+    throw new UnsupportedCryptoTypeError('Type ' + this._typeId + ' is not supported')
   }
 
   if (this._bitmask > Condition.MAX_SAFE_BITMASK) {
-    throw new Error('Bitmask is too large to be safely supported')
+    throw new ValidationError('Bitmask is too large to be safely supported')
   }
 
   if (this._bitmask & ~Condition.SUPPORTED_BITMASK) {
-    throw new Error('Condition feature suites are not supported')
+    throw new ValidationError('Condition feature suites are not supported')
   }
 
   if (this._maxFulfillmentLength > Condition.MAX_FULFILLMENT_LENGTH) {
-    throw new Error('Condition max fulfillment length is too large')
+    throw new ValidationError('Condition max fulfillment length is too large')
   }
 
   return true
