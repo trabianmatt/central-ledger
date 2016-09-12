@@ -4,6 +4,7 @@ const Proxyquire = require('proxyquire')
 const Sinon = require('sinon')
 const Test = require('tape')
 const Boom = require('boom')
+const P = require('bluebird')
 
 function createHandler (model) {
   return Proxyquire('../../../../src/api/subscriptions/handler', {
@@ -29,7 +30,7 @@ Test('subscription handler', function (handlerTest) {
       let id = 12
       let subscription = { subscriptionUuid: 'test', url: 'test', secret: 'test', createdDate: new Date() }
       let model = {
-        getById: Sinon.stub().returns(Promise.resolve(subscription))
+        getById: Sinon.stub().returns(P.resolve(subscription))
       }
       let reply = function (response) {
         t.equal(response.id, subscription.subscriptionUuid)
@@ -47,7 +48,7 @@ Test('subscription handler', function (handlerTest) {
 
     getSubscriptionByIdTest.test('return 404 if subscription null', function (t) {
       let model = {
-        getById: Sinon.stub().returns(Promise.resolve(null))
+        getById: Sinon.stub().returns(P.resolve(null))
       }
       let reply = function (response) {
         t.deepEqual(response, Boom.notFound())
@@ -60,7 +61,7 @@ Test('subscription handler', function (handlerTest) {
     getSubscriptionByIdTest.test('return error if model throws error', function (t) {
       let error = new Error()
       let model = {
-        getById: function () { return Promise.reject(error) }
+        getById: function () { return P.reject(error) }
       }
 
       let reply = function (response) {
@@ -79,7 +80,7 @@ Test('subscription handler', function (handlerTest) {
       let payload = { url: 'url', secret: 'secret' }
       let subscription = { subscriptionUuid: 'test', url: 'test', secret: 'test', createdDate: new Date() }
       let model = {
-        create: Sinon.stub().withArgs(payload).returns(Promise.resolve(subscription))
+        create: Sinon.stub().withArgs(payload).returns(P.resolve(subscription))
       }
 
       let reply = function (response) {
@@ -100,7 +101,7 @@ Test('subscription handler', function (handlerTest) {
     createSubscriptionTest.test('return error if model throws error', function (t) {
       let error = new Error()
       let model = {
-        create: function () { return Promise.reject(error) }
+        create: function () { return P.reject(error) }
       }
 
       let reply = function (response) {

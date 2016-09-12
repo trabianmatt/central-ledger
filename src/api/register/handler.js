@@ -2,14 +2,7 @@
 
 const Model = require('./model')
 const Handle = require('../../lib/handler')
-
-function respond (reply, statusCode) {
-  return (entity) => {
-    if (entity) {
-      reply(buildResponseRegistration(entity)).code(statusCode)
-    }
-  }
-}
+const RecordExistsError = require('../../errors/record-exists-error')
 
 function buildResponseRegistration (record) {
   return {
@@ -19,27 +12,27 @@ function buildResponseRegistration (record) {
   }
 }
 
-function handleExistingRecord (reply) {
+function handleExistingRecord () {
   return (entity) => {
     if (entity) {
-      Handle.badRequest(reply, 'The identifier has already been registered')
+      throw new RecordExistsError()
+    } else {
+      return entity
     }
-    return entity
   }
 }
 
 function createRegistration (payload) {
   return (entity) => {
-    if (!entity) {
-      return Model.create(payload)
-    }
+    return Model.create(payload)
   }
 }
 
 exports.register = function (request, reply) {
   Model.getByIdentifier(request.payload.identifier)
-    .then(handleExistingRecord(reply))
+    .then(handleExistingRecord())
     .then(createRegistration(request.payload))
-    .then(respond(reply, 201))
+    .then(Handle.createResponse(reply, buildResponseRegistration))
+    .catch(RecordExistsError, Handle.badRequest(reply, 'The identifier has already been registered'))
     .catch(Handle.error(request, reply))
 }

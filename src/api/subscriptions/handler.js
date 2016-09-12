@@ -2,18 +2,9 @@
 
 const Model = require('./model')
 const Handle = require('../../lib/handler')
+const NotFoundError = require('../../errors/not-found-error')
 
-var respond = (reply, statusCode) => {
-  let code = statusCode || 200
-  return (entity) => {
-    if (entity) {
-      reply(buildResponseSubscription(entity)).code(code)
-      return entity
-    }
-  }
-}
-
-var buildResponseSubscription = (record) => {
+function buildResponseSubscription (record) {
   return {
     id: record.subscriptionUuid,
     url: record.url,
@@ -23,13 +14,13 @@ var buildResponseSubscription = (record) => {
 
 exports.getSubscriptionById = function (request, reply) {
   Model.getById(request.params.id)
-    .then(respond(reply))
-    .then(Handle.notFound(reply))
+    .then(Handle.getResponse(reply, buildResponseSubscription))
+    .catch(NotFoundError, Handle.notFound(reply))
     .catch(Handle.error(request, reply))
 }
 
 exports.createSubscription = function (request, reply) {
   Model.create(request.payload)
-    .then(respond(reply, 201))
+    .then(Handle.createResponse(reply, buildResponseSubscription))
     .catch(Handle.error(request, reply))
 }

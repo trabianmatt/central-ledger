@@ -4,6 +4,7 @@ const Proxyquire = require('proxyquire')
 const Sinon = require('sinon')
 const Test = require('tape')
 const Boom = require('boom')
+const P = require('bluebird')
 
 function createHandler (model) {
   return Proxyquire('../../../../src/api/register/handler', {
@@ -27,8 +28,8 @@ Test('register handler', function (handlerTest) {
       let payload = { identifier: 'dfsp1', name: 'name' }
       let registration = { identifier: payload.identifier, name: payload.name, createdDate: new Date() }
       let model = {
-        getByIdentifier: Sinon.stub().withArgs(payload.identifier).returns(Promise.resolve(null)),
-        create: Sinon.stub().withArgs(payload).returns(Promise.resolve(registration))
+        getByIdentifier: Sinon.stub().withArgs(payload.identifier).returns(P.resolve(null)),
+        create: Sinon.stub().withArgs(payload).returns(P.resolve(registration))
       }
 
       let reply = function (response) {
@@ -50,12 +51,11 @@ Test('register handler', function (handlerTest) {
       let payload = { identifier: 'dfsp1', name: 'name' }
       let registration = { identifier: payload.identifier, name: payload.name, createdDate: new Date() }
       let model = {
-        getByIdentifier: Sinon.stub().withArgs(payload.identifier).returns(Promise.resolve(registration))
+        getByIdentifier: Sinon.stub().withArgs(payload.identifier).returns(P.resolve(registration))
       }
 
       let reply = function (response) {
-        let boomError = Boom.badRequest('The identifier has already been registered')
-        assert.deepEqual(response, boomError)
+        assert.deepEqual(response, Boom.badRequest('The identifier has already been registered'))
         assert.end()
       }
 
@@ -66,12 +66,11 @@ Test('register handler', function (handlerTest) {
       let payload = { identifier: 'dfsp1', name: 'name' }
       let error = new Error()
       let model = {
-        getByIdentifier: function (identifier) { return Promise.reject(error) }
+        getByIdentifier: function (identifier) { return P.reject(error) }
       }
 
       let reply = function (response) {
-        let boomError = Boom.wrap(error)
-        assert.deepEqual(response, boomError)
+        assert.deepEqual(response, Boom.wrap(error))
         assert.end()
       }
 
@@ -82,13 +81,12 @@ Test('register handler', function (handlerTest) {
       let payload = { identifier: 'dfsp1', name: 'name' }
       let error = new Error()
       let model = {
-        getByIdentifier: Sinon.stub().returns(Promise.resolve(null)),
-        create: function (data) { return Promise.reject(error) }
+        getByIdentifier: Sinon.stub().returns(P.resolve(null)),
+        create: function (data) { return P.reject(error) }
       }
 
       let reply = function (response) {
-        let boomError = Boom.wrap(error)
-        assert.deepEqual(response, boomError)
+        assert.deepEqual(response, Boom.wrap(error))
         assert.end()
       }
 
