@@ -2,10 +2,10 @@
 
 const Eventric = require('../../lib/eventric')
 
-exports.create = (transfer) => {
+exports.prepare = (transfer) => {
   return Eventric.getContext()
   .then(context => {
-    context.command('ProposeTransfer', {
+    context.command('PrepareTransfer', {
       id: transfer.id,
       ledger: transfer.ledger,
       debits: transfer.debits,
@@ -22,5 +22,16 @@ exports.create = (transfer) => {
       execution_condition: transfer.execution_condition,
       expires_at: transfer.expires_at
     }
+  })
+}
+
+exports.fulfill = (fulfillment) => {
+  return Eventric.getContext()
+  .then(context => {
+    context.command('FulfillTransfer', {
+      fulfillment
+    })
+  }).then(() => {
+    return fulfillment
   })
 }

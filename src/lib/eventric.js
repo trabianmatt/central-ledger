@@ -1,12 +1,18 @@
 const Eventric = require('eventric')
 const PostgresStore = require('../eventric/postgresStore')
+const Fulfillments = require('../cryptoConditions/fulfillments')
 
 var initializedContext
 
+var transferState = {
+  PREPARED: 'prepared',
+  EXECUTED: 'executed'
+}
+
 /*eslint-disable */
-function _defineDomainEvents (context) {
+function defineDomainEvents (context) {
   context.defineDomainEvents({
-    TransferProposed ({
+    TransferPrepared ({
       ledger,
       debits,
       credits,
@@ -18,6 +24,7 @@ function _defineDomainEvents (context) {
       this.credits = credits
       this.execution_condition = execution_condition
       this.expires_at = expires_at
+      this.state = transferState.PREPARED
       return {
         ledger,
         debits,
@@ -25,11 +32,16 @@ function _defineDomainEvents (context) {
         execution_condition,
         expires_at
       }
-    }})
+    },
+    
+    TransferExecuted () {
+      this.state = transferState.EXECUTED
+    }
+})
 }
 /*eslint-enable */
 
-function _addAggregates (context) {
+function addAggregates (context) {
   context.addAggregate('Transfer', class Transfer {
     create ({
       ledger,
@@ -38,19 +50,32 @@ function _addAggregates (context) {
       execution_condition,
       expires_at
     }) {
-      return this.$emitDomainEvent('TransferProposed', {
+      return this.$emitDomainEvent('TransferPrepared', {
         ledger,
         debits,
         credits,
         execution_condition,
         expires_at
       })
-    }})
+    }
+
+    fulfill ({
+      fulfillment
+    }) {
+      if (this.state !== transferState.PREPARED) {
+        throw new Error('transfer is not prepared')
+      }
+
+      Fulfillments.validateConditionFulfillment(this.execution_condition, fulfillment)
+
+      return this.$emitDomainEvent('TransferExecuted', { fulfillment })
+    }
+})
 }
 
-function _addCommandHandlers (context) {
+function addCommandHandlers (context) {
   context.addCommandHandlers({
-    ProposeTransfer ({
+    PrepareTransfer ({
       ledger,
       debits,
       credits,
@@ -66,6 +91,16 @@ function _addCommandHandlers (context) {
       })
                         .then(
                         transfer => transfer.$save())
+    },
+
+    FulfillTransfer ({
+      id, fulfillment
+    }) {
+      return this.$aggregate.load('Transfer', id)
+      .then(function (transfer) {
+        transfer.fulfill({fulfillment})
+        return transfer.$save()
+      })
     }
   })
 }
@@ -75,9 +110,9 @@ exports.getContext = () => {
     Eventric.setStore(PostgresStore.default, {})
     var context = Eventric.context('Ledger')
 
-    _defineDomainEvents(context)
-    _addAggregates(context)
-    _addCommandHandlers(context)
+    defineDomainEvents(context)
+    addAggregates(context)
+    addCommandHandlers(context)
     initializedContext = context.initialize().then(() => context)
   }
 

@@ -3,16 +3,6 @@
 const Model = require('./model')
 const Handle = require('../../lib/handler')
 
-var respond = (reply, statusCode) => {
-  let code = statusCode || 200
-  return (entity) => {
-    if (entity) {
-      reply(buildResponseTransfer(entity)).code(code)
-      return entity
-    }
-  }
-}
-
 var buildResponseTransfer = (record) => {
   return {
     id: record.id,
@@ -24,8 +14,14 @@ var buildResponseTransfer = (record) => {
   }
 }
 
-exports.createTransfer = function (request, reply) {
-  Model.create(request.payload)
-    .then(respond(reply, 201))
+exports.prepareTransfer = function (request, reply) {
+  Model.prepare(request.payload)
+    .then(Handle.createResponse(reply, buildResponseTransfer))
+    .catch(Handle.error(request, reply))
+}
+
+exports.fulfillTransfer = function (request, reply) {
+  Model.fulfill(request.payload)
+    .then(Handle.getResponse(reply, x => x))
     .catch(Handle.error(request, reply))
 }

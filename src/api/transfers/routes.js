@@ -5,10 +5,10 @@ const tags = ['api', 'transfers']
 module.exports = [{
   method: 'PUT',
   path: '/transfers/{id}',
-  handler: Handler.createTransfer,
+  handler: Handler.prepareTransfer,
   config: {
     tags: tags,
-    description: 'Propose a transfer',
+    description: 'Prepare a transfer',
     validate: {
       payload: {
         id: Joi.string().uri().required().description('Id of transfer'),
@@ -24,6 +24,18 @@ module.exports = [{
         execution_condition: Joi.string().trim().max(256).required().description('Execution condition of transfer'),
         expires_at: Joi.string().isoDate().required().description('When the transfer expires')
       }
+    }
+  }
+},
+{
+  method: 'PUT',
+  path: '/transfers/{id}/fulfillment',
+  handler: Handler.fulfillTransfer,
+  config: {
+    tags: tags,
+    description: 'Fulfill a transfer',
+    validate: {
+      payload: Joi.string().trim().max(65535).required().description('Fulfillment of the execution condition')
     }
   }
 }]

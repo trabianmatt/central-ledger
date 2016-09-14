@@ -17,8 +17,8 @@ function setupEventric (context) {
 }
 
 Test('transfer model', function (modelTest) {
-  modelTest.test('create should', function (createTest) {
-    createTest.test('send CreateTransfer command', function (assert) {
+  modelTest.test('prepare should', function (prepareTest) {
+    prepareTest.test('send PrepareTransfer command', function (assert) {
       let command = Sinon.stub()
       let model = createModel(setupEventric({ command: command }))
       let payload = {
@@ -39,11 +39,11 @@ Test('transfer model', function (modelTest) {
         execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
         expires_at: '2015-06-16T00:00:01.000Z'
       }
-      model.create(payload)
+      model.prepare(payload)
         .then(() => {
           let commandArg1 = command.firstCall.args[0]
           let commandArg2 = command.firstCall.args[1]
-          assert.equal(commandArg1, 'ProposeTransfer')
+          assert.equal(commandArg1, 'PrepareTransfer')
           assert.equal(commandArg2.id, payload.id)
           assert.equal(commandArg2.ledger, payload.ledger)
           assert.deepEqual(commandArg2.debits, payload.debits)
@@ -54,7 +54,25 @@ Test('transfer model', function (modelTest) {
         })
     })
 
-    createTest.end()
+    prepareTest.end()
+  })
+
+  modelTest.test('fulfill should', function (fulfillTest) {
+    fulfillTest.test('send FulfillTransfer command', function (assert) {
+      let command = Sinon.stub()
+      let model = createModel(setupEventric({ command: command }))
+      let payload = 'cf:0:_v8'
+      model.fulfill(payload)
+        .then(() => {
+          let commandArg1 = command.firstCall.args[0]
+          let commandArg2 = command.firstCall.args[1]
+          assert.equal(commandArg1, 'FulfillTransfer')
+          assert.equal(commandArg2.fulfillment, payload)
+          assert.end()
+        })
+    })
+
+    fulfillTest.end()
   })
 
   modelTest.end()

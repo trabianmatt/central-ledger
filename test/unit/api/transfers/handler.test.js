@@ -22,8 +22,8 @@ function createRequest (payload) {
 }
 
 Test('transfer handler', function (handlerTest) {
-  handlerTest.test('createTransfer should', function (transferTest) {
-    transferTest.test('return created transfer', function (assert) {
+  handlerTest.test('prepareTransfer should', function (prepareTransferTest) {
+    prepareTransferTest.test('return prepared transfer', function (assert) {
       let payload = {
         id: 'https://central-ledger/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204',
         ledger: 'http://usd-ledger.example/USD',
@@ -51,7 +51,7 @@ Test('transfer handler', function (handlerTest) {
         expires_at: payload.expires_at
       }
       let model = {
-        create: Sinon.stub().withArgs(payload).returns(Promise.resolve(transfer))
+        prepare: Sinon.stub().withArgs(payload).returns(Promise.resolve(transfer))
       }
 
       let reply = function (response) {
@@ -69,10 +69,10 @@ Test('transfer handler', function (handlerTest) {
         }
       }
 
-      createHandler(model).createTransfer(createRequest(payload), reply)
+      createHandler(model).prepareTransfer(createRequest(payload), reply)
     })
 
-    transferTest.test('return error if model throws error on transfer creation', function (assert) {
+    prepareTransferTest.test('return error if model throws error on transfer creation', function (assert) {
       let payload = {
         id: 'https://central-ledger/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204',
         ledger: 'http://usd-ledger.example/USD',
@@ -94,7 +94,7 @@ Test('transfer handler', function (handlerTest) {
       }
       let error = new Error()
       let model = {
-        create: function (data) { return Promise.reject(error) }
+        prepare: function (data) { return Promise.reject(error) }
       }
 
       let reply = function (response) {
@@ -103,10 +103,33 @@ Test('transfer handler', function (handlerTest) {
         assert.end()
       }
 
-      createHandler(model).createTransfer(createRequest(payload), reply)
+      createHandler(model).prepareTransfer(createRequest(payload), reply)
     })
 
-    transferTest.end()
+    prepareTransferTest.end()
+  })
+
+  handlerTest.test('fulfillTransfer should', function (fulfillTransferTest) {
+    fulfillTransferTest.test('return fulfilled transfer', function (t) {
+      let payload = 'cf:0:_v8'
+      let executionConditionFufillment = payload
+      let model = {
+        fulfill: Sinon.stub().returns(Promise.resolve(executionConditionFufillment))
+      }
+
+      let reply = function (response) {
+        t.equal(response, executionConditionFufillment)
+        return {
+          code: function (statusCode) {
+            t.equal(statusCode, 200)
+            t.end()
+          }
+        }
+      }
+      createHandler(model).fulfillTransfer(createRequest(payload), reply)
+    })
+
+    fulfillTransferTest.end()
   })
 
   handlerTest.end()
