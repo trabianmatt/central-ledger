@@ -81,17 +81,35 @@ Test('ensure an identifier can only be registered once', function (assert) {
     })
 })
 
-Test('create a transfer', function (assert) {
+Test('prepare a transfer', function (assert) {
   var transfer = {
-    amount: '11.11'
+    id: 'http://usd-ledger.example/USD/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204',
+    ledger: 'http://usd-ledger.example/USD',
+    debits: [{
+      account: 'http://usd-ledger.example/USD/accounts/alice',
+      amount: '50'
+    }],
+    credits: [{
+      account: 'http://usd-ledger.example/USD/accounts/bob',
+      amount: '50'
+    }],
+    execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
+    expires_at: '2015-06-16T00:00:01.000Z'
   }
 
-  Request.post('/transfers')
+  Request.put('/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204')
     .send(transfer)
     .expect('Content-Type', /json/)
     .expect(201, function (err, res) {
       if (err) assert.end(err)
-      assert.equal(res.body.amount, transfer.amount)
+      assert.equal(res.body.id, transfer.id)
+      assert.equal(res.body.ledger, transfer.ledger)
+      assert.equal(res.body.debits[0].account, transfer.debits[0].account)
+      assert.equal(res.body.debits[0].amount, parseInt(transfer.debits[0].amount))
+      assert.equal(res.body.credits[0].account, transfer.credits[0].account)
+      assert.equal(res.body.credits[0].amount, parseInt(transfer.credits[0].amount))
+      assert.equal(res.body.execution_condition, transfer.execution_condition)
+      assert.equal(res.body.expires_at, transfer.expires_at)
       assert.end()
     })
 })

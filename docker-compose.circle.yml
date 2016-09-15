@@ -9,11 +9,13 @@ services:
   functional:
     build: ./test/functional
     environment:
-      - FUNC_TEST_CMD=npm -s run test
+      - FUNC_TEST_CMD=npm -s run test:xunit > /results/tape-functional.xml
     depends_on:
      - central-ledger
     networks:
      - front
+    volumes:
+      - ./test/results:/results
 networks:
   front: {}
   back: {}

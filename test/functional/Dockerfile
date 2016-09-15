@@ -1,7 +1,11 @@
 FROM mhart/alpine-node:6.5.0
 
-WORKDIR /opt/functional
-COPY . /opt/functional
-RUN [ "npm", "install" ]
+ENV FUNC_TEST_CMD error
 
-CMD [ "npm", "test" ]
+ADD . /opt/functional
+WORKDIR /opt/functional
+
+RUN npm install
+
+RUN chmod +x start.sh
+CMD ./start.sh

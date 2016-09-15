@@ -1,3 +1,5 @@
+'use strict'
+
 const Tape = require('tape')
 const Tapes = require('tapes')
 const Test = Tapes(Tape)

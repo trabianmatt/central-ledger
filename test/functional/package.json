@@ -8,7 +8,8 @@
     "url": "git@github.com:LevelOneProject/central-ledger.git"
   },
   "scripts": {
-    "test": "tape *.test.js | faucet",
+    "test": "tape '*.test.js' | faucet",
+    "test:xunit": "tape '*.test.js' | tap-xunit",
     "pretest": "standard"
   },
   "dependencies": {},
@@ -17,6 +18,7 @@
     "faucet": "0.0.1",
     "standard": "^7.1.2",
     "supertest": "^2.0.0",
+    "tap-xunit": "^1.4.0",
     "tape": "^4.6.0"
   }
 }

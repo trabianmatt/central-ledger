@@ -16,14 +16,15 @@
     "pretest": "standard",
     "test:xunit": "tape 'test/unit/**/*.test.js' | tap-xunit",
     "test:coverage": "istanbul cover tape -- 'test/unit/**/*.test.js'",
-    "test:functional": "env $(cat .env | xargs) ./functional-runner.sh docker-compose.yml docker-compose.functional.yml",
+    "test:functional": "npm run docker:clean && ./functional-runner.sh docker-compose.yml docker-compose.functional.yml .env",
+    "test:circle": "./functional-runner.sh docker-compose.yml docker-compose.circle.yml .env",
     "db:create": "db-migrate db:create central_ledger $npm_package_config_db",
-    "db:psql": "docker run -it --net centralledger_back --rm postgres:9.3 sh -c 'exec psql -h postgres -p \"$POSTGRES_PORT_5432_TCP_PORT\" -U central_ledger'",
+    "db:psql": "docker run -it --net centralledger_back --rm postgres:9.4 sh -c 'exec psql -h postgres -p \"$POSTGRES_PORT_5432_TCP_PORT\" -U central_ledger'",
     "migrate": "db-migrate up $npm_package_config_db",
     "migrate:down": "db-migrate down $npm_package_config_db",
     "migrate:create": "db-migrate create $npm_package_config_db",
     "docker:stop": "docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.functional.yml stop",
-    "docker:rm": "docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.functional.yml rm",
+    "docker:rm": "docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.functional.yml rm -f -v",
     "docker:clean": "npm run docker:stop && npm run docker:rm"
   },
   "dependencies": {
