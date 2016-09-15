@@ -1,6 +1,7 @@
 const Eventric = require('eventric')
 const PostgresStore = require('../eventric/postgresStore')
 const Fulfillments = require('../cryptoConditions/fulfillments')
+const Events = require('./events')
 
 var initializedContext
 
@@ -33,7 +34,7 @@ function defineDomainEvents (context) {
         expires_at
       }
     },
-    
+
     TransferExecuted () {
       this.state = transferState.EXECUTED
     }
@@ -105,6 +106,12 @@ function addCommandHandlers (context) {
   })
 }
 
+function addEventListeners (context) {
+  context.subscribeToDomainEvent('TransferPrepared', domainEvent => {
+    Events.emitTransferPrepared(domainEvent.payload)
+  })
+}
+
 exports.getContext = () => {
   if (!initializedContext) {
     Eventric.setStore(PostgresStore.default, {})
@@ -113,6 +120,7 @@ exports.getContext = () => {
     defineDomainEvents(context)
     addAggregates(context)
     addCommandHandlers(context)
+    addEventListeners(context)
     initializedContext = context.initialize().then(() => context)
   }
 

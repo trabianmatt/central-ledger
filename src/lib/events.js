@@ -19,7 +19,9 @@ module.exports = {
     listen('transferFulfilled', callback)
   },
   emitTransferPrepared: function (transfer) {
-    publish('transferPrepared', transfer)
+    publish('transferPrepared', {
+      resource: transfer
+    })
   },
   emitTransferFulfilled: function (transfer) {
     publish('transferFulfilled', transfer)

@@ -10,7 +10,7 @@ Test('events', function (eventTest) {
       Events.onTransferPrepared(spy)
       var transfer = { id: 12 }
       Events.emitTransferPrepared(transfer)
-      t.ok(spy.calledWith(transfer))
+      t.ok(spy.calledWith({ resource: transfer }))
       t.end()
     })
 
