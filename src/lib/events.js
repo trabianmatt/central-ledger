@@ -15,15 +15,17 @@ module.exports = {
   onTransferPrepared: function (callback) {
     listen('transferPrepared', callback)
   },
-  onTransferFulfilled: function (callback) {
-    listen('transferFulfilled', callback)
+  onTransferExecuted: function (callback) {
+    listen('transferExecuted', callback)
   },
   emitTransferPrepared: function (transfer) {
     publish('transferPrepared', {
       resource: transfer
     })
   },
-  emitTransferFulfilled: function (transfer) {
-    publish('transferFulfilled', transfer)
+  emitTransferExecuted: function (transfer) {
+    publish('transferExecuted', {
+      resource: transfer
+    })
   }
 }

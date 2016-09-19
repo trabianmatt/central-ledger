@@ -15,7 +15,7 @@ Test('routes', function (routesTest) {
   routesTest.beforeEach(t => {
     sandbox = Sinon.sandbox.create()
     sandbox.stub(events, 'onTransferPrepared')
-    sandbox.stub(events, 'onTransferFulfilled')
+    sandbox.stub(events, 'onTransferExecuted')
     t.end()
   })
 
@@ -57,7 +57,7 @@ Test('routes', function (routesTest) {
     }
     var transfer = Any.simpleObject()
 
-    events.onTransferFulfilled.yields(transfer)
+    events.onTransferExecuted.yields(transfer)
 
     routes(serverStub)
 

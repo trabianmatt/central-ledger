@@ -110,6 +110,10 @@ function addEventListeners (context) {
   context.subscribeToDomainEvent('TransferPrepared', domainEvent => {
     Events.emitTransferPrepared(domainEvent.payload)
   })
+
+  context.subscribeToDomainEvent('TransferExecuted', domainEvent => {
+    Events.emitTransferExecuted(domainEvent.payload)
+  })
 }
 
 exports.getContext = () => {

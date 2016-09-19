@@ -8,7 +8,7 @@ function setupListeners (server) {
   Events.onTransferPrepared((msg) => {
     push(msg)
   })
-  Events.onTransferFulfilled((msg) => {
+  Events.onTransferExecuted((msg) => {
     push(msg)
   })
 }
