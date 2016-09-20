@@ -18,6 +18,16 @@ function addCommandHandlers (context) {
   context.addCommandHandlers(TransferCommands)
 }
 
+function addEventListeners (context) {
+  context.subscribeToDomainEvent('TransferPrepared', domainEvent => {
+    TransferEvents.emitTransferPrepared(domainEvent.payload)
+  })
+
+  context.subscribeToDomainEvent('TransferExecuted', domainEvent => {
+    TransferEvents.emitTransferExecuted(domainEvent.payload)
+  })
+}
+
 exports.getContext = () => {
   if (!initializedContext) {
     Eventric.setStore(PostgresStore.default, {})
@@ -26,6 +36,7 @@ exports.getContext = () => {
     defineDomainEvents(context)
     addAggregates(context)
     addCommandHandlers(context)
+    addEventListeners(context)
     initializedContext = context.initialize().then(() => {
       // Monkeypatch a private function exposed on the Transfer aggregate respository. This is a temporary
       // fix until https://github.com/efacilitation/eventric/issues/47 is resolved.
