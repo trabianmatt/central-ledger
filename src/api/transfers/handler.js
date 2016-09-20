@@ -21,7 +21,12 @@ exports.prepareTransfer = function (request, reply) {
 }
 
 exports.fulfillTransfer = function (request, reply) {
-  Model.fulfill(request.payload)
+  var fulfillment = {
+    id: request.params.id,
+    fulfillment: request.payload
+  }
+
+  Model.fulfill(fulfillment)
     .then(Handle.getResponse(reply, x => x))
     .catch(Handle.error(request, reply))
 }

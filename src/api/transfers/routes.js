@@ -21,7 +21,7 @@ module.exports = [{
           account: Joi.string().uri().required().description('Credit account of the transfer'),
           amount: Joi.number().required().description('Credit amount of the transfer')
         })).required().description('Credits of the transfer'),
-        execution_condition: Joi.string().trim().max(256).required().description('Execution condition of transfer'),
+        execution_condition: Joi.string().trim().max(65535).required().description('Execution condition of transfer'),
         expires_at: Joi.string().isoDate().required().description('When the transfer expires')
       }
     }

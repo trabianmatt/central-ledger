@@ -44,7 +44,7 @@ Test('transfer model', function (modelTest) {
           let commandArg1 = command.firstCall.args[0]
           let commandArg2 = command.firstCall.args[1]
           assert.equal(commandArg1, 'PrepareTransfer')
-          assert.equal(commandArg2.id, payload.id)
+          assert.equal(commandArg2.id, '3a2a1d9e-8640-4d2d-b06c-84f2cd613204')
           assert.equal(commandArg2.ledger, payload.ledger)
           assert.deepEqual(commandArg2.debits, payload.debits)
           assert.deepEqual(commandArg2.credits, payload.credits)
@@ -61,13 +61,14 @@ Test('transfer model', function (modelTest) {
     fulfillTest.test('send FulfillTransfer command', function (assert) {
       let command = Sinon.stub()
       let model = createModel(setupEventric({ command: command }))
-      let payload = 'cf:0:_v8'
+      let payload = { id: '3a2a1d9e-8640-4d2d-b06c-84f2cd613204', fulfillment: 'cf:0:_v8' }
       model.fulfill(payload)
         .then(() => {
           let commandArg1 = command.firstCall.args[0]
           let commandArg2 = command.firstCall.args[1]
           assert.equal(commandArg1, 'FulfillTransfer')
-          assert.equal(commandArg2.fulfillment, payload)
+          assert.equal(commandArg2.id, payload.id)
+          assert.equal(commandArg2.fulfillment, payload.fulfillment)
           assert.end()
         })
     })

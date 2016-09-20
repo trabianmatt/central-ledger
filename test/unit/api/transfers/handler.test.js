@@ -89,8 +89,7 @@ Test('transfer handler', function (handlerTest) {
           }
         ],
         execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
-        expires_at: '2015-06-16T00:00:01.000Z',
-        amount: '11.11'
+        expires_at: '2015-06-16T00:00:01.000Z'
       }
       let error = new Error()
       let model = {
@@ -110,23 +109,27 @@ Test('transfer handler', function (handlerTest) {
   })
 
   handlerTest.test('fulfillTransfer should', function (fulfillTransferTest) {
-    fulfillTransferTest.test('return fulfilled transfer', function (t) {
-      let payload = 'cf:0:_v8'
-      let executionConditionFufillment = payload
+    fulfillTransferTest.test('return fulfilled transfer', function (assert) {
+      let fulfillment = { id: '3a2a1d9e-8640-4d2d-b06c-84f2cd613204', fulfillment: 'cf:0:_v8' }
       let model = {
-        fulfill: Sinon.stub().returns(Promise.resolve(executionConditionFufillment))
+        fulfill: Sinon.stub().returns(Promise.resolve(fulfillment.fulfillment))
       }
 
       let reply = function (response) {
-        t.equal(response, executionConditionFufillment)
+        assert.equal(response, fulfillment.fulfillment)
         return {
           code: function (statusCode) {
-            t.equal(statusCode, 200)
-            t.end()
+            assert.equal(statusCode, 200)
+            assert.end()
           }
         }
       }
-      createHandler(model).fulfillTransfer(createRequest(payload), reply)
+
+      let request = {
+        payload: fulfillment.fulfillment,
+        params: { id: fulfillment.id }
+      }
+      createHandler(model).fulfillTransfer(request, reply)
     })
 
     fulfillTransferTest.end()

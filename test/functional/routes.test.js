@@ -113,3 +113,17 @@ Test('prepare a transfer', function (assert) {
       assert.end()
     })
 })
+
+Test('fulfill a transfer', function (assert) {
+  var fulfillment = 'cf:0:_v8'
+
+  Request.put('/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/fulfillment')
+    .set('Content-Type', 'text/html; charset=utf-8')
+    .send(fulfillment)
+    .expect('Content-Type', 'text/html; charset=utf-8')
+    .expect(200, function (err, res) {
+      if (err) assert.end(err)
+      assert.equal(res.text, fulfillment)
+      assert.end()
+    })
+})

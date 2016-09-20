@@ -2,11 +2,15 @@
 
 const Eventric = require('../../lib/eventric')
 
+function parseIdFor (transfer) {
+  return transfer.id.substr(transfer.id.lastIndexOf('/') + 1)
+}
+
 exports.prepare = (transfer) => {
   return Eventric.getContext()
   .then(context => {
     context.command('PrepareTransfer', {
-      id: transfer.id,
+      id: parseIdFor(transfer),
       ledger: transfer.ledger,
       debits: transfer.debits,
       credits: transfer.credits,
@@ -29,9 +33,10 @@ exports.fulfill = (fulfillment) => {
   return Eventric.getContext()
   .then(context => {
     context.command('FulfillTransfer', {
-      fulfillment
+      id: fulfillment.id,
+      fulfillment: fulfillment.fulfillment
     })
   }).then(() => {
-    return fulfillment
+    return fulfillment.fulfillment
   })
 }
