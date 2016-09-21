@@ -1,3 +1,16 @@
 .git
 .gitignore
-node_modules
+node_modules/
+test/
+coverage/
+.editorconfig
+.nvmrc
+circle.yml
+docker-compose.yml
+docker-compose.circle.yml
+docker-compose.dev.yml
+docker-compose.functional.yml
+Dockerfile
+functional-runner.sh
+README.md
+sonar-project.properties

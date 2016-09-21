@@ -2,7 +2,7 @@ FROM mhart/alpine-node:6.5.0
 
 WORKDIR /opt/central-ledger
 COPY . /opt/central-ledger
-RUN [ "npm", "install" ]
+RUN npm install --production
 
 EXPOSE 3000
 CMD npm run migrate && \
