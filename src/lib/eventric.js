@@ -1,4 +1,5 @@
 const Eventric = require('eventric')
+const Events = require('./events')
 const PostgresStore = require('../eventric/postgresStore')
 const Transfer = require('../eventric/transfer/transfer')
 const TransferEvents = require('../eventric/transfer/events')
@@ -20,11 +21,11 @@ function addCommandHandlers (context) {
 
 function addEventListeners (context) {
   context.subscribeToDomainEvent('TransferPrepared', domainEvent => {
-    TransferEvents.emitTransferPrepared(domainEvent.payload)
+    Events.emitTransferPrepared(domainEvent.payload)
   })
 
   context.subscribeToDomainEvent('TransferExecuted', domainEvent => {
-    TransferEvents.emitTransferExecuted(domainEvent.payload)
+    Events.emitTransferExecuted(domainEvent.payload)
   })
 }
 
