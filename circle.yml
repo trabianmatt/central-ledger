@@ -8,6 +8,7 @@ machine:
   environment:
     DOCKER_REPO: modusbox-level1-docker-release.jfrog.io
     DOCKER_IMAGE: $DOCKER_REPO/central-ledger
+    INTG_TEST_CMD: tape 'test/integration/**/*.test.js' | tap-xunit > ./test/results/tape-integration.xml
 
 dependencies:
   pre:
@@ -21,6 +22,7 @@ test:
   override:
     - set -o pipefail && npm -s run test:xunit > ./test/results/tape.xml
     - npm -s run test:coverage
+    - npm -s run test:integration
     - npm -s run test:circle
   post:
     - cp ./test/results/* $CIRCLE_TEST_REPORTS
