@@ -1,0 +1,67 @@
+{
+  "AWSEBDockerrunVersion": 2,
+  "authentication": {
+    "bucket": "<BUCKET>",
+    "key": "<DOCKER_CFG_KEY>"
+  },
+  "volumes": [
+    {
+      "name": "postgres-data",
+      "host": {
+        "sourcePath": "/var/lib/postgresql/data"
+      }
+    }
+  ],
+  "containerDefinitions": [
+    {
+      "name": "postgres",
+      "image": "postgres:9.4",
+      "essential": true,
+      "memory": 1000,
+      "portMappings": [
+        {
+          "hostPort": 5432,
+          "containerPort": 5432
+        }
+      ],
+      "environment": [
+        {
+          "name": "POSTGRES_USER",
+          "value": "<POSTGRES_USER>"
+        },
+        {
+          "name": "POSTGRES_PASSORD",
+          "value": "<POSTGRES_PASSWORD>"
+        }
+      ],
+      "mountPoints": [
+        {
+          "sourceVolume": "postgres-data",
+          "containerPath": "/var/lib/postgresql/data",
+          "readOnly": false
+        }
+      ]
+    },
+    {
+      "name": "<APP_NAME>",
+      "image": "<DOCKER_IMAGE>:<DOCKER_VERSION>",
+      "essential": true,
+      "memory": 1000,
+      "portMappings": [
+        {
+          "hostPort": 80,
+          "containerPort": 3000
+        }
+      ],
+      "environment": [
+        {
+          "name": "CLEDG_DATABASE_URI",
+          "value": "postgres://<POSTGRES_USER>:<POSTGRES_PASSWORD>@postgres:5432/central_ledger"
+        }
+      ],
+      "links": [
+        "postgres"
+      ]
+    }
+  ]
+}

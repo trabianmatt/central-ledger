@@ -7,14 +7,16 @@ machine:
     version: 6.5.0
   environment:
     DOCKER_REPO: modusbox-level1-docker-release.jfrog.io
-    DOCKER_IMAGE: $DOCKER_REPO/central-ledger
+    APP_NAME: central-ledger
+    DOCKER_IMAGE: $DOCKER_REPO/$APP_NAME
+    BUCKET: elasticbeanstalk-us-west-2-886403637725
+    EB_ENV: central-ledger-dev
     INTG_TEST_CMD: tape 'test/integration/**/*.test.js' | tap-xunit > ./test/results/tape-integration.xml
 
 dependencies:
   pre:
     - sudo pip install docker-compose
-    - docker build -t $DOCKER_IMAGE:$(git describe) .
-    - docker tag $DOCKER_IMAGE:$(git describe) $DOCKER_IMAGE:latest
+    - docker build -t $DOCKER_IMAGE .
 
 test:
   pre:
@@ -31,8 +33,6 @@ test:
 
 deployment:
   dev:
-    branch: [master]
+    tag: /v[0-9]+(\.[0-9]+)*/
     commands:
-      - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS $DOCKER_REPO
-      - docker push $DOCKER_IMAGE:$(git describe)
-      - docker push $DOCKER_IMAGE:latest
+      - ./.deploy/run.sh
