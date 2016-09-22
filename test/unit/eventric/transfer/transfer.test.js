@@ -5,10 +5,11 @@ const Test = require('tape')
 const Proxyquire = require('proxyquire')
 const TransferState = require('../../../../src/eventric/transfer/transferState')
 
-function createTransfer (cryptoConditions) {
+function createTransfer (cryptoConditions, cryptoFulfillments) {
   return Proxyquire('../../../../src/eventric/transfer/transfer',
     {
-      '../../cryptoConditions/fulfillments': cryptoConditions
+      '../../cryptoConditions/conditions': cryptoConditions,
+      '../../cryptoConditions/fulfillments': cryptoFulfillments
     }
   )
 }
@@ -16,7 +17,12 @@ function createTransfer (cryptoConditions) {
 Test('transfer', function (transferTest) {
   transferTest.test('create should', function (createTransferTest) {
     createTransferTest.test('emit TransferPrepared event', function (assert) {
-      let transfer = new (createTransfer({}))()
+      let cryptoConditions = {
+        validateCondition: Sinon.stub().returns(true)
+      }
+
+      let transfer = new (createTransfer(cryptoConditions, {}))()
+
       let emitDomainEvent = Sinon.stub()
       transfer.$emitDomainEvent = emitDomainEvent
 
@@ -51,6 +57,37 @@ Test('transfer', function (transferTest) {
       assert.end()
     })
 
+    createTransferTest.test('throw an exception if execution condition validation fails', function (assert) {
+      let cryptoConditions = {
+        validateCondition: Sinon.stub().throws()
+      }
+
+      let transfer = new (createTransfer(cryptoConditions, {}))()
+
+      let payload = {
+        ledger: 'http://usd-ledger.example/USD',
+        debits: [
+          {
+            account: 'http://usd-ledger.example/USD/accounts/alice',
+            amount: '50'
+          }
+        ],
+        credits: [
+          {
+            account: 'http://usd-ledger.example/USD/accounts/bob',
+            amount: '50'
+          }
+        ],
+        execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
+        expires_at: '2015-06-16T00:00:01.000Z'
+      }
+
+      assert.throws(
+        () => transfer.create(payload)
+      )
+      assert.end()
+    })
+
     createTransferTest.end()
   })
 
@@ -60,7 +97,7 @@ Test('transfer', function (transferTest) {
         validateConditionFulfillment: Sinon.stub().returns(true)
       }
 
-      let transfer = new (createTransfer(cryptoFulfillments))()
+      let transfer = new (createTransfer({}, cryptoFulfillments))()
       transfer.execution_condition = 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2'
       transfer.state = TransferState.PREPARED
 
@@ -81,7 +118,7 @@ Test('transfer', function (transferTest) {
         validateConditionFulfillment: Sinon.stub().returns(true)
       }
 
-      let transfer = new (createTransfer(cryptoFulfillments))()
+      let transfer = new (createTransfer({}, cryptoFulfillments))()
       transfer.execution_condition = 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2'
       transfer.state = null
 
@@ -100,7 +137,7 @@ Test('transfer', function (transferTest) {
       }
 
       let fulfillment = 'cf:0:_v8'
-      let transfer = new (createTransfer(cryptoFulfillments))()
+      let transfer = new (createTransfer({}, cryptoFulfillments))()
       transfer.state = TransferState.PREPARED
       transfer.execution_condition = 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2'
 

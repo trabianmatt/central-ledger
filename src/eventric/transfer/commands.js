@@ -2,7 +2,7 @@
 
 module.exports = {
   PrepareTransfer ({
-    id,
+      id,
       ledger,
       debits,
       credits,
@@ -16,18 +16,17 @@ module.exports = {
       execution_condition,
       expires_at
     })
-                        .then(
-                        transfer => {
-                          transfer.$setId(id)
-                          transfer.$save()
-                        })
+    .then(transfer => {
+      transfer.$setId(id)
+      transfer.$save()
+    })
   },
 
   FulfillTransfer ({
       id, fulfillment
     }) {
     return this.$aggregate.load('Transfer', id)
-      .then(function (transfer) {
+      .then(transfer => {
         transfer.fulfill({fulfillment})
         transfer.$save()
       })

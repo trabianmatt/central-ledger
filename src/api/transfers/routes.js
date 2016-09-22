@@ -10,6 +10,9 @@ module.exports = [{
     tags: tags,
     description: 'Prepare a transfer',
     validate: {
+      params: {
+        id: Joi.string().guid().required().description('Id of transfer to prepare')
+      },
       payload: {
         id: Joi.string().uri().required().description('Id of transfer'),
         ledger: Joi.string().uri().required().description('Ledger of transfer'),
@@ -35,6 +38,9 @@ module.exports = [{
     tags: tags,
     description: 'Fulfill a transfer',
     validate: {
+      params: {
+        id: Joi.string().guid().required().description('Id of transfer to fulfill')
+      },
       payload: Joi.string().trim().max(65535).required().description('Fulfillment of the execution condition')
     }
   }

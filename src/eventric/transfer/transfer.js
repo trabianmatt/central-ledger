@@ -1,5 +1,6 @@
 'use strict'
 
+const CryptoConditions = require('../../cryptoConditions/conditions')
 const CryptoFulfillments = require('../../cryptoConditions/fulfillments')
 const TransferState = require('./transferState')
 
@@ -11,6 +12,8 @@ class Transfer {
       execution_condition,
       expires_at
     }) {
+    CryptoConditions.validateCondition(execution_condition)
+
     return this.$emitDomainEvent('TransferPrepared', {
       ledger,
       debits,
