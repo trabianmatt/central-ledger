@@ -7,6 +7,7 @@ module.exports = [{
   path: '/subscriptions/{id}',
   handler: Handler.getSubscriptionById,
   config: {
+    id: 'subscription',
     tags: tags,
     description: 'Retrieve a subscription\'s details by id',
     validate: {

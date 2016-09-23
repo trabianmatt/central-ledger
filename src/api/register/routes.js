@@ -1,7 +1,7 @@
 const Handler = require('./handler')
 const Joi = require('joi')
 
-const tags = ['api', 'subscriptions']
+const tags = ['api', 'register']
 
 module.exports = [{
   method: 'POST',

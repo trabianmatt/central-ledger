@@ -7,6 +7,7 @@ module.exports = [{
   path: '/transfers/{id}',
   handler: Handler.prepareTransfer,
   config: {
+    id: 'transfer',
     tags: tags,
     description: 'Prepare a transfer',
     validate: {
@@ -35,6 +36,7 @@ module.exports = [{
   path: '/transfers/{id}/fulfillment',
   handler: Handler.fulfillTransfer,
   config: {
+    id: 'transfer_fulfillment',
     tags: tags,
     description: 'Fulfill a transfer',
     validate: {
