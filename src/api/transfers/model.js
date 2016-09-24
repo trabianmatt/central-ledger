@@ -9,7 +9,7 @@ function parseIdFor (transfer) {
 exports.prepare = (transfer) => {
   return Eventric.getContext()
   .then(context => {
-    context.command('PrepareTransfer', {
+    return context.command('PrepareTransfer', {
       id: parseIdFor(transfer),
       ledger: transfer.ledger,
       debits: transfer.debits,
@@ -17,7 +17,8 @@ exports.prepare = (transfer) => {
       execution_condition: transfer.execution_condition,
       expires_at: transfer.expires_at
     })
-  }).then(() => {
+  })
+  .then(() => {
     return {
       id: transfer.id,
       ledger: transfer.ledger,
@@ -32,7 +33,7 @@ exports.prepare = (transfer) => {
 exports.fulfill = (fulfillment) => {
   return Eventric.getContext()
   .then(context => {
-    context.command('FulfillTransfer', {
+    return context.command('FulfillTransfer', {
       id: fulfillment.id,
       fulfillment: fulfillment.fulfillment
     })

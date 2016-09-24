@@ -42,3 +42,10 @@ exports.notFound = (reply) => {
     return null
   }
 }
+
+exports.unprocessableEntity = (reply, message) => {
+  return (e) => {
+    reply(Boom.badData(message))
+    return null
+  }
+}

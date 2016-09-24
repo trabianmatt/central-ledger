@@ -72,7 +72,7 @@ Test('transfer handler', function (handlerTest) {
       createHandler(model).prepareTransfer(createRequest(payload), reply)
     })
 
-    prepareTransferTest.test('return error if model throws error on transfer creation', function (assert) {
+    prepareTransferTest.test('return error if transfer is already created', function (assert) {
       let payload = {
         id: 'https://central-ledger/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204',
         ledger: 'http://usd-ledger.example/USD',
@@ -91,13 +91,14 @@ Test('transfer handler', function (handlerTest) {
         execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
         expires_at: '2015-06-16T00:00:01.000Z'
       }
-      let error = new Error()
+      let error = new Error('')
+      error.originalErrorMessage = 'aggregate with id=3a2a1d9e-8640-4d2d-b06c-84f2cd613204 already created'
       let model = {
         prepare: function (data) { return Promise.reject(error) }
       }
 
       let reply = function (response) {
-        let boomError = Boom.wrap(error)
+        let boomError = Boom.badData("Can't re-prepare an existing transfer.")
         assert.deepEqual(response, boomError)
         assert.end()
       }
@@ -123,6 +124,48 @@ Test('transfer handler', function (handlerTest) {
             assert.end()
           }
         }
+      }
+
+      let request = {
+        payload: fulfillment.fulfillment,
+        params: { id: fulfillment.id }
+      }
+      createHandler(model).fulfillTransfer(request, reply)
+    })
+
+    fulfillTransferTest.test('return error if transfer is not prepared', function (assert) {
+      let fulfillment = { id: '3a2a1d9e-8640-4d2d-b06c-84f2cd613204', fulfillment: 'cf:0:_v8' }
+      let error = new Error('')
+      error.originalErrorMessage = 'transfer exists, but is not prepared'
+      let model = {
+        fulfill: function (data) { return Promise.reject(error) }
+      }
+
+      let reply = function (response) {
+        let boomError = Boom.badData("Can't execute a non-prepared transfer.")
+        assert.deepEqual(response, boomError)
+        assert.end()
+      }
+
+      let request = {
+        payload: fulfillment.fulfillment,
+        params: { id: fulfillment.id }
+      }
+      createHandler(model).fulfillTransfer(request, reply)
+    })
+
+    fulfillTransferTest.test('return error if transfer has no domain events', function (assert) {
+      let fulfillment = { id: '3a2a1d9e-8640-4d2d-b06c-84f2cd613204', fulfillment: 'cf:0:_v8' }
+      let error = new Error('')
+      error.originalErrorMessage = 'No domainEvents for aggregate of type Transfer'
+      let model = {
+        fulfill: function (data) { return Promise.reject(error) }
+      }
+
+      let reply = function (response) {
+        let boomError = Boom.notFound()
+        assert.deepEqual(response, boomError)
+        assert.end()
       }
 
       let request = {

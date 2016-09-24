@@ -16,10 +16,11 @@ module.exports = {
       execution_condition,
       expires_at
     })
-    .then(transfer => {
-      transfer.$setId(id)
-      transfer.$save()
-    })
+                        .then(
+                        transfer => {
+                          transfer.$setIdForCreation(id)
+                          return transfer.$save()
+                        })
   },
 
   FulfillTransfer ({
@@ -28,7 +29,7 @@ module.exports = {
     return this.$aggregate.load('Transfer', id)
       .then(transfer => {
         transfer.fulfill({fulfillment})
-        transfer.$save()
+        return transfer.$save()
       })
   }
 }

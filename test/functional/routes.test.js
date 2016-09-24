@@ -127,3 +127,51 @@ Test('fulfill a transfer', function (assert) {
       assert.end()
     })
 })
+
+Test('return error when preparing existing transfer', function (assert) {
+  var transfer = {
+    id: 'http://usd-ledger.example/USD/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204',
+    ledger: 'http://usd-ledger.example/USD',
+    debits: [{
+      account: 'http://usd-ledger.example/USD/accounts/alice',
+      amount: '50'
+    }],
+    credits: [{
+      account: 'http://usd-ledger.example/USD/accounts/bob',
+      amount: '50'
+    }],
+    execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
+    expires_at: '2015-06-16T00:00:01.000Z'
+  }
+
+  Request.put('/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204')
+    .send(transfer)
+    .expect(422, function (err, res) {
+      if (err) assert.end(err)
+      assert.end()
+    })
+})
+
+Test('return error when fulfilling non-existing transfer', function (assert) {
+  var fulfillment = 'cf:0:_v8'
+
+  Request.put('/transfers/dea49356-57ea-440e-b0f7-a3809ad5b4ad/fulfillment')
+    .set('Content-Type', 'text/html; charset=utf-8')
+    .send(fulfillment)
+    .expect(404, function (err, res) {
+      if (err) assert.end(err)
+      assert.end()
+    })
+})
+
+Test('return error when fulfilling already fulfilled transfer', function (assert) {
+  var fulfillment = 'cf:0:_v8'
+
+  Request.put('/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/fulfillment')
+    .set('Content-Type', 'text/html; charset=utf-8')
+    .send(fulfillment)
+    .expect(422, function (err, res) {
+      if (err) assert.end(err)
+      assert.end()
+    })
+})

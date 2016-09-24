@@ -45,8 +45,10 @@ exports.getContext = () => {
       // The version of eventric is pinned at 0.24.1 to prevent any changes to the behavior of this code.
       var _installSaveFunctionOnAggregateInstance = Object.getPrototypeOf(context._getAggregateRepository('Transfer'))._installSaveFunctionOnAggregateInstance
       var _installSaveFunctionOnAggregateInstanceWithId = function (aggregate) {
-        aggregate.instance.$setId = function (aggregateId) {
-          aggregate._newDomainEvents.forEach(function (item) { item.aggregate.id = aggregateId })
+        aggregate.instance.$setIdForCreation = function (aggregateId) {
+          var item = aggregate._newDomainEvents[0]
+          item.aggregate.id = aggregateId
+          item.ensureIsFirstDomainEvent = true
         }
 
         return _installSaveFunctionOnAggregateInstance.call(this, aggregate)

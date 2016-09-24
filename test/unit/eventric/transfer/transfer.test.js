@@ -126,7 +126,7 @@ Test('transfer', function (transferTest) {
 
       assert.throws(
         () => transfer.fulfill({ fulfillment }),
-        /transfer is not prepared/
+        /transfer exists, but is not prepared/
       )
       assert.end()
     })

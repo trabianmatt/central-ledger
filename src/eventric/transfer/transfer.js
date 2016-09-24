@@ -25,7 +25,7 @@ class Transfer {
 
   fulfill ({ fulfillment }) {
     if (this.state !== TransferState.PREPARED) {
-      throw new Error('transfer is not prepared')
+      throw new Error('transfer exists, but is not prepared')
     }
 
     CryptoFulfillments.validateConditionFulfillment(this.execution_condition, fulfillment)

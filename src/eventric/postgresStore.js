@@ -10,7 +10,7 @@ class PostgresStore {
               if (err) {
                 console.log(err)
               } else {
-                if (res[0].max === null) {
+                if (domainEvent.ensureIsFirstDomainEvent || res[0].max === null) {
                   return 1
                 } else {
                   return res[0].max + 1
@@ -59,7 +59,13 @@ class PostgresStore {
                 function (result) {
                   return self._toDomainEvent(result)
                 }
-                ))
+                ).catch(e => {
+                  if (e.message.includes('duplicate key value violates unique constraint') && sequenceNumber === 1) {
+                    throw Error(`aggregate with id=${domainEvent.aggregate.id} already created`)
+                  }
+
+                  throw e
+                }))
   }
 
   findDomainEventsByName (domainEventNames, callback) {
