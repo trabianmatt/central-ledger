@@ -1,6 +1,7 @@
 'use strict'
 
-const Request = require('supertest')('http://central-ledger:3000')
+let host = process.env.HOST_IP || 'localhost'
+let Request = require('supertest')('http://' + host + ':3000')
 const Test = require('tape')
 
 Test('return api documentation', function (assert) {
@@ -39,43 +40,50 @@ Test('post and get a subscription', function (assert) {
     })
 })
 
-Test('register a dfsp', function (assert) {
-  var registration = {
-    identifier: 'dfsp1',
-    name: 'The DFSP'
+Test('post and get an account', function (assert) {
+  var account = {
+    name: 'dfsp1'
   }
 
-  Request.post('/register')
-    .send(registration)
+  Request.post('/accounts')
+    .send(account)
     .expect('Content-Type', /json/)
-    .expect(201, function (err, res) {
+    .expect(201, (err, res) => {
       if (err) assert.end(err)
-      assert.equal(res.body.identifier, registration.identifier)
-      assert.equal(res.body.name, registration.name)
-      assert.notEqual(res.body.created, undefined)
-      assert.end()
+      var expectedCreated = res.body.created
+      assert.notEqual(expectedCreated, undefined)
+      assert.equal(res.body.name, account.name)
+      Request.get('/accounts/' + account.name)
+        .expect('Content-Type', /json/)
+        .expect(200, (err, getRes) => {
+          if (err) return assert.end(err)
+          assert.equal(account.name, getRes.body.name)
+          assert.equal(expectedCreated, getRes.body.created)
+          assert.equal(1000000.00, getRes.body.balance)
+          assert.equal(false, getRes.body.is_disabled)
+          assert.end()
+        })
     })
 })
 
-Test('ensure an identifier can only be registered once', function (assert) {
-  var registration = {
-    identifier: 'dfsp2',
-    name: 'The DFSP'
+Test('ensure a name can only be registered once', function (assert) {
+  var account = {
+    name: 'dfsp2'
   }
 
-  Request.post('/register')
-    .send(registration)
+  Request.post('/accounts')
+    .send(account)
     .expect('Content-Type', /json/)
     .expect(201, function (err, res) {
       if (err) assert.end(err)
-      Request.post('/register')
-        .send(registration)
+      Request.post('/accounts')
+        .send(account)
         .expect('Content-Type', /json/)
         .expect(400, function (err, res) {
           if (err) assert.end(err)
           assert.equal(res.body.statusCode, 400)
           assert.equal(res.body.error, 'Bad Request')
-          assert.equal(res.body.message, 'The identifier has already been registered')
+          assert.equal(res.body.message, 'The account has already been registered')
           assert.end()
         })
     })

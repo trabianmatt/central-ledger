@@ -1,21 +1,6 @@
 version: '2'
 services:
   central-ledger:
+    image: ${DOCKER_IMAGE}:latest
     environment:
      CLEDG_DATABASE_URI: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/central_ledger_functional"
-    networks:
-     - front
-     - back
-  functional:
-    build: ./test/functional
-    environment:
-      - FUNC_TEST_CMD=npm -s run test:xunit > /results/tape-functional.xml
-    depends_on:
-     - central-ledger
-    networks:
-     - front
-    volumes:
-      - ./test/results:/results
-networks:
-  front: {}
-  back: {}

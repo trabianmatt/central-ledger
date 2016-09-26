@@ -12,6 +12,7 @@ machine:
     BUCKET: elasticbeanstalk-us-west-2-886403637725
     EB_ENV: central-ledger-dev
     INTG_TEST_CMD: tape 'test/integration/**/*.test.js' | tap-xunit > ./test/results/tape-integration.xml
+    FUNC_TEST_CMD: tape 'test/functional/**/*.test.js' | tap-xunit > ./test/results/tape-functional.xml
 
 dependencies:
   pre:

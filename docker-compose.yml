@@ -2,13 +2,12 @@ version: '2'
 services:
   central-ledger:
     env_file: .env
-    build: .
     ports:
      - "3000:3000"
     depends_on:
      - postgres
     networks:
-     - back    
+     - back
   postgres:
     env_file: .env
     image: postgres:9.4

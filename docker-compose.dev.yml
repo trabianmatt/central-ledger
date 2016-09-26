@@ -1,5 +1,6 @@
 version: '2'
 services:
   central-ledger:
+    build: .
     environment:
      CLEDG_DATABASE_URI: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/central_ledger"

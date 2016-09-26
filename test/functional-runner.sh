@@ -1,6 +1,8 @@
 #!/bin/bash
 POSTGRES_USER=${POSTGRES_USER:-postgres}
 POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+LEDGER_HOST=${HOST_IP:-localhost}
+FUNC_TEST_CMD=${FUNC_TEST_CMD:-tape 'test/functional/**/*.test.js' | faucet}
 docker_compose_file=$1
 docker_functional_compose_file=$2
 env_file=$3
@@ -10,43 +12,36 @@ if [ $# -ne 3 ]; then
     exit 1
 fi
 
-is_psql_up() {
-    docker run --rm -i \
-    --net centralledger_back \
-    --entrypoint psql \
-    -e PGPASSWORD=$POSTGRES_PASSWORD \
-    "postgres:9.4" \
-    --host postgres \
-    --username $POSTGRES_USER \
-    --quiet \
-    -c '\l' > /dev/null 2>&1
-}
-
-is_central_ledger_up() {
-    docker run --rm -i \
-    --net centralledger_front \
-    --entrypoint curl \
-    "byrnedo/alpine-curl" \
-    --output /dev/null --silent --head --fail http://central-ledger:3000/documentation
-}
-
 psql() {
 	docker run --rm -i \
 		--net centralledger_back \
 		--entrypoint psql \
 		-e PGPASSWORD=$POSTGRES_PASSWORD \
 		"postgres:9.4" \
-        --host postgres \
+    --host postgres \
 		--username $POSTGRES_USER \
 		--quiet --no-align --tuples-only \
 		"$@"
+}
+
+is_psql_up() {
+    psql -c '\l' > /dev/null 2>&1
+}
+
+is_central_ledger_up() {
+    curl --output /dev/null --silent --head --fail http://${LEDGER_HOST}:3000/health
+}
+
+run_test_command()
+{
+  eval "$FUNC_TEST_CMD"
 }
 
 >&2 echo "Loading environment variables"
 source $env_file
 
 >&2 echo "Postgres is starting"
-docker-compose -f $docker_compose_file up -d postgres > /dev/null 2>&1
+docker-compose -f $docker_compose_file -f $docker_functional_compose_file up -d postgres > /dev/null 2>&1
 
 until is_psql_up; do
   >&2 echo "Postgres is unavailable - sleeping"
@@ -59,14 +54,17 @@ psql <<'EOSQL'
 	  CREATE DATABASE "central_ledger_functional";
 EOSQL
 
->&2 echo "Central-ledger is starting"
-docker-compose -f $docker_compose_file -f $docker_functional_compose_file up --build -d central-ledger > /dev/null 2>&1
+>&2 printf "Central-ledger is starting ..."
+docker-compose -f $docker_compose_file -f $docker_functional_compose_file up -d central-ledger > /dev/null 2>&1
 
 until is_central_ledger_up; do
-  >&2 echo "Central-ledger is unavailable - sleeping"
+  >&2 printf "."
   sleep 1
 done
 
+>&2 echo " done"
+
 >&2 echo "Functional tests are starting"
-docker-compose -f $docker_compose_file -f $docker_functional_compose_file build functional
-docker-compose -f $docker_compose_file -f $docker_functional_compose_file run functional
+set -o pipefail && run_test_command
+
+docker-compose -f $docker_compose_file -f $docker_functional_compose_file down --rmi local
