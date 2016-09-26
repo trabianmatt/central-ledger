@@ -5,10 +5,10 @@ const Proxyquire = require('proxyquire')
 Test('db', function (dbTest) {
   dbTest.test('connect should', function (connectTest) {
     connectTest.test('connect using config values', function (t) {
-      var fakeDb = {}
-      var connectStub = Sinon.stub().yields(null, fakeDb)
-      var config = { DATABASE_URI: 'some-data-uri' }
-      var db = Proxyquire('../../../src/lib/db', {
+      let fakeDb = {}
+      let connectStub = Sinon.stub().yields(null, fakeDb)
+      let config = { DATABASE_URI: 'some-data-uri' }
+      let db = Proxyquire('../../../src/lib/db', {
         'massive': { connect: connectStub },
         '../lib/config': config
       })

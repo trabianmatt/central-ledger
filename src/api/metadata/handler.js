@@ -1,5 +1,5 @@
-var extractUrls = (request) => {
-  var urls = {}
+let extractUrls = (request) => {
+  let urls = {}
   request.server.table()[0].table.filter(route => {
     return route.settings.id !== undefined &&
       Array.isArray(route.settings.tags) &&

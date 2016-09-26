@@ -15,7 +15,7 @@ Test('return api documentation', function (assert) {
 })
 
 Test('post and get a subscription', function (assert) {
-  var subscription = {
+  let subscription = {
     'url': 'http://localhost/blah',
     'secret': 'secret'
   }
@@ -25,9 +25,9 @@ Test('post and get a subscription', function (assert) {
     .expect('Content-Type', /json/)
     .expect(201, function (err, res) {
       if (err) assert.end(err)
-      var expectedId = res.body.id
-      var expectedUrl = res.body.url
-      var expectedCreated = res.body.created
+      let expectedId = res.body.id
+      let expectedUrl = res.body.url
+      let expectedCreated = res.body.created
       Request.get('/subscriptions/' + expectedId)
         .expect('Content-Type', /json/)
         .expect(200, function (err, res) {
@@ -90,15 +90,15 @@ Test('ensure a name can only be registered once', function (assert) {
 })
 
 Test('prepare a transfer', function (assert) {
-  var transfer = {
-    id: 'http://usd-ledger.example/USD/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204',
-    ledger: 'http://usd-ledger.example/USD',
+  let transfer = {
+    id: 'http://central-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204',
+    ledger: 'http://central-ledger.example',
     debits: [{
-      account: 'http://usd-ledger.example/USD/accounts/alice',
+      account: 'http://central-ledger.example/accounts/dfsp1',
       amount: '50'
     }],
     credits: [{
-      account: 'http://usd-ledger.example/USD/accounts/bob',
+      account: 'http://central-ledger.example/accounts/dfsp2',
       amount: '50'
     }],
     execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
@@ -123,7 +123,7 @@ Test('prepare a transfer', function (assert) {
 })
 
 Test('fulfill a transfer', function (assert) {
-  var fulfillment = 'cf:0:_v8'
+  let fulfillment = 'cf:0:_v8'
 
   Request.put('/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/fulfillment')
     .set('Content-Type', 'text/html; charset=utf-8')
@@ -137,15 +137,15 @@ Test('fulfill a transfer', function (assert) {
 })
 
 Test('return error when preparing existing transfer', function (assert) {
-  var transfer = {
-    id: 'http://usd-ledger.example/USD/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204',
-    ledger: 'http://usd-ledger.example/USD',
+  let transfer = {
+    id: 'http://central-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204',
+    ledger: 'http://central-ledger.example',
     debits: [{
-      account: 'http://usd-ledger.example/USD/accounts/alice',
+      account: 'http://central-ledger.example/accounts/dfsp1',
       amount: '50'
     }],
     credits: [{
-      account: 'http://usd-ledger.example/USD/accounts/bob',
+      account: 'http://central-ledger.example/accounts/dfsp2',
       amount: '50'
     }],
     execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
@@ -156,30 +156,33 @@ Test('return error when preparing existing transfer', function (assert) {
     .send(transfer)
     .expect(422, function (err, res) {
       if (err) assert.end(err)
+      assert.pass()
       assert.end()
     })
 })
 
 Test('return error when fulfilling non-existing transfer', function (assert) {
-  var fulfillment = 'cf:0:_v8'
+  let fulfillment = 'cf:0:_v8'
 
   Request.put('/transfers/dea49356-57ea-440e-b0f7-a3809ad5b4ad/fulfillment')
     .set('Content-Type', 'text/html; charset=utf-8')
     .send(fulfillment)
     .expect(404, function (err, res) {
       if (err) assert.end(err)
+      assert.pass()
       assert.end()
     })
 })
 
 Test('return error when fulfilling already fulfilled transfer', function (assert) {
-  var fulfillment = 'cf:0:_v8'
+  let fulfillment = 'cf:0:_v8'
 
   Request.put('/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/fulfillment')
     .set('Content-Type', 'text/html; charset=utf-8')
     .send(fulfillment)
     .expect(422, function (err, res) {
       if (err) assert.end(err)
+      assert.pass()
       assert.end()
     })
 })

@@ -28,6 +28,7 @@ Test('subscription model', function (modelTest) {
       model.getById(1)
         .then(() => {
           t.fail('Should have thrown error')
+          t.end()
         })
         .catch(err => {
           t.equal(err, error)
@@ -44,6 +45,7 @@ Test('subscription model', function (modelTest) {
       model.getById(1)
         .then(() => {
           t.fail('Should have thrown error')
+          t.end()
         })
         .catch(err => {
           t.equal(err, error)
@@ -59,13 +61,15 @@ Test('subscription model', function (modelTest) {
 
       model.getById(id)
         .then(d => {
+          let findOneAsyncArg = findOneAsync.firstCall.args[0]
           t.equal(d, subscription)
-          t.equal(findOneAsync.firstCall.args[0].subscriptionUuid, id)
-          t.equal(findOneAsync.firstCall.args[0].deleted, 0)
+          t.equal(findOneAsyncArg.subscriptionUuid, id)
+          t.equal(findOneAsyncArg.deleted, 0)
           t.end()
         })
         .catch(err => {
           t.fail(err)
+          t.end()
         })
     })
 
@@ -99,6 +103,7 @@ Test('subscription model', function (modelTest) {
         })
         .catch(err => {
           t.fail(err)
+          t.end()
         })
     })
 

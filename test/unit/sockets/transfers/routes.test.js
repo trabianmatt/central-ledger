@@ -25,7 +25,7 @@ Test('routes', function (routesTest) {
   })
 
   routesTest.test('setup server', function (serverTest) {
-    var serverStub = {
+    let serverStub = {
       subscription: Sinon.spy()
     }
 
@@ -36,11 +36,11 @@ Test('routes', function (routesTest) {
   })
 
   routesTest.test('setup transfer prepared listeners', function (serverTest) {
-    var serverStub = {
+    let serverStub = {
       subscription: Sinon.stub(),
       publish: Sinon.stub()
     }
-    var transfer = Any.simpleObject()
+    let transfer = Any.simpleObject()
 
     events.onTransferPrepared.yields(transfer)
 
@@ -51,11 +51,11 @@ Test('routes', function (routesTest) {
   })
 
   routesTest.test('setup transfer fulfilled listeners', function (serverTest) {
-    var serverStub = {
+    let serverStub = {
       subscription: Sinon.stub(),
       publish: Sinon.stub()
     }
-    var transfer = Any.simpleObject()
+    let transfer = Any.simpleObject()
 
     events.onTransferExecuted.yields(transfer)
 

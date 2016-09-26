@@ -4,8 +4,9 @@ const PostgresStore = require('../eventric/postgresStore')
 const Transfer = require('../eventric/transfer/transfer')
 const TransferEvents = require('../eventric/transfer/events')
 const TransferCommands = require('../eventric/transfer/commands')
+const TransferProjection = require('../eventric/transfer/projection')
 
-var initializedContext
+let initializedContext
 
 function defineDomainEvents (context) {
   context.defineDomainEvents(TransferEvents)
@@ -17,6 +18,10 @@ function addAggregates (context) {
 
 function addCommandHandlers (context) {
   context.addCommandHandlers(TransferCommands)
+}
+
+function addProjections (context) {
+  context.addProjection(TransferProjection)
 }
 
 function addEventListeners (context) {
@@ -32,21 +37,22 @@ function addEventListeners (context) {
 exports.getContext = () => {
   if (!initializedContext) {
     Eventric.setStore(PostgresStore.default, {})
-    var context = Eventric.context('Ledger')
+    let context = Eventric.context('Ledger')
 
     defineDomainEvents(context)
     addAggregates(context)
     addCommandHandlers(context)
+    addProjections(context)
     addEventListeners(context)
     initializedContext = context.initialize().then(() => {
       // Monkeypatch a private function exposed on the Transfer aggregate respository. This is a temporary
       // fix until https://github.com/efacilitation/eventric/issues/47 is resolved.
 
       // The version of eventric is pinned at 0.24.1 to prevent any changes to the behavior of this code.
-      var _installSaveFunctionOnAggregateInstance = Object.getPrototypeOf(context._getAggregateRepository('Transfer'))._installSaveFunctionOnAggregateInstance
-      var _installSaveFunctionOnAggregateInstanceWithId = function (aggregate) {
+      let _installSaveFunctionOnAggregateInstance = Object.getPrototypeOf(context._getAggregateRepository('Transfer'))._installSaveFunctionOnAggregateInstance
+      let _installSaveFunctionOnAggregateInstanceWithId = function (aggregate) {
         aggregate.instance.$setIdForCreation = function (aggregateId) {
-          var item = aggregate._newDomainEvents[0]
+          let item = aggregate._newDomainEvents[0]
           item.aggregate.id = aggregateId
           item.ensureIsFirstDomainEvent = true
         }

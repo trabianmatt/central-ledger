@@ -30,7 +30,6 @@ test:
   post:
     - cp ./test/results/* $CIRCLE_TEST_REPORTS
     - mv ./coverage $CIRCLE_ARTIFACTS
-    - npm run docker:stop
 
 deployment:
   dev:

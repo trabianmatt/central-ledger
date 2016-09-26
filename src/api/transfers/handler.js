@@ -3,7 +3,7 @@
 const Model = require('./model')
 const Handle = require('../../lib/handler')
 
-var buildResponseTransfer = (record) => {
+let buildResponseTransfer = (record) => {
   return {
     id: record.id,
     ledger: record.ledger,
@@ -37,7 +37,7 @@ exports.prepareTransfer = function (request, reply) {
 }
 
 exports.fulfillTransfer = function (request, reply) {
-  var fulfillment = {
+  let fulfillment = {
     id: request.params.id,
     fulfillment: request.payload
   }

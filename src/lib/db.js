@@ -2,14 +2,14 @@ const Massive = require('massive')
 const Config = require('../lib/config')
 const p = require('bluebird')
 
-var connection
+let connection
 
 function getConnection () {
   if (!connection) {
     connection = p.promisify(Massive.connect)({ connectionString: Config.DATABASE_URI }).then(db => {
       p.promisifyAll(db)
-      for (var prop in db) {
-        var dbProp = db[prop]
+      for (let prop in db) {
+        let dbProp = db[prop]
         if (dbProp instanceof Object && !(dbProp instanceof Array) && !(dbProp instanceof Function)) {
           p.promisifyAll(dbProp)
         }

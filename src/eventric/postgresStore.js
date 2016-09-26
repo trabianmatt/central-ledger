@@ -40,7 +40,7 @@ class PostgresStore {
   }
 
   saveDomainEvent (domainEvent) {
-    var self = this
+    let self = this
 
     return this._getNextSequenceNumber(domainEvent).then(sequenceNumber =>
             Db.connect()
@@ -69,7 +69,7 @@ class PostgresStore {
   }
 
   findDomainEventsByName (domainEventNames, callback) {
-    var self = this
+    let self = this
 
     if (!(domainEventNames instanceof Array)) {
       domainEventNames = [domainEventNames]
@@ -80,7 +80,7 @@ class PostgresStore {
   }
 
   findDomainEventsByAggregateId (aggregateIds, callback) {
-    var self = this
+    let self = this
 
     if (!(aggregateIds instanceof Array)) {
       aggregateIds = [aggregateIds]
@@ -91,7 +91,7 @@ class PostgresStore {
   }
 
   findDomainEventsByNameAndAggregateId (domainEventNames, aggregateIds, callback) {
-    var self = this
+    let self = this
 
     if (!(domainEventNames instanceof Array)) {
       domainEventNames = [domainEventNames]

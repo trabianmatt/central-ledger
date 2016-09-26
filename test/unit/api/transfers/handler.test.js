@@ -172,6 +172,7 @@ Test('transfer handler', function (handlerTest) {
         payload: fulfillment.fulfillment,
         params: { id: fulfillment.id }
       }
+
       createHandler(model).fulfillTransfer(request, reply)
     })
 
