@@ -23,9 +23,10 @@ module.exports = {
       resource: transfer
     })
   },
-  emitTransferExecuted: function (transfer) {
+  emitTransferExecuted: function (resource, relatedResources) {
     publish('transferExecuted', {
-      resource: transfer
+      resource: resource,
+      related_resources: relatedResources
     })
   }
 }

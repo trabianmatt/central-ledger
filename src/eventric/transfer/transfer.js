@@ -30,7 +30,15 @@ class Transfer {
 
     CryptoFulfillments.validateConditionFulfillment(this.execution_condition, fulfillment)
 
-    return this.$emitDomainEvent('TransferExecuted')
+    var payload = {}
+    payload.ledger = this.ledger
+    payload.debits = this.debits
+    payload.credits = this.credits
+    payload.execution_condition = this.execution_condition
+    payload.expires_at = this.expires_at
+    payload.fulfillment = fulfillment
+
+    return this.$emitDomainEvent('TransferExecuted', payload)
   }
 
   handleTransferPrepared (event) {

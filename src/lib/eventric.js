@@ -26,11 +26,27 @@ function addProjections (context) {
 
 function addEventListeners (context) {
   context.subscribeToDomainEvent('TransferPrepared', domainEvent => {
+    domainEvent.payload.id = domainEvent.aggregate.id
+    domainEvent.payload.state = 'prepared'
     Events.emitTransferPrepared(domainEvent.payload)
   })
 
   context.subscribeToDomainEvent('TransferExecuted', domainEvent => {
-    Events.emitTransferExecuted(domainEvent.payload)
+    let resource = {
+      id: domainEvent.aggregate.id,
+      state: 'executed',
+      ledger: domainEvent.payload.ledger,
+      debit: domainEvent.payload.debits,
+      credits: domainEvent.payload.credits,
+      execution_condition: domainEvent.payload.execution_condition,
+      expires_at: domainEvent.payload.expires_at
+    }
+
+    let relatedResources = {
+      execution_condition_fulfillment: domainEvent.payload.fulfillment
+    }
+
+    Events.emitTransferExecuted(resource, relatedResources)
   })
 }
 
