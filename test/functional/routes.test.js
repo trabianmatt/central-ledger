@@ -194,3 +194,17 @@ Test('return error when fulfilling already fulfilled transfer', function (assert
       assert.end()
     })
 })
+
+Test('reject a transfer', function (assert) {
+  let reason = 'rejection reason'
+
+  Request.put('/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/rejection')
+    .set('Content-Type', 'text/html; charset=utf-8')
+    .send(reason)
+    .expect('Content-Type', 'text/html; charset=utf-8')
+    .expect(200, function (err, res) {
+      if (err) assert.end(err)
+      assert.equal(res.text, reason)
+      assert.end()
+    })
+})

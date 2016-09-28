@@ -4,6 +4,7 @@ const Model = require('./model')
 const Validator = require('./validator')
 const Handle = require('../../lib/handler')
 const ValidationError = require('../../errors/validation-error')
+const P = require('bluebird')
 
 let buildResponseTransfer = (record) => {
   return {
@@ -59,4 +60,9 @@ exports.fulfillTransfer = function (request, reply) {
         Handle.notFound(reply)(e)
       } else { Handle.error(request, reply)(e) }
     })
+}
+
+exports.rejectTransfer = function (request, reply) {
+  let reason = request.payload
+  return P.resolve(reason).then(Handle.getResponse(reply, x => x))
 }

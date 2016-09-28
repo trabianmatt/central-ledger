@@ -195,5 +195,27 @@ Test('transfer handler', function (handlerTest) {
     fulfillTransferTest.end()
   })
 
+  handlerTest.test('reject transfer', rejectTransferTest => {
+    rejectTransferTest.test('should return 200', assert => {
+      let payload = 'error reason'
+      let request = {
+        params: { id: '3a2a1d9e-8640-4d2d-b06c-84f2cd613204' },
+        payload: payload
+      }
+      let reply = function (response) {
+        assert.equal(response, payload)
+        return {
+          code: statusCode => {
+            assert.equal(200, statusCode)
+            assert.end()
+          }
+        }
+      }
+      Handler.rejectTransfer(request, reply)
+    })
+
+    rejectTransferTest.end()
+  })
+
   handlerTest.end()
 })

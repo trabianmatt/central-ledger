@@ -46,4 +46,20 @@ module.exports = [{
       payload: Joi.string().trim().max(65535).required().description('Fulfillment of the execution condition')
     }
   }
+},
+{
+  method: 'PUT',
+  path: '/transfers/{id}/rejection',
+  handler: Handler.rejectTransfer,
+  config: {
+    id: 'transfer_rejection',
+    tags: tags,
+    description: 'Reject a transfer',
+    validate: {
+      params: {
+        id: Joi.string().guid().required().description('Id of transfer to reject')
+      },
+      payload: Joi.string().trim().max(65535).required().description('Rejection reason')
+    }
+  }
 }]
