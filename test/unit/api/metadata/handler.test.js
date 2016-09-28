@@ -63,7 +63,8 @@ Test('metadata handler', (handlerTest) => {
     })
 
     metadataTest.test('return default values', t => {
-      let hostName = 'http://example-hostname'
+      let host = 'example-hostname'
+      let hostName = `http://${host}`
       Config.HOSTNAME = hostName
       let reply = response => {
         t.equal(response.currency_code, null)
@@ -71,6 +72,7 @@ Test('metadata handler', (handlerTest) => {
         t.equal(response.ledger, hostName)
         t.equal(response.precision, 10)
         t.equal(response.scale, 2)
+        t.equal(response.urls['account_transfers'], `ws://${host}/transfers/updates`)
         return { code: statusCode => { t.end() } }
       }
 
@@ -99,7 +101,7 @@ Test('metadata handler', (handlerTest) => {
       ])
 
       let reply = response => {
-        t.equal(Object.keys(response.urls).length, 1)
+        t.equal(Object.keys(response.urls).length, 2)
         t.equal(response.urls['expected'], '/expected')
         return { code: statusCode => { t.end() } }
       }
@@ -115,7 +117,7 @@ Test('metadata handler', (handlerTest) => {
       ])
 
       let reply = response => {
-        t.equal(Object.keys(response.urls).length, 1)
+        t.equal(Object.keys(response.urls).length, 2)
         t.equal(response.urls['tagged'], '/tagged')
         t.notOk(response.urls['nottagged'])
         return { code: statusCode => { t.end() } }

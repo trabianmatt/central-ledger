@@ -9,6 +9,8 @@ let extractUrls = (request) => {
   }).forEach(route => {
     urls[route.settings.id] = `${Config.HOSTNAME}${route.path.replace(/\{/g, ':').replace(/\}/g, '')}`
   })
+  let host = Config.HOSTNAME.replace(/^https?:\/\//, '')
+  urls['account_transfers'] = `ws://${host}/transfers/updates`
   return urls
 }
 
