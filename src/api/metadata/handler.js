@@ -1,3 +1,5 @@
+const Config = require('../../lib/config')
+
 let extractUrls = (request) => {
   let urls = {}
   request.server.table()[0].table.filter(route => {
@@ -5,7 +7,7 @@ let extractUrls = (request) => {
       Array.isArray(route.settings.tags) &&
       route.settings.tags.indexOf('api') >= 0
   }).forEach(route => {
-    urls[route.settings.id] = route.path.replace(/\{/g, ':').replace(/\}/g, '')
+    urls[route.settings.id] = `${Config.HOSTNAME}${route.path.replace(/\{/g, ':').replace(/\}/g, '')}`
   })
   return urls
 }
@@ -18,6 +20,7 @@ exports.metadata = (request, reply) => {
   reply({
     currency_code: null,
     currency_symbol: null,
+    ledger: Config.HOSTNAME,
     urls: extractUrls(request),
     precision: 10,
     scale: 2

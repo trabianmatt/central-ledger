@@ -1,16 +1,19 @@
 'use strict'
 
-const Model = require('./model')
+const Model = require('../../models/accounts')
 const Handle = require('../../lib/handler')
+const Config = require('../../lib/config')
 const RecordExistsError = require('../../errors/record-exists-error')
 const NotFoundError = require('../../errors/not-found-error')
 
 function buildResponse (record) {
   return {
+    id: `${Config.HOSTNAME}/accounts/${record.name}`,
     name: record.name,
     created: record.createdDate,
     balance: 1000000.00,
-    is_disabled: false
+    is_disabled: false,
+    ledger: Config.HOSTNAME
   }
 }
 

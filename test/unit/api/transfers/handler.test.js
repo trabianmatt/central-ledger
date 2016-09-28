@@ -1,20 +1,17 @@
 'use strict'
 
-const Proxyquire = require('proxyquire')
 const Sinon = require('sinon')
-const Test = require('tape')
+const Test = require('tapes')(require('tape'))
 const Boom = require('boom')
-
-function createHandler (model) {
-  return Proxyquire('../../../../src/api/transfers/handler', {
-    './model': model
-  })
-}
+const Validator = require('../../../../src/api/transfers/validator')
+const ValidationError = require('../../../../src/errors/validation-error')
+const P = require('bluebird')
+const Handler = require('../../../../src/api/transfers/handler')
+const Model = require('../../../../src/api/transfers/model')
 
 function createRequest (payload) {
-  let requestPayload = payload || {}
   return {
-    payload: requestPayload,
+    payload: payload || {},
     server: {
       log: function () { }
     }
@@ -22,6 +19,19 @@ function createRequest (payload) {
 }
 
 Test('transfer handler', function (handlerTest) {
+  let sandbox
+
+  handlerTest.beforeEach(t => {
+    sandbox = Sinon.sandbox.create()
+    sandbox.stub(Validator, 'validate', a => P.resolve(a))
+    t.end()
+  })
+
+  handlerTest.afterEach(t => {
+    sandbox.restore()
+    t.end()
+  })
+
   handlerTest.test('prepareTransfer should', function (prepareTransferTest) {
     prepareTransferTest.test('return prepared transfer', function (assert) {
       let payload = {
@@ -50,9 +60,8 @@ Test('transfer handler', function (handlerTest) {
         execution_condition: payload.execution_condition,
         expires_at: payload.expires_at
       }
-      let model = {
-        prepare: Sinon.stub().withArgs(payload).returns(Promise.resolve(transfer))
-      }
+      let modelStub = sandbox.stub(Model, 'prepare')
+      modelStub.returns(Promise.resolve(transfer))
 
       let reply = function (response) {
         assert.equal(response.id, transfer.id)
@@ -69,7 +78,22 @@ Test('transfer handler', function (handlerTest) {
         }
       }
 
-      createHandler(model).prepareTransfer(createRequest(payload), reply)
+      Handler.prepareTransfer(createRequest(payload), reply)
+    })
+
+    prepareTransferTest.test('return error if transfer not validated', function (assert) {
+      let payload = {}
+      let errorMessage = 'Error message'
+      sandbox.restore()
+      sandbox.stub(Validator, 'validate').returns(P.reject(new ValidationError(errorMessage)))
+
+      let reply = response => {
+        let boomError = Boom.badData(errorMessage)
+        assert.deepEqual(response, boomError)
+        assert.end()
+      }
+
+      Handler.prepareTransfer(createRequest(payload), reply)
     })
 
     prepareTransferTest.test('return error if transfer is already created', function (assert) {
@@ -93,9 +117,7 @@ Test('transfer handler', function (handlerTest) {
       }
       let error = new Error('')
       error.originalErrorMessage = 'aggregate with id=3a2a1d9e-8640-4d2d-b06c-84f2cd613204 already created'
-      let model = {
-        prepare: function (data) { return Promise.reject(error) }
-      }
+      sandbox.stub(Model, 'prepare').returns(Promise.reject(error))
 
       let reply = function (response) {
         let boomError = Boom.badData("Can't re-prepare an existing transfer.")
@@ -103,7 +125,7 @@ Test('transfer handler', function (handlerTest) {
         assert.end()
       }
 
-      createHandler(model).prepareTransfer(createRequest(payload), reply)
+      Handler.prepareTransfer(createRequest(payload), reply)
     })
 
     prepareTransferTest.end()
@@ -112,9 +134,7 @@ Test('transfer handler', function (handlerTest) {
   handlerTest.test('fulfillTransfer should', function (fulfillTransferTest) {
     fulfillTransferTest.test('return fulfilled transfer', function (assert) {
       let fulfillment = { id: '3a2a1d9e-8640-4d2d-b06c-84f2cd613204', fulfillment: 'cf:0:_v8' }
-      let model = {
-        fulfill: Sinon.stub().returns(Promise.resolve(fulfillment.fulfillment))
-      }
+      sandbox.stub(Model, 'fulfill').returns(Promise.resolve(fulfillment.fulfillment))
 
       let reply = function (response) {
         assert.equal(response, fulfillment.fulfillment)
@@ -130,16 +150,14 @@ Test('transfer handler', function (handlerTest) {
         payload: fulfillment.fulfillment,
         params: { id: fulfillment.id }
       }
-      createHandler(model).fulfillTransfer(request, reply)
+      Handler.fulfillTransfer(request, reply)
     })
 
     fulfillTransferTest.test('return error if transfer is not prepared', function (assert) {
       let fulfillment = { id: '3a2a1d9e-8640-4d2d-b06c-84f2cd613204', fulfillment: 'cf:0:_v8' }
       let error = new Error('')
       error.originalErrorMessage = 'transfer exists, but is not prepared'
-      let model = {
-        fulfill: function (data) { return Promise.reject(error) }
-      }
+      sandbox.stub(Model, 'fulfill').returns(Promise.reject(error))
 
       let reply = function (response) {
         let boomError = Boom.badData("Can't execute a non-prepared transfer.")
@@ -151,16 +169,14 @@ Test('transfer handler', function (handlerTest) {
         payload: fulfillment.fulfillment,
         params: { id: fulfillment.id }
       }
-      createHandler(model).fulfillTransfer(request, reply)
+      Handler.fulfillTransfer(request, reply)
     })
 
     fulfillTransferTest.test('return error if transfer has no domain events', function (assert) {
       let fulfillment = { id: '3a2a1d9e-8640-4d2d-b06c-84f2cd613204', fulfillment: 'cf:0:_v8' }
       let error = new Error('')
       error.originalErrorMessage = 'No domainEvents for aggregate of type Transfer'
-      let model = {
-        fulfill: function (data) { return Promise.reject(error) }
-      }
+      sandbox.stub(Model, 'fulfill').returns(Promise.reject(error))
 
       let reply = function (response) {
         let boomError = Boom.notFound()
@@ -173,7 +189,7 @@ Test('transfer handler', function (handlerTest) {
         params: { id: fulfillment.id }
       }
 
-      createHandler(model).fulfillTransfer(request, reply)
+      Handler.fulfillTransfer(request, reply)
     })
 
     fulfillTransferTest.end()

@@ -1,7 +1,8 @@
 'use strict'
 
+const Test = require('tapes')(require('tape'))
+const Config = require('../../../../src/lib/config')
 const Handler = require('../../../../src/api/metadata/handler')
-const Test = require('tape')
 const apiTags = ['api']
 
 function createRequest (routes) {
@@ -17,6 +18,19 @@ function createRequest (routes) {
 }
 
 Test('metadata handler', (handlerTest) => {
+  let originalHostName
+
+  handlerTest.beforeEach(t => {
+    originalHostName = Config.HOSTNAME
+    Config.HOSTNAME = ''
+    t.end()
+  })
+
+  handlerTest.afterEach(t => {
+    Config.HOSTNAME = originalHostName
+    t.end()
+  })
+
   handlerTest.test('health should', (healthTest) => {
     healthTest.test('return status ok', (assert) => {
       let reply = function (response) {
@@ -49,9 +63,12 @@ Test('metadata handler', (handlerTest) => {
     })
 
     metadataTest.test('return default values', t => {
+      let hostName = 'http://example-hostname'
+      Config.HOSTNAME = hostName
       let reply = response => {
         t.equal(response.currency_code, null)
         t.equal(response.currency_symbol, null)
+        t.equal(response.ledger, hostName)
         t.equal(response.precision, 10)
         t.equal(response.scale, 2)
         return { code: statusCode => { t.end() } }
@@ -60,13 +77,15 @@ Test('metadata handler', (handlerTest) => {
       Handler.metadata(createRequest(), reply)
     })
 
-    metadataTest.test('return urls from request.server', t => {
+    metadataTest.test('return urls from request.server and append hostname', t => {
+      let hostName = 'some-host-name'
+      Config.HOSTNAME = hostName
       let request = createRequest([
-        { settings: { id: 'first_route', tags: apiTags }, path: '/' }
+        { settings: { id: 'first_route', tags: apiTags }, path: '/first' }
       ])
 
       let reply = response => {
-        t.equal(response.urls['first_route'], '/')
+        t.equal(response.urls['first_route'], `${hostName}/first`)
         return { code: statusCode => { t.end() } }
       }
 

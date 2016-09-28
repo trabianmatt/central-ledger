@@ -2,7 +2,7 @@
 POSTGRES_USER=${POSTGRES_USER:-postgres}
 POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
 LEDGER_HOST=${HOST_IP:-localhost}
-FUNC_TEST_CMD=${FUNC_TEST_CMD:-tape 'test/functional/**/*.test.js' | faucet}
+FUNC_TEST_CMD=${FUNC_TEST_CMD:-tape \'test/functional/**/*.test.js\' | faucet}
 docker_compose_file=$1
 docker_functional_compose_file=$2
 env_file=$3

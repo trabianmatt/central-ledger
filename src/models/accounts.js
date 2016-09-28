@@ -1,6 +1,6 @@
 'use strict'
 
-const Db = require('../../lib/db')
+const Db = require('../lib/db')
 
 exports.getByName = name => {
   return Db.connect().then(db => db.accounts.findOneAsync({ name: name }))

@@ -1,7 +1,9 @@
 'use strict'
 
 const Model = require('./model')
+const Validator = require('./validator')
 const Handle = require('../../lib/handler')
+const ValidationError = require('../../errors/validation-error')
 
 let buildResponseTransfer = (record) => {
   return {
@@ -19,7 +21,8 @@ function UnpreparedTransferError (e) {
 }
 
 function AlreadyCreatedError (e) {
-  return e.originalErrorMessage.includes('already created')
+  return e.originalErrorMessage &&
+    e.originalErrorMessage.includes('already created')
 }
 
 function NotFoundError (e) {
@@ -27,12 +30,17 @@ function NotFoundError (e) {
 }
 
 exports.prepareTransfer = function (request, reply) {
-  return Model.prepare(request.payload)
+  return Validator.validate(request.payload)
+    .then(Model.prepare)
     .then(Handle.createResponse(reply, buildResponseTransfer))
     .catch(e => {
-      if (AlreadyCreatedError(e)) {
+      if (e instanceof ValidationError) {
+        Handle.unprocessableEntity(reply, e.message)(e)
+      } else if (AlreadyCreatedError(e)) {
         Handle.unprocessableEntity(reply, "Can't re-prepare an existing transfer.")(e)
-      } else { Handle.error(request, reply)(e) }
+      } else {
+        Handle.error(request, reply)(e)
+      }
     })
 }
 

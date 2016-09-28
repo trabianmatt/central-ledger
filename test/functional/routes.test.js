@@ -61,6 +61,7 @@ Test('post and get an account', function (assert) {
           assert.equal(expectedCreated, getRes.body.created)
           assert.equal(1000000.00, getRes.body.balance)
           assert.equal(false, getRes.body.is_disabled)
+          assert.equal('http://central-ledger', getRes.body.ledger)
           assert.end()
         })
     })
@@ -90,36 +91,43 @@ Test('ensure a name can only be registered once', function (assert) {
 })
 
 Test('prepare a transfer', function (assert) {
-  let transfer = {
-    id: 'http://central-ledger.example/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204',
-    ledger: 'http://central-ledger.example',
-    debits: [{
-      account: 'http://central-ledger.example/accounts/dfsp1',
-      amount: '50'
-    }],
-    credits: [{
-      account: 'http://central-ledger.example/accounts/dfsp2',
-      amount: '50'
-    }],
-    execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
-    expires_at: '2015-06-16T00:00:01.000Z'
-  }
+  var account1 = { name: 'account1' }
+  var account2 = { name: 'account2' }
 
-  Request.put('/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204')
-    .send(transfer)
-    .expect('Content-Type', /json/)
-    .expect(201, function (err, res) {
-      if (err) assert.end(err)
-      assert.equal(res.body.id, transfer.id)
-      assert.equal(res.body.ledger, transfer.ledger)
-      assert.equal(res.body.debits[0].account, transfer.debits[0].account)
-      assert.equal(res.body.debits[0].amount, parseInt(transfer.debits[0].amount))
-      assert.equal(res.body.credits[0].account, transfer.credits[0].account)
-      assert.equal(res.body.credits[0].amount, parseInt(transfer.credits[0].amount))
-      assert.equal(res.body.execution_condition, transfer.execution_condition)
-      assert.equal(res.body.expires_at, transfer.expires_at)
-      assert.end()
+  Request.post('/accounts').send(account1).then(() => {
+    Request.post('/accounts').send(account2).then(() => {
+      let transfer = {
+        id: 'http://central-ledger/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204',
+        ledger: 'http://central-ledger',
+        debits: [{
+          account: `http://central-ledger/accounts/${account1.name}`,
+          amount: '50'
+        }],
+        credits: [{
+          account: `http://central-ledger/accounts/${account2.name}`,
+          amount: '50'
+        }],
+        execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
+        expires_at: '2015-06-16T00:00:01.000Z'
+      }
+
+      Request.put('/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204')
+        .send(transfer)
+        .expect('Content-Type', /json/)
+        .expect(201, function (err, res) {
+          if (err) assert.end(err)
+          assert.equal(res.body.id, transfer.id)
+          assert.equal(res.body.ledger, transfer.ledger)
+          assert.equal(res.body.debits[0].account, transfer.debits[0].account)
+          assert.equal(res.body.debits[0].amount, parseInt(transfer.debits[0].amount))
+          assert.equal(res.body.credits[0].account, transfer.credits[0].account)
+          assert.equal(res.body.credits[0].amount, parseInt(transfer.credits[0].amount))
+          assert.equal(res.body.execution_condition, transfer.execution_condition)
+          assert.equal(res.body.expires_at, transfer.expires_at)
+          assert.end()
+        })
     })
+  })
 })
 
 Test('fulfill a transfer', function (assert) {

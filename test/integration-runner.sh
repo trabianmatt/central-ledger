@@ -2,7 +2,7 @@
 POSTGRES_USER=${POSTGRES_USER:-postgres}
 POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
 POSTGRES_HOST=${HOST_IP:-localhost}
-INTG_TEST_CMD=${INTG_TEST_CMD:-tape 'test/integration/**/*.test.js' | faucet}
+INTG_TEST_CMD=${INTG_TEST_CMD:-tape \'test/integration/**/*.test.js\' | faucet}
 env_file=$1
 
 if [ $# -ne 1 ]; then

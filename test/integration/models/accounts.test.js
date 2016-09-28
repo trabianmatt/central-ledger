@@ -1,7 +1,7 @@
 'use strict'
 
 const Test = require('tape')
-const Model = require('../../../../src/api/accounts/model')
+const Model = require('../../../src/models/accounts')
 
 Test('accounts model', function (modelTest) {
   modelTest.test('create should', function (createTest) {

@@ -1,30 +1,32 @@
 'use strict'
 
-const Test = require('tape')
-const Proxyquire = require('proxyquire')
+const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
-
-function createModel (db) {
-  return Proxyquire('../../../../src/api/accounts/model', {
-    '../../lib/db': db
-  })
-}
-
-function setupAccountsDb (accounts) {
-  var db = { accounts: accounts }
-  return {
-    connect: () => Promise.resolve(db)
-  }
-}
+const Model = require('../../../src/models/accounts')
+const Db = require('../../../src/lib/db')
 
 Test('accounts model', function (modelTest) {
+  let sandbox
+
+  function setupAccountsDb (accounts) {
+    sandbox.stub(Db, 'connect').returns(Promise.resolve({ accounts: accounts }))
+  }
+
+  modelTest.beforeEach((t) => {
+    sandbox = Sinon.sandbox.create()
+    t.end()
+  })
+
+  modelTest.afterEach((t) => {
+    sandbox.restore()
+    t.end()
+  })
+
   modelTest.test('getByName should', function (getByName) {
     getByName.test('return exception if db.connect throws', function (assert) {
       let error = new Error()
-      let db = { connect: () => Promise.reject(error) }
-      var model = createModel(db)
-
-      model.getByName('dfsp1')
+      sandbox.stub(Db, 'connect').returns(Promise.reject(error))
+      Model.getByName('dfsp1')
         .then(() => {
           assert.fail('Should have thrown error')
         })
@@ -37,10 +39,9 @@ Test('accounts model', function (modelTest) {
     getByName.test('return exception if db.findOneAsync throws', function (assert) {
       let error = new Error()
       let findOneAsync = function () { return Promise.reject(error) }
-      let db = setupAccountsDb({ findOneAsync: findOneAsync })
-      let model = createModel(db)
+      setupAccountsDb({ findOneAsync: findOneAsync })
 
-      model.getByName('dfsp1')
+      Model.getByName('dfsp1')
         .then(() => {
           assert.fail('Should have thrown error')
         })
@@ -54,9 +55,8 @@ Test('accounts model', function (modelTest) {
       let name = 'dfsp1'
       let account = { name: name }
       let findOneAsync = Sinon.stub().returns(Promise.resolve(account))
-      let model = createModel(setupAccountsDb({ findOneAsync: findOneAsync }))
-
-      model.getByName(name)
+      setupAccountsDb({ findOneAsync: findOneAsync })
+      Model.getByName(name)
         .then(r => {
           assert.equal(r, account)
           assert.equal(findOneAsync.firstCall.args[0].name, name)
@@ -73,9 +73,9 @@ Test('accounts model', function (modelTest) {
   modelTest.test('create should', function (createTest) {
     createTest.test('save payload as new object', function (assert) {
       let saveAsync = Sinon.stub()
-      let model = createModel(setupAccountsDb({ saveAsync: saveAsync }))
+      setupAccountsDb({ saveAsync: saveAsync })
       let payload = { name: 'dfsp1' }
-      model.create(payload)
+      Model.create(payload)
         .then(() => {
           let saveAsyncArg = saveAsync.firstCall.args[0]
           assert.notEqual(saveAsyncArg, payload)
@@ -87,8 +87,8 @@ Test('accounts model', function (modelTest) {
     createTest.test('return newly created account', function (t) {
       let newAccount = { accountId: 1 }
       let saveAsync = Sinon.stub().returns(newAccount)
-      let model = createModel(setupAccountsDb({ saveAsync: saveAsync }))
-      model.create({})
+      setupAccountsDb({ saveAsync: saveAsync })
+      Model.create({})
         .then(s => {
           t.equal(s, newAccount)
           t.end()
