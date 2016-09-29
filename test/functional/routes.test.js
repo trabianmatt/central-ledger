@@ -101,11 +101,19 @@ Test('prepare a transfer', function (assert) {
         ledger: 'http://central-ledger',
         debits: [{
           account: `http://central-ledger/accounts/${account1.name}`,
-          amount: '50'
+          amount: '50',
+          memo: {
+            interledger: 'blah',
+            path: 'blah'
+          }
         }],
         credits: [{
           account: `http://central-ledger/accounts/${account2.name}`,
-          amount: '50'
+          amount: '50',
+          memo: {
+            interledger: 'blah',
+            path: 'blah'
+          }
         }],
         execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
         expires_at: '2015-06-16T00:00:01.000Z'
