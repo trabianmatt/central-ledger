@@ -5,6 +5,55 @@ const Moment = require('moment')
 const Db = require('../../../../src/lib/db')
 const Model = require('../../../../src/api/transfers/model')
 
+let transferPreparedEvent = {
+  id: 1,
+  name: 'TransferPrepared',
+  payload: {
+    ledger: 'http://central-ledger.example',
+    debits: [{
+      account: 'http://central-ledger.example/accounts/dfsp1',
+      amount: '50'
+    }],
+    credits: [{
+      account: 'http://central-ledger.example/accounts/dfsp2',
+      amount: '50'
+    }],
+    execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
+    expires_at: '2015-06-16T00:00:01.000Z'
+  },
+  aggregate: {
+    id: '1d4f2a70-e0d6-42dc-9efb-6d23060ccd6f',
+    name: 'Transfer'
+  },
+  context: 'Ledger',
+  timestamp: 1474471273588
+}
+
+let transferExecutedEvent = {
+  id: 2,
+  name: 'TransferExecuted',
+  payload: {
+    ledger: 'http://central-ledger.example',
+    debits: [{
+      account: 'http://central-ledger.example/accounts/dfsp1',
+      amount: '50'
+    }],
+    credits: [{
+      account: 'http://central-ledger.example/accounts/dfsp2',
+      amount: '50'
+    }],
+    execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
+    expires_at: '2015-06-16T00:00:01.000Z',
+    fulfillment: 'cf:0:_v8'
+  },
+  aggregate: {
+    id: '1d4f2a70-e0d6-42dc-9efb-6d23060ccd6f',
+    name: 'Transfer'
+  },
+  context: 'Ledger',
+  timestamp: 1474471284081
+}
+
 Test('transfer model', function (modelTest) {
   modelTest.test('prepare should', function (prepareTest) {
     let transfer = {
@@ -58,31 +107,6 @@ Test('transfer model', function (modelTest) {
   })
 
   modelTest.test('saveTransferPrepared should', function (transferPreparedTest) {
-    let transferPreparedEvent = {
-      id: 1,
-      name: 'TransferPrepared',
-      payload: {
-        id: 'http://central-ledger.example/transfers/1d4f2a70-e0d6-42dc-9efb-6d23060ccd6f',
-        ledger: 'http://central-ledger.example',
-        debits: [{
-          account: 'http://central-ledger.example/accounts/dfsp1',
-          amount: '50'
-        }],
-        credits: [{
-          account: 'http://central-ledger.example/accounts/dfsp2',
-          amount: '50'
-        }],
-        execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
-        expires_at: '2015-06-16T00:00:01.000Z'
-      },
-      aggregate: {
-        id: '1d4f2a70-e0d6-42dc-9efb-6d23060ccd6f',
-        name: 'Transfer'
-      },
-      context: 'Ledger',
-      timestamp: 1474471273588
-    }
-
     transferPreparedTest.test('save a TransferPrepared event object to the read model', function (assert) {
       Model.saveTransferPrepared(transferPreparedEvent)
         .then((transfer) => {
@@ -111,23 +135,12 @@ Test('transfer model', function (modelTest) {
   })
 
   modelTest.test('saveTransferExecuted should', function (transferExecutedTest) {
-    let transferExecutedEvent = {
-      id: 2,
-      name: 'TransferExecuted',
-      payload: {},
-      aggregate: {
-        id: '1d4f2a70-e0d6-42dc-9efb-6d23060ccd6f',
-        name: 'Transfer'
-      },
-      context: 'Ledger',
-      timestamp: 1474471284081
-    }
-
     transferExecutedTest.test('update the read model with TransferExecuted event object', function (assert) {
       Model.saveTransferExecuted(transferExecutedEvent)
         .then((transfer) => {
           assert.equal(transfer.transferUuid, transferExecutedEvent.aggregate.id)
           assert.equal(transfer.state, 'executed')
+          assert.equal(transfer.fulfillment, transferExecutedEvent.payload.fulfillment)
           assert.deepEqual(transfer.executedDate, Moment(transferExecutedEvent.timestamp).toDate())
           assert.end()
         })
@@ -156,6 +169,22 @@ Test('transfer model', function (modelTest) {
     })
 
     truncateTest.end()
+  })
+
+  modelTest.test('getById should', function (getByIdTest) {
+    getByIdTest.test('retrieve transfer from read model by id', function (assert) {
+      Model.saveTransferPrepared(transferPreparedEvent)
+        .then((saved) => {
+          Model.getById(saved.transferUuid)
+            .then((found) => {
+              assert.notEqual(found, saved)
+              assert.deepEqual(found, saved)
+              assert.end()
+            })
+        })
+    })
+
+    getByIdTest.end()
   })
 
   modelTest.end()

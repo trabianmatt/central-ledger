@@ -5,7 +5,7 @@ const Base = require('../../base')
 
 Test('return error if required field missing', assert => {
   let fixtures = Base.setup()
-  let req = Base.buildRequest('/accounts', 'POST', { })
+  let req = Base.buildRequest({ url: '/accounts', method: 'POST', payload: { } })
 
   fixtures.server.inject(req, res => {
     Base.assertBadRequestError(assert, res, 'child "name" fails because ["name" is required]')
@@ -15,7 +15,7 @@ Test('return error if required field missing', assert => {
 
 Test('return error if name is not a token', assert => {
   let fixtures = Base.setup()
-  let req = Base.buildRequest('/accounts', 'POST', { name: 'this contains spaces' })
+  let req = Base.buildRequest({ url: '/accounts', method: 'POST', payload: { name: 'this contains spaces' } })
 
   fixtures.server.inject(req, res => {
     Base.assertBadRequestError(assert, res, 'child "name" fails because ["name" must only contain alpha-numeric and underscore characters]')
@@ -25,7 +25,7 @@ Test('return error if name is not a token', assert => {
 
 Test('return error if name is not a token', assert => {
   let fixtures = Base.setup()
-  let req = Base.buildRequest('/accounts/some%20bad%20name', 'GET')
+  let req = Base.buildRequest({ url: '/accounts/some%20bad%20name', method: 'GET' })
 
   fixtures.server.inject(req, res => {
     Base.assertBadRequestError(assert, res, 'child "name" fails because ["name" must only contain alpha-numeric and underscore characters]')

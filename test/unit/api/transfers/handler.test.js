@@ -3,15 +3,22 @@
 const Sinon = require('sinon')
 const Test = require('tapes')(require('tape'))
 const Boom = require('boom')
-const Validator = require('../../../../src/api/transfers/validator')
-const ValidationError = require('../../../../src/errors/validation-error')
 const P = require('bluebird')
+const Uuid = require('uuid4')
+const Validator = require('../../../../src/api/transfers/validator')
+const Config = require('../../../../src/lib/config')
 const Handler = require('../../../../src/api/transfers/handler')
 const Model = require('../../../../src/api/transfers/model')
+const ValidationError = require('../../../../src/errors/validation-error')
+const AlreadyPreparedError = require('../../../../src/errors/already-prepared-error')
+const UnpreparedTransferError = require('../../../../src/errors/unprepared-transfer-error')
 
-function createRequest (payload) {
+function createRequest (id, payload) {
+  let requestId = id || Uuid()
+  let requestPayload = payload || {}
   return {
-    payload: payload || {},
+    payload: requestPayload,
+    params: { id: requestId },
     server: {
       log: function () { }
     }
@@ -20,14 +27,19 @@ function createRequest (payload) {
 
 Test('transfer handler', function (handlerTest) {
   let sandbox
+  let originalHostName
+  let hostname = 'http://some-host'
 
   handlerTest.beforeEach(t => {
     sandbox = Sinon.sandbox.create()
     sandbox.stub(Validator, 'validate', a => P.resolve(a))
+    originalHostName = Config.HOSTNAME
+    Config.HOSTNAME = hostname
     t.end()
   })
 
   handlerTest.afterEach(t => {
+    Config.HOSTNAME = originalHostName
     sandbox.restore()
     t.end()
   })
@@ -52,6 +64,7 @@ Test('transfer handler', function (handlerTest) {
         execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
         expires_at: '2015-06-16T00:00:01.000Z'
       }
+
       let transfer = {
         id: payload.id,
         ledger: payload.ledger,
@@ -60,8 +73,9 @@ Test('transfer handler', function (handlerTest) {
         execution_condition: payload.execution_condition,
         expires_at: payload.expires_at
       }
+
       let modelStub = sandbox.stub(Model, 'prepare')
-      modelStub.returns(Promise.resolve(transfer))
+      modelStub.returns(P.resolve(transfer))
 
       let reply = function (response) {
         assert.equal(response.id, transfer.id)
@@ -70,6 +84,7 @@ Test('transfer handler', function (handlerTest) {
         assert.deepEqual(response.credits, transfer.credits)
         assert.equal(response.execution_condition, transfer.execution_condition)
         assert.equal(response.expires_at, transfer.expires_at)
+        assert.equal(response.state, 'prepared')
         return {
           code: function (statusCode) {
             assert.equal(statusCode, 201)
@@ -78,7 +93,7 @@ Test('transfer handler', function (handlerTest) {
         }
       }
 
-      Handler.prepareTransfer(createRequest(payload), reply)
+      Handler.prepareTransfer(createRequest(Uuid(), payload), reply)
     })
 
     prepareTransferTest.test('return error if transfer not validated', function (assert) {
@@ -93,10 +108,10 @@ Test('transfer handler', function (handlerTest) {
         assert.end()
       }
 
-      Handler.prepareTransfer(createRequest(payload), reply)
+      Handler.prepareTransfer(createRequest(Uuid(), payload), reply)
     })
 
-    prepareTransferTest.test('return error if transfer is already created', function (assert) {
+    prepareTransferTest.test('return error if transfer is already prepared', function (assert) {
       let payload = {
         id: 'https://central-ledger/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204',
         ledger: 'http://usd-ledger.example/USD',
@@ -115,9 +130,9 @@ Test('transfer handler', function (handlerTest) {
         execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
         expires_at: '2015-06-16T00:00:01.000Z'
       }
-      let error = new Error('')
-      error.originalErrorMessage = 'aggregate with id=3a2a1d9e-8640-4d2d-b06c-84f2cd613204 already created'
-      sandbox.stub(Model, 'prepare').returns(Promise.reject(error))
+
+      let error = new AlreadyPreparedError()
+      sandbox.stub(Model, 'prepare').returns(P.reject(error))
 
       let reply = function (response) {
         let boomError = Boom.badData("Can't re-prepare an existing transfer.")
@@ -125,7 +140,7 @@ Test('transfer handler', function (handlerTest) {
         assert.end()
       }
 
-      Handler.prepareTransfer(createRequest(payload), reply)
+      Handler.prepareTransfer(createRequest(Uuid(), payload), reply)
     })
 
     prepareTransferTest.end()
@@ -134,10 +149,70 @@ Test('transfer handler', function (handlerTest) {
   handlerTest.test('fulfillTransfer should', function (fulfillTransferTest) {
     fulfillTransferTest.test('return fulfilled transfer', function (assert) {
       let fulfillment = { id: '3a2a1d9e-8640-4d2d-b06c-84f2cd613204', fulfillment: 'cf:0:_v8' }
-      sandbox.stub(Model, 'fulfill').returns(Promise.resolve(fulfillment.fulfillment))
+
+      sandbox.stub(Model, 'fulfill').returns(P.resolve(fulfillment.fulfillment))
 
       let reply = function (response) {
         assert.equal(response, fulfillment.fulfillment)
+        return {
+          code: function (statusCode) {
+            assert.equal(statusCode, 200)
+            return {
+              type: function (type) {
+                assert.equal(type, 'text/plain')
+                assert.end()
+              }
+            }
+          }
+        }
+      }
+
+      Handler.fulfillTransfer(createRequest(fulfillment.id, fulfillment.fulfillment), reply)
+    })
+
+    fulfillTransferTest.test('return error if transfer is not prepared', function (assert) {
+      let fulfillment = { id: '3a2a1d9e-8640-4d2d-b06c-84f2cd613204', fulfillment: 'cf:0:_v8' }
+
+      let error = new UnpreparedTransferError()
+      sandbox.stub(Model, 'fulfill').returns(P.reject(error))
+
+      let reply = function (response) {
+        let boomError = Boom.badData("Can't execute a non-prepared transfer.")
+        assert.deepEqual(response, boomError)
+        assert.end()
+      }
+
+      Handler.fulfillTransfer(createRequest(fulfillment.id, fulfillment.fulfillment), reply)
+    })
+
+    fulfillTransferTest.test('return error if transfer has no domain events', function (assert) {
+      let fulfillment = { id: '3a2a1d9e-8640-4d2d-b06c-84f2cd613204', fulfillment: 'cf:0:_v8' }
+
+      let error = new Error('')
+      error.originalErrorMessage = 'No domainEvents for aggregate of type Transfer'
+      sandbox.stub(Model, 'fulfill').returns(P.reject(error))
+
+      let reply = function (response) {
+        let boomError = Boom.notFound()
+        assert.deepEqual(response, boomError)
+        assert.end()
+      }
+
+      Handler.fulfillTransfer(createRequest(fulfillment.id, fulfillment.fulfillment), reply)
+    })
+
+    fulfillTransferTest.end()
+  })
+
+  handlerTest.test('getTransferById should', function (getTransferByIdTest) {
+    getTransferByIdTest.test('get transfer by transfer id', function (assert) {
+      let id = Uuid()
+
+      let transfer = { transferUuid: id }
+      sandbox.stub(Model, 'getById').returns(P.resolve(transfer))
+
+      let reply = function (response) {
+        assert.equal(response.id, `${hostname}/transfers/${transfer.transferUuid}`)
         return {
           code: function (statusCode) {
             assert.equal(statusCode, 200)
@@ -146,53 +221,98 @@ Test('transfer handler', function (handlerTest) {
         }
       }
 
-      let request = {
-        payload: fulfillment.fulfillment,
-        params: { id: fulfillment.id }
-      }
-      Handler.fulfillTransfer(request, reply)
+      Handler.getTransferById(createRequest(id), reply)
     })
 
-    fulfillTransferTest.test('return error if transfer is not prepared', function (assert) {
-      let fulfillment = { id: '3a2a1d9e-8640-4d2d-b06c-84f2cd613204', fulfillment: 'cf:0:_v8' }
-      let error = new Error('')
-      error.originalErrorMessage = 'transfer exists, but is not prepared'
-      sandbox.stub(Model, 'fulfill').returns(Promise.reject(error))
+    getTransferByIdTest.test('return 404 if transfer null', function (t) {
+      sandbox.stub(Model, 'getById').returns(P.resolve(null))
 
       let reply = function (response) {
-        let boomError = Boom.badData("Can't execute a non-prepared transfer.")
-        assert.deepEqual(response, boomError)
-        assert.end()
+        t.deepEqual(response, Boom.notFound())
+        t.end()
       }
 
-      let request = {
-        payload: fulfillment.fulfillment,
-        params: { id: fulfillment.id }
-      }
-      Handler.fulfillTransfer(request, reply)
+      Handler.getTransferById(createRequest(), reply)
     })
 
-    fulfillTransferTest.test('return error if transfer has no domain events', function (assert) {
-      let fulfillment = { id: '3a2a1d9e-8640-4d2d-b06c-84f2cd613204', fulfillment: 'cf:0:_v8' }
-      let error = new Error('')
-      error.originalErrorMessage = 'No domainEvents for aggregate of type Transfer'
-      sandbox.stub(Model, 'fulfill').returns(Promise.reject(error))
+    getTransferByIdTest.test('return error if model throws error', function (t) {
+      let error = new Error()
+      sandbox.stub(Model, 'getById').returns(P.reject(error))
 
       let reply = function (response) {
-        let boomError = Boom.notFound()
-        assert.deepEqual(response, boomError)
-        assert.end()
+        t.deepEqual(response, Boom.wrap(error))
+        t.end()
       }
 
-      let request = {
-        payload: fulfillment.fulfillment,
-        params: { id: fulfillment.id }
-      }
-
-      Handler.fulfillTransfer(request, reply)
+      Handler.getTransferById(createRequest(), reply)
     })
 
-    fulfillTransferTest.end()
+    getTransferByIdTest.end()
+  })
+
+  handlerTest.test('getTransferFulfillment should', function (getTransferFulfillmentTest) {
+    getTransferFulfillmentTest.test('get fulfillment by transfer id', function (assert) {
+      let id = Uuid()
+
+      let transfer = { transferUuid: id, fulfillment: 'cf:0:_v8', state: 'executed' }
+      sandbox.stub(Model, 'getById').returns(P.resolve(transfer))
+
+      let reply = function (response) {
+        assert.equal(response, transfer.fulfillment)
+        return {
+          code: function (statusCode) {
+            assert.equal(statusCode, 200)
+            return {
+              type: function (type) {
+                assert.equal(type, 'text/plain')
+                assert.end()
+              }
+            }
+          }
+        }
+      }
+
+      Handler.getTransferFulfillment(createRequest(id), reply)
+    })
+
+    getTransferFulfillmentTest.test('return 404 if transfer not executed', function (t) {
+      let id = Uuid()
+
+      let transfer = { transferUuid: id, fulfillment: 'cf:0:_v8', state: 'prepared' }
+      sandbox.stub(Model, 'getById').returns(P.resolve(transfer))
+
+      let reply = function (response) {
+        t.deepEqual(response, Boom.notFound())
+        t.end()
+      }
+
+      Handler.getTransferFulfillment(createRequest(), reply)
+    })
+
+    getTransferFulfillmentTest.test('return 404 if transfer null', function (t) {
+      sandbox.stub(Model, 'getById').returns(P.resolve(null))
+
+      let reply = function (response) {
+        t.deepEqual(response, Boom.notFound())
+        t.end()
+      }
+
+      Handler.getTransferFulfillment(createRequest(), reply)
+    })
+
+    getTransferFulfillmentTest.test('return error if model throws error', function (t) {
+      let error = new Error()
+      sandbox.stub(Model, 'getById').returns(P.reject(error))
+
+      let reply = function (response) {
+        t.deepEqual(response, Boom.wrap(error))
+        t.end()
+      }
+
+      Handler.getTransferFulfillment(createRequest(), reply)
+    })
+
+    getTransferFulfillmentTest.end()
   })
 
   handlerTest.test('reject transfer', rejectTransferTest => {
@@ -207,7 +327,12 @@ Test('transfer handler', function (handlerTest) {
         return {
           code: statusCode => {
             assert.equal(200, statusCode)
-            assert.end()
+            return {
+              type: function (type) {
+                assert.equal(type, 'text/plain')
+                assert.end()
+              }
+            }
           }
         }
       }

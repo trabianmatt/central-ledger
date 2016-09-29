@@ -4,6 +4,7 @@ const Sinon = require('sinon')
 const Test = require('tape')
 const Proxyquire = require('proxyquire')
 const TransferState = require('../../../../src/eventric/transfer/transferState')
+const UnpreparedTransferError = require('../../../../src/errors/unprepared-transfer-error')
 
 function createTransfer (cryptoConditions, cryptoFulfillments) {
   return Proxyquire('../../../../src/eventric/transfer/transfer',
@@ -126,7 +127,7 @@ Test('transfer', function (transferTest) {
 
       assert.throws(
         () => transfer.fulfill({ fulfillment }),
-        /transfer exists, but is not prepared/
+        UnpreparedTransferError
       )
       assert.end()
     })

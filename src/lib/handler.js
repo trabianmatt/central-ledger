@@ -3,10 +3,14 @@
 const Boom = require('boom')
 const NotFoundError = require('../errors/not-found-error')
 
-exports.getResponse = (reply, buildResponse) => {
+exports.getResponse = (reply, buildResponse, options) => {
   return (entity) => {
+    options = options || {}
     if (entity) {
-      reply(buildResponse(entity)).code(200)
+      let response = reply(buildResponse(entity)).code(200)
+      if (options.contentType) {
+        response.type(options.contentType)
+      }
       return null
     } else {
       throw new NotFoundError()
@@ -45,7 +49,7 @@ exports.notFound = (reply) => {
 
 exports.unprocessableEntity = (reply, message) => {
   return (e) => {
-    reply(Boom.badData(message))
+    reply(Boom.badData(message || e.message))
     return null
   }
 }

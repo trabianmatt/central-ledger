@@ -3,6 +3,7 @@
 const CryptoConditions = require('../../cryptoConditions/conditions')
 const CryptoFulfillments = require('../../cryptoConditions/fulfillments')
 const TransferState = require('./transferState')
+const UnpreparedTransferError = require('../../errors/unprepared-transfer-error')
 
 class Transfer {
   create ({
@@ -25,7 +26,7 @@ class Transfer {
 
   fulfill ({ fulfillment }) {
     if (this.state !== TransferState.PREPARED) {
-      throw new Error('transfer exists, but is not prepared')
+      throw new UnpreparedTransferError()
     }
 
     CryptoFulfillments.validateConditionFulfillment(this.execution_condition, fulfillment)

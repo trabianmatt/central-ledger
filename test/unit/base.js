@@ -17,8 +17,8 @@ function setup () {
   return fixtures
 }
 
-function buildRequest (url, method, payload) {
-  return { url: url, method: method, payload: payload }
+function buildRequest (options) {
+  return { url: options.url, method: options.method || 'GET', payload: options.payload || '', headers: options.headers || {} }
 }
 
 function assertServerError (assert, response) {

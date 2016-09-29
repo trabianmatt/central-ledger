@@ -36,6 +36,20 @@ module.exports = [{
   }
 },
 {
+  method: 'GET',
+  path: '/transfers/{id}',
+  handler: Handler.getTransferById,
+  config: {
+    tags: tags,
+    description: 'Get transfer by ID',
+    validate: {
+      params: {
+        id: Joi.string().guid().required().description('Id of transfer to retrieve')
+      }
+    }
+  }
+},
+{
   method: 'PUT',
   path: '/transfers/{id}/fulfillment',
   handler: Handler.fulfillTransfer,
@@ -44,6 +58,7 @@ module.exports = [{
     tags: tags,
     description: 'Fulfill a transfer',
     validate: {
+      headers: Joi.object({ 'content-type': Joi.string().required().valid('text/plain') }).unknown(),
       params: {
         id: Joi.string().guid().required().description('Id of transfer to fulfill')
       },
@@ -60,10 +75,25 @@ module.exports = [{
     tags: tags,
     description: 'Reject a transfer',
     validate: {
+      headers: Joi.object({ 'content-type': Joi.string().required().valid('text/plain') }).unknown(),
       params: {
         id: Joi.string().guid().required().description('Id of transfer to reject')
       },
       payload: Joi.string().trim().max(65535).required().description('Rejection reason')
+    }
+  }
+},
+{
+  method: 'GET',
+  path: '/transfers/{id}/fulfillment',
+  handler: Handler.getTransferFulfillment,
+  config: {
+    tags: tags,
+    description: 'Get transfer fulfillment',
+    validate: {
+      params: {
+        id: Joi.string().guid().required().description('Id of transfer to retrieve fulfillment for')
+      }
     }
   }
 }]

@@ -1,6 +1,8 @@
 'use strict'
+
 const Db = require('../lib/db')
 const Uuid = require('uuid4')
+const AlreadyPreparedError = require('../errors/already-prepared-error')
 
 class PostgresStore {
 
@@ -61,7 +63,7 @@ class PostgresStore {
                 }
                 ).catch(e => {
                   if (e.message.includes('duplicate key value violates unique constraint') && sequenceNumber === 1) {
-                    throw Error(`aggregate with id=${domainEvent.aggregate.id} already created`)
+                    throw new AlreadyPreparedError()
                   }
 
                   throw e

@@ -1,6 +1,7 @@
 'use strict'
 
 const Test = require('tape')
+const Uuid = require('uuid4')
 const Moment = require('moment')
 const Proxyquire = require('proxyquire')
 const Sinon = require('sinon')
@@ -90,7 +91,6 @@ Test('transfer model', function (modelTest) {
       id: 1,
       name: 'TransferPrepared',
       payload: {
-        id: 'http://central-ledger.example/transfers/1d4f2a70-e0d6-42dc-9efb-6d23060ccd6f',
         ledger: 'http://central-ledger.example',
         debits: [{
           account: 'http://central-ledger.example/accounts/dfsp1',
@@ -161,7 +161,20 @@ Test('transfer model', function (modelTest) {
     let transferExecutedEvent = {
       id: 2,
       name: 'TransferExecuted',
-      payload: {},
+      payload: {
+        ledger: 'http://central-ledger.example',
+        debits: [{
+          account: 'http://central-ledger.example/accounts/dfsp1',
+          amount: '50'
+        }],
+        credits: [{
+          account: 'http://central-ledger.example/accounts/dfsp2',
+          amount: '50'
+        }],
+        execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
+        expires_at: '2015-06-16T00:00:01.000Z',
+        fulfillment: 'cf:0:_v8'
+      },
       aggregate: {
         id: '1d4f2a70-e0d6-42dc-9efb-6d23060ccd6f',
         name: 'Transfer'
@@ -185,6 +198,7 @@ Test('transfer model', function (modelTest) {
           assert.equal(findOneAsyncArg.transferUuid, transferExecutedEvent.aggregate.id)
           assert.equal(updateAsyncArg.transferUuid, foundTransfer.transferUuid)
           assert.equal(updateAsyncArg.state, 'executed')
+          assert.equal(updateAsyncArg.fulfillment, transferExecutedEvent.payload.fulfillment)
           assert.deepEqual(updateAsyncArg.executedDate, Moment(transferExecutedEvent.timestamp))
           assert.end()
         })
@@ -239,6 +253,60 @@ Test('transfer model', function (modelTest) {
     })
 
     truncateTest.end()
+  })
+
+  modelTest.test('getByIdShould', function (getByIdTest) {
+    getByIdTest.test('return exception if db.connect throws', function (assert) {
+      let error = new Error()
+      let model = createModel({ connect: () => Promise.reject(error) }, {})
+
+      model.getById(Uuid())
+        .then(() => {
+          assert.fail('Should have thrown error')
+          assert.end()
+        })
+        .catch(err => {
+          assert.equal(err, error)
+          assert.end()
+        })
+    })
+
+    getByIdTest.test('return exception if db.findOneAsync throws', function (assert) {
+      let error = new Error()
+      let findOneAsync = function () { return Promise.reject(error) }
+      let model = createModel(setupTransfersDb({ findOneAsync: findOneAsync }), {})
+
+      model.getById(Uuid())
+        .then(() => {
+          assert.fail('Should have thrown error')
+          assert.end()
+        })
+        .catch(err => {
+          assert.equal(err, error)
+          assert.end()
+        })
+    })
+
+    getByIdTest.test('find transfer by transferUuid', function (assert) {
+      let id = Uuid()
+      let transfer = { id: id }
+      let findOneAsync = Sinon.stub().returns(Promise.resolve(transfer))
+      let model = createModel(setupTransfersDb({ findOneAsync: findOneAsync }), {})
+
+      model.getById(id)
+        .then(found => {
+          let findOneAsyncArg = findOneAsync.firstCall.args[0]
+          assert.equal(found, transfer)
+          assert.equal(findOneAsyncArg.transferUuid, id)
+          assert.end()
+        })
+        .catch(err => {
+          assert.fail(err)
+          assert.end()
+        })
+    })
+
+    getByIdTest.end()
   })
 
   modelTest.end()

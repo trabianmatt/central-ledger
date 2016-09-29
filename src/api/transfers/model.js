@@ -1,6 +1,7 @@
 'use strict'
 
 const Moment = require('moment')
+const P = require('bluebird')
 const Db = require('../../lib/db')
 const Eventric = require('../../lib/eventric')
 
@@ -9,40 +10,44 @@ function parseIdFor (transfer) {
 }
 
 exports.prepare = (transfer) => {
-  return Eventric.getContext()
-    .then(context => {
-      return context.command('PrepareTransfer', {
-        id: parseIdFor(transfer),
-        ledger: transfer.ledger,
-        debits: transfer.debits,
-        credits: transfer.credits,
-        execution_condition: transfer.execution_condition,
-        expires_at: transfer.expires_at
+  return P.resolve(
+    Eventric.getContext()
+      .then(context => {
+        return context.command('PrepareTransfer', {
+          id: parseIdFor(transfer),
+          ledger: transfer.ledger,
+          debits: transfer.debits,
+          credits: transfer.credits,
+          execution_condition: transfer.execution_condition,
+          expires_at: transfer.expires_at
+        })
       })
-    })
-    .then(() => {
-      return {
-        id: transfer.id,
-        ledger: transfer.ledger,
-        debits: transfer.debits,
-        credits: transfer.credits,
-        execution_condition: transfer.execution_condition,
-        expires_at: transfer.expires_at
-      }
-    })
+      .then(() => {
+        return {
+          id: transfer.id,
+          ledger: transfer.ledger,
+          debits: transfer.debits,
+          credits: transfer.credits,
+          execution_condition: transfer.execution_condition,
+          expires_at: transfer.expires_at
+        }
+      })
+    )
 }
 
 exports.fulfill = (fulfillment) => {
-  return Eventric.getContext()
-    .then(context => {
-      return context.command('FulfillTransfer', {
-        id: fulfillment.id,
-        fulfillment: fulfillment.fulfillment
+  return P.resolve(
+    Eventric.getContext()
+      .then(context => {
+        return context.command('FulfillTransfer', {
+          id: fulfillment.id,
+          fulfillment: fulfillment.fulfillment
+        })
       })
-    })
-    .then(() => {
-      return fulfillment.fulfillment
-    })
+      .then(() => {
+        return fulfillment.fulfillment
+      })
+  )
 }
 
 exports.saveTransferPrepared = (preparedEvent) => {
@@ -91,6 +96,7 @@ exports.saveTransferExecuted = (executedEvent) => {
         {
           transferUuid: transfer.transferUuid,
           state: 'executed',
+          fulfillment: executedEvent.payload.fulfillment,
           executedDate: Moment(executedEvent.timestamp)
         })
     })
@@ -98,4 +104,8 @@ exports.saveTransferExecuted = (executedEvent) => {
 
 exports.truncateReadModel = () => {
   return Db.connect().then(db => db.transfers.destroyAsync({}))
+}
+
+exports.getById = (id) => {
+  return Db.connect().then(db => db.transfers.findOneAsync({ transferUuid: id }))
 }
