@@ -65,7 +65,7 @@ Test('return metadata', function (assert) {
       assert.equal(res.body.urls.transfer, `http://${hostname}/transfers/:id`)
       assert.equal(res.body.urls.transfer_fulfillment, `http://${hostname}/transfers/:id/fulfillment`)
       assert.equal(res.body.urls.transfer_rejection, `http://${hostname}/transfers/:id/rejection`)
-      assert.equal(res.body.urls.account_transfers, `ws://${hostname}/transfers/updates`)
+      assert.equal(res.body.urls.account_transfers, `ws://${hostname}/accounts/:name/transfers`)
       assert.end()
     })
 })

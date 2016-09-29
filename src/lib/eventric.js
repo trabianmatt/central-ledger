@@ -36,7 +36,7 @@ function addEventListeners (context) {
       id: domainEvent.aggregate.id,
       state: 'executed',
       ledger: domainEvent.payload.ledger,
-      debit: domainEvent.payload.debits,
+      debits: domainEvent.payload.debits,
       credits: domainEvent.payload.credits,
       execution_condition: domainEvent.payload.execution_condition,
       expires_at: domainEvent.payload.expires_at

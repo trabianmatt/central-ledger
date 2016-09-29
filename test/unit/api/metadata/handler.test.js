@@ -72,7 +72,7 @@ Test('metadata handler', (handlerTest) => {
         t.equal(response.ledger, hostName)
         t.equal(response.precision, 10)
         t.equal(response.scale, 2)
-        t.equal(response.urls['account_transfers'], `ws://${host}/transfers/updates`)
+        t.equal(response.urls['account_transfers'], `ws://${host}/accounts/:name/transfers`)
         return { code: statusCode => { t.end() } }
       }
 
