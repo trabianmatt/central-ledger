@@ -1,6 +1,6 @@
 {
   "name": "@leveloneproject/central-ledger",
-  "version": "1.20.0",
+  "version": "1.21.0",
   "description": "Central ledger hosted by a scheme to record and settle transfers.",
   "repository": {
     "type": "git",
