@@ -4,9 +4,9 @@ const Sinon = require('sinon')
 const Test = require('tapes')(require('tape'))
 const P = require('bluebird')
 const TransfersModel = require('../../../../src/api/transfers/model')
-const Handler = require('../../../../src/api/settlements/handler')
+const Handler = require('../../../../src/api/positions/handler')
 
-Test('settlements handler', (handlerTest) => {
+Test('positions handler', (handlerTest) => {
   let sandbox
 
   handlerTest.beforeEach(t => {
@@ -28,7 +28,7 @@ Test('settlements handler', (handlerTest) => {
         assert.deepEqual(response, expectedResponse)
         return {
           code: function (statusCode) {
-            assert.equal(statusCode, 201)
+            assert.equal(statusCode, 200)
             assert.end()
           }
         }
@@ -77,7 +77,7 @@ Test('settlements handler', (handlerTest) => {
         assert.deepEqual(response, expectedResponse)
         return {
           code: function (statusCode) {
-            assert.equal(statusCode, 201)
+            assert.equal(statusCode, 200)
             assert.end()
           }
         }

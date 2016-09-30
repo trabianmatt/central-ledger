@@ -63,5 +63,5 @@ function createPositions (executedTransfers) {
 exports.perform = (request, reply) => {
   TransfersModel.getExecuted()
     .then(createPositions)
-    .then(Handle.createResponse(reply, buildResponse))
+    .then(Handle.getResponse(reply, buildResponse))
 }

@@ -67,7 +67,7 @@ Test('return metadata', function (assert) {
       assert.equal(res.body.urls.transfer_fulfillment, `http://${hostname}/transfers/:id/fulfillment`)
       assert.equal(res.body.urls.transfer_rejection, `http://${hostname}/transfers/:id/rejection`)
       assert.equal(res.body.urls.account_transfers, `ws://${hostname}/accounts/:name/transfers`)
-      assert.equal(res.body.urls.settlements, `http://${hostname}/settlements`)
+      assert.equal(res.body.urls.positions, `http://${hostname}/positions`)
       assert.end()
     })
     .expect('Content-Type', /json/)
@@ -351,7 +351,7 @@ Test('reject a transfer', function (assert) {
     })
 })
 
-Test('return net positions when preparing a settlement', function (assert) {
+Test('return net positions', function (assert) {
   let expectedResponseBody = {
     positions: [{
       account: 'http://central-ledger/accounts/dfsp10',
@@ -386,9 +386,8 @@ Test('return net positions when preparing a settlement', function (assert) {
     }]
   }
 
-  Request.post('/settlements')
-    .send('')
-    .expect(201, function (err, res) {
+  Request.get('/positions')
+    .expect(200, function (err, res) {
       if (err) assert.end(err)
       assert.deepEqual(res.body, expectedResponseBody)
       assert.end()
