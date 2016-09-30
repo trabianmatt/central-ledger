@@ -50,6 +50,25 @@ function fulfillTransfer (transferId, fulfillment) {
   return Request.put('/transfers/' + transferId + '/fulfillment').set('Content-Type', 'text/plain').send(fulfillment)
 }
 
+function findAccountPositions (positions, accountName) {
+  return positions.find(function (p) {
+    return p.account === buildAccountUrl(accountName)
+  })
+}
+
+function buildAccountUrl (accountName) {
+  return `http://${hostname}/accounts/${accountName}`
+}
+
+function buildAccountPosition (accountName, payments, receipts) {
+  return {
+    account: buildAccountUrl(accountName),
+    net: (receipts - payments).toString(),
+    payments: payments.toString(),
+    receipts: receipts.toString()
+  }
+}
+
 Test('return metadata', function (assert) {
   Request.get('/')
     .expect(200, function (err, res) {
@@ -75,21 +94,21 @@ Test('return metadata', function (assert) {
 
 Test('return api documentation', function (assert) {
   Request.get('/documentation')
-    .expect('Content-Type', /html/)
     .expect(200, function (err, res) {
       if (err) return assert.end(err)
       assert.end()
     })
+    .expect('Content-Type', /html/)
 })
 
 Test('return health', function (assert) {
   Request.get('/health')
-    .expect('Content-Type', /json/)
     .expect(200, function (err, res) {
       if (err) return assert.end(err)
       assert.equal(res.body.status, 'OK')
       assert.end()
     })
+    .expect('Content-Type', /json/)
 })
 
 Test('post and get a subscription', function (assert) {
@@ -100,7 +119,6 @@ Test('post and get a subscription', function (assert) {
 
   Request.post('/subscriptions')
     .send(subscription)
-    .expect('Content-Type', /json/)
     .expect(201, function (err, res) {
       if (err) return assert.end(err)
       let expectedId = res.body.id
@@ -116,20 +134,19 @@ Test('post and get a subscription', function (assert) {
           assert.end()
         })
     })
+    .expect('Content-Type', /json/)
 })
 
 Test('post and get an account', function (assert) {
   var accountName = generateAccountName()
 
   createAccount(accountName)
-    .expect('Content-Type', /json/)
     .expect(201, (err, res) => {
       if (err) return assert.end(err)
       var expectedCreated = res.body.created
       assert.notEqual(expectedCreated, undefined)
       assert.equal(res.body.name, accountName)
       Request.get('/accounts/' + accountName)
-        .expect('Content-Type', /json/)
         .expect(200, (err, getRes) => {
           if (err) return assert.end(err)
           assert.equal(accountName, getRes.body.name)
@@ -139,18 +156,18 @@ Test('post and get an account', function (assert) {
           assert.equal('http://central-ledger', getRes.body.ledger)
           assert.end()
         })
+        .expect('Content-Type', /json/)
     })
+    .expect('Content-Type', /json/)
 })
 
 Test('ensure an account name can only be registered once', function (assert) {
   var accountName = generateAccountName()
 
   createAccount(accountName)
-    .expect('Content-Type', /json/)
     .expect(201, function (err, res) {
       if (err) return assert.end(err)
       createAccount(accountName)
-        .expect('Content-Type', /json/)
         .expect(400, function (err, res) {
           if (err) return assert.end(err)
           assert.equal(res.body.statusCode, 400)
@@ -158,7 +175,9 @@ Test('ensure an account name can only be registered once', function (assert) {
           assert.equal(res.body.message, 'The account has already been registered')
           assert.end()
         })
+        .expect('Content-Type', /json/)
     })
+    .expect('Content-Type', /json/)
 })
 
 Test('prepare a transfer', function (assert) {
@@ -170,7 +189,6 @@ Test('prepare a transfer', function (assert) {
       let transferId = generateTransferId()
       let transfer = buildTransfer(transferId, buildDebitOrCredit(account1Name, '50', { interledger: 'blah', path: 'blah' }), buildDebitOrCredit(account2Name, '50', { interledger: 'blah', path: 'blah' }))
       prepareTransfer(transferId, transfer)
-        .expect('Content-Type', /json/)
         .expect(201, function (err, res) {
           if (err) return assert.end(err)
           assert.equal(res.body.id, transfer.id)
@@ -184,6 +202,7 @@ Test('prepare a transfer', function (assert) {
           assert.equal(res.body.state, 'prepared')
           assert.end()
         })
+        .expect('Content-Type', /json/)
     })
   })
 })
@@ -198,7 +217,6 @@ Test('return transfer details', function (assert) {
       let transfer = buildTransfer(transferId, buildDebitOrCredit(account1Name, '50'), buildDebitOrCredit(account2Name, '50'))
       prepareTransfer(transferId, transfer).then(() => {
         Request.get('/transfers/' + transferId)
-          .expect('Content-Type', /json/)
           .expect(200, function (err, res) {
             if (err) return assert.end(err)
             assert.equal(res.body.id, transfer.id)
@@ -214,6 +232,7 @@ Test('return transfer details', function (assert) {
             assert.notOk(res.body.timeline.executed_at)
             assert.end()
           })
+          .expect('Content-Type', /json/)
       })
     })
   })
@@ -229,12 +248,12 @@ Test('fulfill a transfer', function (assert) {
       let transferId = generateTransferId()
       prepareTransfer(transferId, buildTransfer(transferId, buildDebitOrCredit(account1Name, '25'), buildDebitOrCredit(account2Name, '25'))).then(() => {
         fulfillTransfer(transferId, fulfillment)
-          .expect('Content-Type', 'text/plain; charset=utf-8')
           .expect(200, function (err, res) {
             if (err) return assert.end(err)
             assert.equal(res.text, fulfillment)
             assert.end()
           })
+          .expect('Content-Type', 'text/plain; charset=utf-8')
       })
     })
   })
@@ -343,53 +362,49 @@ Test('reject a transfer', function (assert) {
   Request.put('/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/rejection')
     .set('Content-Type', 'text/plain')
     .send(reason)
-    .expect('Content-Type', 'text/plain; charset=utf-8')
     .expect(200, function (err, res) {
       if (err) assert.end(err)
       assert.equal(res.text, reason)
       assert.end()
     })
+    .expect('Content-Type', 'text/plain; charset=utf-8')
 })
 
 Test('return net positions', function (assert) {
-  let expectedResponseBody = {
-    positions: [{
-      account: 'http://central-ledger/accounts/dfsp10',
-      net: '25',
-      payments: '0',
-      receipts: '25'
-    }, {
-      account: 'http://central-ledger/accounts/dfsp15',
-      net: '-25',
-      payments: '25',
-      receipts: '0'
-    }, {
-      account: 'http://central-ledger/accounts/dfsp16',
-      net: '25',
-      payments: '0',
-      receipts: '25'
-    }, {
-      account: 'http://central-ledger/accounts/dfsp7',
-      net: '-25',
-      payments: '25',
-      receipts: '0'
-    }, {
-      account: 'http://central-ledger/accounts/dfsp8',
-      net: '25',
-      payments: '0',
-      receipts: '25'
-    }, {
-      account: 'http://central-ledger/accounts/dfsp9',
-      net: '-25',
-      payments: '25',
-      receipts: '0'
-    }]
-  }
+  let fulfillment = 'cf:0:_v8'
+  let account1Name = generateAccountName()
+  let account2Name = generateAccountName()
+  let account3Name = generateAccountName()
 
-  Request.get('/positions')
-    .expect(200, function (err, res) {
-      if (err) assert.end(err)
-      assert.deepEqual(res.body, expectedResponseBody)
-      assert.end()
+  createAccount(account1Name).then(() => {
+    createAccount(account2Name).then(() => {
+      createAccount(account3Name).then(() => {
+        let transfer1Id = generateTransferId()
+        let transfer2Id = generateTransferId()
+        let transfer3Id = generateTransferId()
+
+        prepareTransfer(transfer1Id, buildTransfer(transfer1Id, buildDebitOrCredit(account1Name, '25'), buildDebitOrCredit(account2Name, '25'))).then(() => {
+          prepareTransfer(transfer2Id, buildTransfer(transfer2Id, buildDebitOrCredit(account1Name, '10'), buildDebitOrCredit(account3Name, '10'))).then(() => {
+            prepareTransfer(transfer3Id, buildTransfer(transfer3Id, buildDebitOrCredit(account3Name, '15'), buildDebitOrCredit(account2Name, '15'))).then(() => {
+              fulfillTransfer(transfer1Id, fulfillment).then(() => {
+                fulfillTransfer(transfer2Id, fulfillment).then(() => {
+                  fulfillTransfer(transfer3Id, fulfillment).then(() => {
+                    Request.get('/positions')
+                      .expect(200, function (err, res) {
+                        if (err) assert.end(err)
+                        assert.deepEqual(findAccountPositions(res.body.positions, account1Name), buildAccountPosition(account1Name, 35, 0))
+                        assert.deepEqual(findAccountPositions(res.body.positions, account2Name), buildAccountPosition(account2Name, 0, 40))
+                        assert.deepEqual(findAccountPositions(res.body.positions, account3Name), buildAccountPosition(account3Name, 15, 10))
+                        assert.end()
+                      })
+                      .expect('Content-Type', /json/)
+                  })
+                })
+              })
+            })
+          })
+        })
+      })
     })
+  })
 })

@@ -60,4 +60,3 @@ npm run migrate > /dev/null 2>&1
 
 >&2 echo "Integration tests are starting"
 set -o pipefail && run_test_command
-

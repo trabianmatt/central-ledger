@@ -37,6 +37,10 @@ run_test_command()
   eval "$FUNC_TEST_CMD"
 }
 
+shutdown_and_remove() {
+  docker-compose -f $docker_compose_file -f $docker_functional_compose_file down --rmi local
+}
+
 >&2 echo "Loading environment variables"
 source $env_file
 
@@ -66,5 +70,8 @@ done
 
 >&2 echo "Functional tests are starting"
 set -o pipefail && run_test_command
+test_exit_code=$?
 
-docker-compose -f $docker_compose_file -f $docker_functional_compose_file down --rmi local
+shutdown_and_remove
+
+exit "$test_exit_code"
