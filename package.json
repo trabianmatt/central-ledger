@@ -35,6 +35,7 @@
     "boom": "^3.2.2",
     "db-migrate": "^0.10.0-beta.15",
     "db-migrate-pg": "^0.1.10",
+    "decimal.js": "^6.0.0",
     "eventric": "0.24.1",
     "glob": "^7.0.6",
     "glue": "^3.4.0",

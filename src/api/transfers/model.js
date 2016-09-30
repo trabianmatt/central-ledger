@@ -50,6 +50,10 @@ exports.fulfill = (fulfillment) => {
   )
 }
 
+exports.getExecuted = () => {
+  return Db.connect().then(db => db.transfers.findAsync({ state: 'executed' }))
+}
+
 exports.saveTransferPrepared = (preparedEvent) => {
   return Db.connect()
     .then(db => db.transfers.insertAsync(

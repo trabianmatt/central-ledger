@@ -50,14 +50,13 @@ function fulfillTransfer (transferId, fulfillment) {
 
 Test('return metadata', function (assert) {
   Request.get('/')
-    .expect('Content-Type', /json/)
     .expect(200, function (err, res) {
       if (err) return assert.end(err)
       assert.equal(res.body.currency_code, null)
       assert.equal(res.body.currency_symbol, null)
       assert.equal(res.body.precision, 10)
       assert.equal(res.body.scale, 2)
-      assert.equal(Object.keys(res.body.urls).length, 8)
+      assert.equal(Object.keys(res.body.urls).length, 9)
       assert.equal(res.body.urls.health, `http://${hostname}/health`)
       assert.equal(res.body.urls.account, `http://${hostname}/accounts/:name`)
       assert.equal(res.body.urls.subscription, `http://${hostname}/subscriptions/:id`)
@@ -66,8 +65,10 @@ Test('return metadata', function (assert) {
       assert.equal(res.body.urls.transfer_fulfillment, `http://${hostname}/transfers/:id/fulfillment`)
       assert.equal(res.body.urls.transfer_rejection, `http://${hostname}/transfers/:id/rejection`)
       assert.equal(res.body.urls.account_transfers, `ws://${hostname}/accounts/:name/transfers`)
+      assert.equal(res.body.urls.settlements, `http://${hostname}/settlements`)
       assert.end()
     })
+    .expect('Content-Type', /json/)
 })
 
 Test('return api documentation', function (assert) {
@@ -344,6 +345,50 @@ Test('reject a transfer', function (assert) {
     .expect(200, function (err, res) {
       if (err) assert.end(err)
       assert.equal(res.text, reason)
+      assert.end()
+    })
+})
+
+Test('return net positions when preparing a settlement', function (assert) {
+  let expectedResponseBody = {
+    positions: [{
+      account: 'http://central-ledger/accounts/dfsp10',
+      net: '25',
+      payments: '0',
+      receipts: '25'
+    }, {
+      account: 'http://central-ledger/accounts/dfsp15',
+      net: '-25',
+      payments: '25',
+      receipts: '0'
+    }, {
+      account: 'http://central-ledger/accounts/dfsp16',
+      net: '25',
+      payments: '0',
+      receipts: '25'
+    }, {
+      account: 'http://central-ledger/accounts/dfsp7',
+      net: '-25',
+      payments: '25',
+      receipts: '0'
+    }, {
+      account: 'http://central-ledger/accounts/dfsp8',
+      net: '25',
+      payments: '0',
+      receipts: '25'
+    }, {
+      account: 'http://central-ledger/accounts/dfsp9',
+      net: '-25',
+      payments: '25',
+      receipts: '0'
+    }]
+  }
+
+  Request.post('/settlements')
+    .send('')
+    .expect(201, function (err, res) {
+      if (err) assert.end(err)
+      assert.deepEqual(res.body, expectedResponseBody)
       assert.end()
     })
 })
