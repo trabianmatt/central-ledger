@@ -27,7 +27,7 @@
     "migrate:create": "db-migrate create $npm_package_config_db",
     "docker:stop": "docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.functional.yml stop",
     "docker:rm": "docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.functional.yml rm -f -v",
-    "docker:clean": "npm run docker:stop && npm run docker:rm"
+    "docker:clean": "docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.functional.yml down --rmi local"
   },
   "dependencies": {
     "blipp": "^2.3.0",
@@ -48,16 +48,15 @@
     "joi": "^9.0.4",
     "massive": "^2.5.0",
     "moment": "^2.15.1",
-    "nes": "^6.3.1",
     "pg": "^6.1.0",
     "rc": "^1.1.6",
     "urlsafe-base64": "^1.0.0",
     "uuid4": "^1.0.0",
-    "vision": "^4.1.0"
+    "vision": "^4.1.0",
+    "ws": "^1.1.1"
   },
   "optionalDependencies": {},
   "devDependencies": {
-    "@travi/any": "^0.6.1",
     "faucet": "0.0.1",
     "istanbul": "^0.4.5",
     "pre-commit": "^1.1.3",

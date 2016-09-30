@@ -249,12 +249,12 @@ Test('get fulfillment for transfer', function (assert) {
       prepareTransfer(transferId, buildTransfer(transferId, buildDebitOrCredit(account1Name, '25'), buildDebitOrCredit(account2Name, '25'))).then(() => {
         fulfillTransfer(transferId, fulfillment).then(() => {
           Request.get('/transfers/' + transferId + '/fulfillment')
-            .expect('Content-Type', 'text/plain; charset=utf-8')
             .expect(200, function (err, res) {
               if (err) return assert.end(err)
               assert.equal(res.text, fulfillment)
               assert.end()
             })
+            .expect('Content-Type', 'text/plain; charset=utf-8')
         })
       })
     })
