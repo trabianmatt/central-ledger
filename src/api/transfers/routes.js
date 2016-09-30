@@ -21,13 +21,19 @@ module.exports = [{
           account: Joi.string().uri().required().description('Debit account of the transfer'),
           amount: Joi.number().required().description('Debit amount of the transfer'),
           invoice: Joi.string().uri().optional().description('Unique invoice URI'),
-          memo: Joi.object().optional().unknown().description('Additional information related to the debit')
+          memo: Joi.object().optional().unknown().description('Additional information related to the debit'),
+          authorized: Joi.boolean().optional().description('Indicates whether debit has been authorized by account holder'),
+          rejected: Joi.boolean().optional().description('Indicates whether debit has been rejected by account holder'),
+          rejection_message: Joi.string().optional().description('Reason the debit was rejected')
         })).required().description('Debits of the transfer'),
         credits: Joi.array().items(Joi.object().keys({
           account: Joi.string().uri().required().description('Credit account of the transfer'),
           amount: Joi.number().required().description('Credit amount of the transfer'),
           invoice: Joi.string().uri().optional().description('Unique invoice URI'),
-          memo: Joi.object().optional().unknown().description('Additional information related to the credit')
+          memo: Joi.object().optional().unknown().description('Additional information related to the credit'),
+          authorized: Joi.boolean().optional().description('Indicates whether debit has been authorized by account holder'),
+          rejected: Joi.boolean().optional().description('Indicates whether credit has been rejected by account holder'),
+          rejection_message: Joi.string().optional().description('Reason the credit was rejected')
         })).required().description('Credits of the transfer'),
         execution_condition: Joi.string().trim().max(65535).required().description('Execution condition of transfer'),
         expires_at: Joi.string().isoDate().required().description('When the transfer expires')

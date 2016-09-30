@@ -25,7 +25,9 @@ function buildDebitOrCredit (accountName, amount, memo, invoice) {
     account: `http://${hostname}/accounts/${accountName}`,
     amount: amount,
     memo: memo,
-    invoice: invoice
+    invoice: invoice,
+    authorized: true,
+    rejected: false
   }
 }
 
