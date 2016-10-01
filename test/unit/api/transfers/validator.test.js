@@ -2,7 +2,9 @@
 
 const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
+const Uuid = require('uuid4')
 const Config = require('../../../../src/lib/config')
+const UrlParser = require('../../../../src/lib/urlparser')
 const Accounts = require('../../../../src/models/accounts')
 const Validator = require('../../../../src/api/transfers/validator')
 const ValidationError = require('../../../../src/errors/validation-error')
@@ -21,13 +23,42 @@ var assertValidationError = (promise, assert, message) => {
 }
 
 Test('transfer validator', (test) => {
-  let hostname = 'http://some-hostname'
+  const hostname = 'http://some-hostname'
+  const badAccountUri = 'bad_account_uri'
+  let transferId
   let originalHostName
   let sandbox
 
+  var goodTransfer = function () {
+    transferId = Uuid()
+    const accountName = 'some_account_name'
+    const transferIdUri = `${hostname}/transfers/${transferId}`
+    var accountUri = `${hostname}/accounts/${accountName}`
+    Accounts.getByName.withArgs(accountName).returns(P.resolve({}))
+    UrlParser.nameFromAccountUri.withArgs(badAccountUri).returns(null)
+    UrlParser.nameFromAccountUri.withArgs(accountUri).returns(accountName)
+    UrlParser.idFromTransferUri.withArgs(transferIdUri).returns(transferId)
+    return {
+      id: transferIdUri,
+      ledger: hostname,
+      credits: [
+        {
+          account: accountUri
+        }
+      ],
+      debits: [
+        {
+          account: accountUri
+        }
+      ]
+    }
+  }
+
   test.beforeEach((t) => {
     sandbox = Sinon.sandbox.create()
-    // sandbox.stub(Accounts, 'getByName')
+    sandbox.stub(UrlParser, 'nameFromAccountUri')
+    sandbox.stub(UrlParser, 'idFromTransferUri')
+    sandbox.stub(Accounts, 'getByName')
     originalHostName = Config.HOSTNAME
     Config.HOSTNAME = hostname
     t.end()
@@ -40,94 +71,62 @@ Test('transfer validator', (test) => {
   })
 
   test.test('reject if transfer null', assert => {
-    assertValidationError(Validator.validate(), assert, 'Transfer must be provided')
+    assertValidationError(Validator.validate(null, transferId), assert, 'Transfer must be provided')
   })
 
   test.test('reject if transfer.ledger is not hostname', assert => {
-    assertValidationError(Validator.validate({ ledger: 'not-host-name' }), assert, 'transfer.ledger is not valid for this ledger')
+    let transfer = goodTransfer()
+    transfer.ledger = 'not-host-name'
+    assertValidationError(Validator.validate(transfer, transferId), assert, 'transfer.ledger is not valid for this ledger')
   })
 
-  test.test('reject if transfer.credits.account does not belong to host name', assert => {
-    let transfer = {
-      ledger: hostname,
-      credits: [
-        {
-          account: 'http://not-the-host-name/accounts/name'
-        }
-      ]
-    }
-    assertValidationError(Validator.validate(transfer), assert, 'transfer.credits[0].account: Invalid URI')
+  test.test('reject if transfer.credits.account is not parseable', assert => {
+    let transfer = goodTransfer()
+    transfer.credits[0].account = badAccountUri
+    assertValidationError(Validator.validate(transfer, transferId), assert, 'transfer.credits[0].account: Invalid URI')
   })
 
-  test.test('reject if any transfer.credits.account does not belong to host name', assert => {
-    let transfer = {
-      ledger: hostname,
-      credits: [
-        {
-          account: `${hostname}/accounts/name`
-        },
-        {
-          account: 'http://not-the-host-name/accounts/name'
-        }
-      ]
-    }
-    assertValidationError(Validator.validate(transfer), assert, 'transfer.credits[1].account: Invalid URI')
-  })
-
-  test.test('reject if transfer.debits.account does not belong to host name', assert => {
-    let transfer = {
-      ledger: hostname,
-      debits: [
-        {
-          account: 'http://not-the-host-name/accounts/name'
-        }
-      ]
-    }
-    assertValidationError(Validator.validate(transfer), assert, 'transfer.debits[0].account: Invalid URI')
-  })
-
-  test.test('reject any if transfer.debits.account does not belong to host name', assert => {
-    let transfer = {
-      ledger: hostname,
-      debits: [
-        {
-          account: `${hostname}/accounts/name`
-        },
-        {
-          account: 'http://not-the-host-name/accounts/name'
-        }
-      ]
-    }
-    assertValidationError(Validator.validate(transfer), assert, 'transfer.debits[1].account: Invalid URI')
+  test.test('reject if transfer.debits.account is not parseable', assert => {
+    let transfer = goodTransfer()
+    transfer.debits[0].account = badAccountUri
+    assertValidationError(Validator.validate(transfer, transferId), assert, 'transfer.debits[0].account: Invalid URI')
   })
 
   test.test('reject if transfer.credits.account name does not exist', assert => {
-    let accountName = 'account_name'
-    sandbox.stub(Accounts, 'getByName').returns(P.resolve(null))
-    let transfer = {
-      ledger: hostname,
-      credits: [
-        {
-          account: `${hostname}/accounts/${accountName}`
-        }
-      ]
-    }
-    assertValidationError(Validator.validate(transfer), assert, 'Account not found')
+    let badAccountName = 'bad_account_name'
+    let accountUri = 'some-debit-account'
+    let transfer = goodTransfer()
+    transfer.credits[0].account = accountUri
+    UrlParser.nameFromAccountUri.withArgs(accountUri).returns(badAccountName)
+    Accounts.getByName.withArgs(badAccountName).returns(P.resolve(null))
+    assertValidationError(Validator.validate(transfer, transferId), assert, 'Account not found')
+  })
+
+  test.test('reject if transfer.debits.account name does not exist', assert => {
+    let badAccountName = 'bad_account_name'
+    let accountUri = 'some-debit-account'
+    let transfer = goodTransfer()
+    transfer.debits[0].account = accountUri
+    UrlParser.nameFromAccountUri.withArgs(accountUri).returns(badAccountName)
+    Accounts.getByName.withArgs(badAccountName).returns(P.resolve(null))
+    assertValidationError(Validator.validate(transfer, transferId), assert, 'Account not found')
+  })
+
+  test.test('reject if transfer.id is not url', assert => {
+    let transfer = goodTransfer()
+    transfer.id = 'jfksjfskaljfsljflkasjflsa'
+    UrlParser.idFromTransferUri.withArgs(transfer.id).returns(null)
+    assertValidationError(Validator.validate(transfer, transferId), assert, 'transfer.id: Invalid URI')
+  })
+
+  test.test('reject if transfer.id uuid does not match provided transferId', assert => {
+    let transfer = goodTransfer()
+    assertValidationError(Validator.validate(transfer, Uuid()), assert, 'transfer.id: Invalid URI')
   })
 
   test.test('return transfer if all checks pass', assert => {
-    let accountName = 'account_name'
-    sandbox.stub(Accounts, 'getByName').withArgs(accountName).returns(P.resolve({}))
-    let transfer = {
-      ledger: hostname,
-      credits: [
-        {
-          account: `${hostname}/accounts/${accountName}`
-        }
-      ]
-    }
-
-    Validator.validate(transfer)
+    var transfer = goodTransfer()
+    Validator.validate(transfer, transferId)
     .then(t => {
       assert.equal(t, transfer)
       assert.end()

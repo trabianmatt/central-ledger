@@ -3,30 +3,43 @@
 const Config = require('./config')
 
 const accountRegex = new RegExp(`${Config.HOSTNAME}\/accounts\/([A-Za-z0-9_]*)\/?`, 'i')
+const transfersRegex = new RegExp(`${Config.HOSTNAME}\/transfers\/([a-f\\d]{8}(-[a-f\\d]{4}){3}-[a-f\\d]{12})`, 'i')
 const accountsTransfersRouteRegex = new RegExp(/\/accounts\/([A-Za-z0-9_]*)\/transfers/, 'i')
 
-exports.parseAccountName = function (url, callback) {
-  let matches = url.match(accountRegex)
+exports.nameFromAccountUri = (uri, callback) => {
+  let matches = uri.match(accountRegex)
+  let hasCallback = (typeof callback === 'function')
   if (matches) {
-    callback(null, matches[1])
+    return (hasCallback) ? callback(null, matches[1]) : matches[1]
   } else {
-    callback('no match', null)
+    return (hasCallback) ? callback('no match', null) : null
   }
 }
 
 exports.accountNameFromTransfersRoute = (url, callback) => {
-  let match = url.match(accountsTransfersRouteRegex)
-  if (match) {
-    callback(null, match[1])
+  let matches = url.match(accountsTransfersRouteRegex)
+  let hasCallback = (typeof callback === 'function')
+  if (matches) {
+    return hasCallback ? callback(null, matches[1]) : matches[1]
   } else {
-    callback('no match', null)
+    return hasCallback ? callback('no match', null) : null
   }
 }
 
-exports.toTransferUri = function (id) {
+exports.idFromTransferUri = (uri, callback) => {
+  let matches = uri.match(transfersRegex)
+  let hasCallback = (typeof callback === 'function')
+  if (matches) {
+    return hasCallback ? callback(null, matches[1]) : matches[1]
+  } else {
+    return hasCallback ? callback('no match', null) : null
+  }
+}
+
+exports.toTransferUri = (id) => {
   return `${Config.HOSTNAME}/transfers/${id}`
 }
 
-exports.toAccountUri = function (name) {
+exports.toAccountUri = (name) => {
   return `${Config.HOSTNAME}/accounts/${name}`
 }

@@ -100,7 +100,8 @@ Test('transfer handler', function (handlerTest) {
       let payload = {}
       let errorMessage = 'Error message'
       sandbox.restore()
-      sandbox.stub(Validator, 'validate').returns(P.reject(new ValidationError(errorMessage)))
+      let transferId = Uuid()
+      sandbox.stub(Validator, 'validate').withArgs(payload, transferId).returns(P.reject(new ValidationError(errorMessage)))
 
       let reply = response => {
         let boomError = Boom.badData(errorMessage)
@@ -108,7 +109,7 @@ Test('transfer handler', function (handlerTest) {
         assert.end()
       }
 
-      Handler.prepareTransfer(createRequest(Uuid(), payload), reply)
+      Handler.prepareTransfer(createRequest(transferId, payload), reply)
     })
 
     prepareTransferTest.test('return error if transfer is already prepared', function (assert) {

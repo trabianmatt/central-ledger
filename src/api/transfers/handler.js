@@ -54,7 +54,7 @@ function AggregateNotFoundError (e) {
 }
 
 exports.prepareTransfer = function (request, reply) {
-  return Validator.validate(request.payload)
+  return Validator.validate(request.payload, request.params.id)
     .then(Model.prepare)
     .then(Handle.createResponse(reply, buildPrepareTransferResponse))
     .catch(ValidationError, Handle.unprocessableEntity(reply))

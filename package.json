@@ -12,8 +12,9 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "npm run docker:stop && docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d",
-    "test": "tape 'test/unit/**/*.test.js' | faucet",
+    "test": "npm run test:unit | faucet",
     "pretest": "standard",
+    "test:unit": "tape 'test/unit/**/*.test.js'",
     "test:all": "npm test && npm run test:integration && npm run test:functional",
     "test:xunit": "tape 'test/unit/**/*.test.js' | tap-xunit",
     "test:coverage": "istanbul cover tape -- 'test/unit/**/*.test.js'",

@@ -21,7 +21,7 @@ let listeners = new AccountListeners()
 
 let transferHandler = (msg) => {
   let transfer = convertTransfer(msg)
-  getAccounts(transfer.resource).forEach(a => UrlParser.parseAccountName(a, (err, accountName) => {
+  getAccounts(transfer.resource).forEach(a => UrlParser.nameFromAccountUri(a, (err, accountName) => {
     if (!err) {
       listeners.send(accountName, msg)
     }
