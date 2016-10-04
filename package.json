@@ -2,6 +2,7 @@
   "name": "@leveloneproject/central-ledger",
   "version": "1.23.2",
   "description": "Central ledger hosted by a scheme to record and settle transfers.",
+  "license": "SEE LICENSE IN LICENSE",
   "repository": {
     "type": "git",
     "url": "git@github.com:LevelOneProject/central-ledger.git"
