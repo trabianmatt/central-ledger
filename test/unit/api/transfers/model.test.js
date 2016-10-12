@@ -1,36 +1,44 @@
 'use strict'
 
-const Test = require('tape')
+const src = '../../../../src'
+const Test = require('tapes')(require('tape'))
 const Uuid = require('uuid4')
 const Moment = require('moment')
-const Proxyquire = require('proxyquire')
 const Sinon = require('sinon')
-
-function createModel (db, eventric) {
-  return Proxyquire('../../../../src/api/transfers/model', {
-    '../../lib/db': db,
-    '../../lib/eventric': eventric
-  })
-}
+const P = require('bluebird')
+const Model = require(`${src}/api/transfers/model`)
+const Db = require(`${src}/lib/db`)
+const Eventric = require(`${src}/eventric`)
 
 function setupTransfersDb (transfers) {
   let db = { transfers: transfers }
-  return {
-    connect: () => Promise.resolve(db)
-  }
+  Db.connect.returns(P.resolve(db))
 }
 
 function setupEventric (context) {
-  return {
-    getContext: () => Promise.resolve(context)
-  }
+  Eventric.getContext.returns(P.resolve(context))
 }
 
 Test('transfer model', function (modelTest) {
+  let sandbox
+
+  modelTest.beforeEach(t => {
+    sandbox = Sinon.sandbox.create()
+    sandbox.stub(Db, 'connect')
+    sandbox.stub(Eventric, 'getContext')
+    t.end()
+  })
+
+  modelTest.afterEach(t => {
+    sandbox.restore()
+    t.end()
+  })
+
   modelTest.test('prepare should', function (prepareTest) {
     prepareTest.test('send PrepareTransfer command', function (assert) {
-      let command = Sinon.stub()
-      let model = createModel({}, setupEventric({ command: command }))
+      let command = sandbox.stub()
+      setupEventric({ command: command })
+
       let payload = {
         id: 'https://central-ledger/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204',
         ledger: 'http://usd-ledger.example/USD',
@@ -49,7 +57,18 @@ Test('transfer model', function (modelTest) {
         execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
         expires_at: '2015-06-16T00:00:01.000Z'
       }
-      model.prepare(payload)
+      command.withArgs('PrepareTransfer').returns({
+        existing: false,
+        transfer: {
+          ledger: payload.ledger,
+          debits: payload.debits,
+          credits: payload.credits,
+          execution_condition: payload.execution_condition,
+          expires_at: payload.expires_at
+        }
+      })
+
+      Model.prepare(payload)
         .then(() => {
           let commandArg1 = command.firstCall.args[0]
           let commandArg2 = command.firstCall.args[1]
@@ -69,11 +88,16 @@ Test('transfer model', function (modelTest) {
 
   modelTest.test('fulfill should', function (fulfillTest) {
     fulfillTest.test('send FulfillTransfer command', function (assert) {
-      let command = Sinon.stub()
-      let model = createModel({}, setupEventric({ command: command }))
-      let payload = { id: '3a2a1d9e-8640-4d2d-b06c-84f2cd613204', fulfillment: 'cf:0:_v8' }
-      model.fulfill(payload)
-        .then(() => {
+      let command = sandbox.stub()
+      let fulfillment = 'cf:0:_v8'
+      command.returns(P.resolve({
+        fulfillment
+      }))
+      setupEventric({ command: command })
+      let payload = { id: '3a2a1d9e-8640-4d2d-b06c-84f2cd613204', fulfillment }
+      Model.fulfill(payload)
+        .then(result => {
+          assert.equal(result, fulfillment)
           let commandArg1 = command.firstCall.args[0]
           let commandArg2 = command.firstCall.args[1]
           assert.equal(commandArg1, 'FulfillTransfer')
@@ -112,10 +136,10 @@ Test('transfer model', function (modelTest) {
     }
 
     savePreparedTest.test('save transfer prepared event', function (assert) {
-      let insertAsync = Sinon.stub()
-      let model = createModel(setupTransfersDb({ insertAsync: insertAsync }), {})
+      let insertAsync = sandbox.stub()
+      setupTransfersDb({ insertAsync: insertAsync })
 
-      model.saveTransferPrepared(transferPreparedEvent)
+      Model.saveTransferPrepared(transferPreparedEvent)
         .then(() => {
           let insertAsyncArg = insertAsync.firstCall.args[0]
           assert.equal(insertAsyncArg.transferUuid, transferPreparedEvent.aggregate.id)
@@ -141,10 +165,10 @@ Test('transfer model', function (modelTest) {
 
     savePreparedTest.test('return newly created transfer', function (assert) {
       let newTransfer = { transferUuid: '1d4f2a70-e0d6-42dc-9efb-6d23060ccd6f' }
-      let insertAsync = Sinon.stub().returns(newTransfer)
-      let model = createModel(setupTransfersDb({ insertAsync: insertAsync }), {})
+      let insertAsync = sandbox.stub().returns(newTransfer)
+      setupTransfersDb({ insertAsync: insertAsync })
 
-      model.saveTransferPrepared(transferPreparedEvent)
+      Model.saveTransferPrepared(transferPreparedEvent)
         .then(t => {
           assert.equal(t, newTransfer)
           assert.end()
@@ -186,11 +210,11 @@ Test('transfer model', function (modelTest) {
     saveExecutedTest.test('retrieve existing prepared transfer and update fields', function (assert) {
       let foundTransfer = { transferUuid: transferExecutedEvent.aggregate.id, state: 'prepared' }
 
-      let findOneAsync = Sinon.stub().returns(Promise.resolve(foundTransfer))
-      let updateAsync = Sinon.stub()
-      let model = createModel(setupTransfersDb({ findOneAsync: findOneAsync, updateAsync: updateAsync }), {})
+      let findOneAsync = sandbox.stub().returns(Promise.resolve(foundTransfer))
+      let updateAsync = sandbox.stub()
+      setupTransfersDb({ findOneAsync: findOneAsync, updateAsync: updateAsync })
 
-      model.saveTransferExecuted(transferExecutedEvent)
+      Model.saveTransferExecuted(transferExecutedEvent)
         .then(() => {
           let findOneAsyncArg = findOneAsync.firstCall.args[0]
           let updateAsyncArg = updateAsync.firstCall.args[0]
@@ -205,10 +229,10 @@ Test('transfer model', function (modelTest) {
     })
 
     saveExecutedTest.test('fail if prepared transfer not found', function (assert) {
-      let findOneAsync = Sinon.stub().returns(Promise.resolve(null))
-      let model = createModel(setupTransfersDb({ findOneAsync: findOneAsync }), {})
+      let findOneAsync = sandbox.stub().returns(Promise.resolve(null))
+      setupTransfersDb({ findOneAsync: findOneAsync })
 
-      model.saveTransferExecuted(transferExecutedEvent)
+      Model.saveTransferExecuted(transferExecutedEvent)
         .then(() => {
           assert.fail('Should have thrown error')
           assert.end()
@@ -222,10 +246,10 @@ Test('transfer model', function (modelTest) {
     saveExecutedTest.test('fail if transfer is already executed', function (assert) {
       let foundTransfer = { transferUuid: transferExecutedEvent.aggregate.id, state: 'executed' }
 
-      let findOneAsync = Sinon.stub().returns(Promise.resolve(foundTransfer))
-      let model = createModel(setupTransfersDb({ findOneAsync: findOneAsync }), {})
+      let findOneAsync = sandbox.stub().returns(Promise.resolve(foundTransfer))
+      setupTransfersDb({ findOneAsync: findOneAsync })
 
-      model.saveTransferExecuted(transferExecutedEvent)
+      Model.saveTransferExecuted(transferExecutedEvent)
         .then(() => {
           assert.fail('Should have thrown error')
           assert.end()
@@ -241,10 +265,10 @@ Test('transfer model', function (modelTest) {
 
   modelTest.test('truncateReadModel should', function (truncateTest) {
     truncateTest.test('destroy all records', function (assert) {
-      let destroyAsync = Sinon.stub()
-      let model = createModel(setupTransfersDb({ destroyAsync: destroyAsync }), {})
+      let destroyAsync = sandbox.stub()
+      setupTransfersDb({ destroyAsync: destroyAsync })
 
-      model.truncateReadModel()
+      Model.truncateReadModel()
         .then(() => {
           let destroyAsyncArg = destroyAsync.firstCall.args[0]
           assert.deepEqual(destroyAsyncArg, {})
@@ -258,9 +282,9 @@ Test('transfer model', function (modelTest) {
   modelTest.test('getByIdShould', function (getByIdTest) {
     getByIdTest.test('return exception if db.connect throws', function (assert) {
       let error = new Error()
-      let model = createModel({ connect: () => Promise.reject(error) }, {})
+      Db.connect.returns(Promise.reject(error))
 
-      model.getById(Uuid())
+      Model.getById(Uuid())
         .then(() => {
           assert.fail('Should have thrown error')
           assert.end()
@@ -274,9 +298,9 @@ Test('transfer model', function (modelTest) {
     getByIdTest.test('return exception if db.findOneAsync throws', function (assert) {
       let error = new Error()
       let findOneAsync = function () { return Promise.reject(error) }
-      let model = createModel(setupTransfersDb({ findOneAsync: findOneAsync }), {})
+      setupTransfersDb({ findOneAsync: findOneAsync })
 
-      model.getById(Uuid())
+      Model.getById(Uuid())
         .then(() => {
           assert.fail('Should have thrown error')
           assert.end()
@@ -290,10 +314,10 @@ Test('transfer model', function (modelTest) {
     getByIdTest.test('find transfer by transferUuid', function (assert) {
       let id = Uuid()
       let transfer = { id: id }
-      let findOneAsync = Sinon.stub().returns(Promise.resolve(transfer))
-      let model = createModel(setupTransfersDb({ findOneAsync: findOneAsync }), {})
+      let findOneAsync = sandbox.stub().returns(Promise.resolve(transfer))
+      setupTransfersDb({ findOneAsync: findOneAsync })
 
-      model.getById(id)
+      Model.getById(id)
         .then(found => {
           let findOneAsyncArg = findOneAsync.firstCall.args[0]
           assert.equal(found, transfer)

@@ -138,12 +138,12 @@ Test('post and get a subscription', function (assert) {
 })
 
 Test('post and get an account', function (assert) {
-  var accountName = generateAccountName()
+  let accountName = generateAccountName()
 
   createAccount(accountName)
     .expect(201, (err, res) => {
       if (err) return assert.end(err)
-      var expectedCreated = res.body.created
+      let expectedCreated = res.body.created
       assert.notEqual(expectedCreated, undefined)
       assert.equal(res.body.name, accountName)
       Request.get('/accounts/' + accountName)
@@ -162,7 +162,7 @@ Test('post and get an account', function (assert) {
 })
 
 Test('ensure an account name can only be registered once', function (assert) {
-  var accountName = generateAccountName()
+  let accountName = generateAccountName()
 
   createAccount(accountName)
     .expect(201, function (err, res) {
@@ -207,6 +207,78 @@ Test('prepare a transfer', function (assert) {
   })
 })
 
+Test('return transfer details when preparing existing transfer', function (assert) {
+  let account1Name = generateAccountName()
+  let account2Name = generateAccountName()
+  let transferId = generateTransferId()
+  let transfer = buildTransfer(transferId, buildDebitOrCredit(account1Name, '50'), buildDebitOrCredit(account2Name, '50'))
+
+  createAccount(account1Name)
+  .then(() => createAccount(account2Name))
+  .then(() => prepareTransfer(transferId, transfer))
+  .then(() => {
+    prepareTransfer(transferId, transfer)
+    .expect(200, function (err, res) {
+      if (err) return assert.end(err)
+      assert.equal(res.body.id, transfer.id)
+      assert.equal(res.body.ledger, transfer.ledger)
+      assert.equal(res.body.debits[0].account, transfer.debits[0].account)
+      assert.equal(res.body.debits[0].amount, parseInt(transfer.debits[0].amount))
+      assert.equal(res.body.credits[0].account, transfer.credits[0].account)
+      assert.equal(res.body.credits[0].amount, parseInt(transfer.credits[0].amount))
+      assert.equal(res.body.execution_condition, transfer.execution_condition)
+      assert.equal(res.body.expires_at, transfer.expires_at)
+      assert.equal(res.body.state, 'prepared')
+      assert.end()
+    })
+    .expect('Content-Type', /json/)
+  })
+})
+
+Test('return error when preparing existing transfer with changed properties', t => {
+  let account1Name = generateAccountName()
+  let account2Name = generateAccountName()
+  let transferId = generateTransferId()
+  let transfer = buildTransfer(transferId, buildDebitOrCredit(account1Name, '50'), buildDebitOrCredit(account2Name, '50'))
+
+  createAccount(account1Name)
+  .then(() => createAccount(account2Name))
+  .then(() => prepareTransfer(transferId, transfer))
+  .then(() => {
+    transfer.credits.push(buildDebitOrCredit(account1Name, '50'))
+    prepareTransfer(transferId, transfer)
+    .expect(422, (err, res) => {
+      if (err) return t.end(err)
+      t.equal(res.body.error, 'Unprocessable Entity')
+      t.equal(res.body.message, 'The specified entity already exists and may not be modified.')
+      t.end()
+    })
+    .expect('Content-Type', /json/)
+  })
+})
+
+Test('return error when preparing fulfilled transfer', t => {
+  let account1Name = generateAccountName()
+  let account2Name = generateAccountName()
+  let transferId = generateTransferId()
+  let transfer = buildTransfer(transferId, buildDebitOrCredit(account1Name, '50'), buildDebitOrCredit(account2Name, '50'))
+
+  createAccount(account1Name)
+  .then(() => createAccount(account2Name))
+  .then(() => prepareTransfer(transferId, transfer))
+  .then(() => fulfillTransfer(transferId, 'cf:0:_v8'))
+  .then(() => {
+    prepareTransfer(transferId, transfer)
+    .expect(422, (err, res) => {
+      if (err) return t.end(err)
+      t.equal(res.body.error, 'Unprocessable Entity')
+      t.equal(res.body.message, 'The specified entity already exists and may not be modified.')
+      t.end()
+    })
+    .expect('Content-Type', /json/)
+  })
+})
+
 Test('return transfer details', function (assert) {
   let account1Name = generateAccountName()
   let account2Name = generateAccountName()
@@ -242,20 +314,19 @@ Test('fulfill a transfer', function (assert) {
   let fulfillment = 'cf:0:_v8'
   let account1Name = generateAccountName()
   let account2Name = generateAccountName()
+  let transferId = generateTransferId()
 
-  createAccount(account1Name).then(() => {
-    createAccount(account2Name).then(() => {
-      let transferId = generateTransferId()
-      prepareTransfer(transferId, buildTransfer(transferId, buildDebitOrCredit(account1Name, '25'), buildDebitOrCredit(account2Name, '25'))).then(() => {
-        fulfillTransfer(transferId, fulfillment)
-          .expect(200, function (err, res) {
-            if (err) return assert.end(err)
-            assert.equal(res.text, fulfillment)
-            assert.end()
-          })
-          .expect('Content-Type', 'text/plain; charset=utf-8')
+  createAccount(account1Name)
+  .then(() => createAccount(account2Name))
+  .then(() => prepareTransfer(transferId, buildTransfer(transferId, buildDebitOrCredit(account1Name, '25'), buildDebitOrCredit(account2Name, '25'))))
+  .then(() => {
+    fulfillTransfer(transferId, fulfillment)
+      .expect(200, function (err, res) {
+        if (err) return assert.end(err)
+        assert.equal(res.text, fulfillment)
+        assert.end()
       })
-    })
+      .expect('Content-Type', 'text/plain; charset=utf-8')
   })
 })
 
@@ -263,22 +334,20 @@ Test('get fulfillment for transfer', function (assert) {
   let fulfillment = 'cf:0:_v8'
   let account1Name = generateAccountName()
   let account2Name = generateAccountName()
+  let transferId = generateTransferId()
 
-  createAccount(account1Name).then(() => {
-    createAccount(account2Name).then(() => {
-      let transferId = generateTransferId()
-      prepareTransfer(transferId, buildTransfer(transferId, buildDebitOrCredit(account1Name, '25'), buildDebitOrCredit(account2Name, '25'))).then(() => {
-        fulfillTransfer(transferId, fulfillment).then(() => {
-          Request.get('/transfers/' + transferId + '/fulfillment')
-            .expect(200, function (err, res) {
-              if (err) return assert.end(err)
-              assert.equal(res.text, fulfillment)
-              assert.end()
-            })
-            .expect('Content-Type', 'text/plain; charset=utf-8')
-        })
+  createAccount(account1Name)
+  .then(account1 => createAccount(account2Name))
+  .then(account2 => prepareTransfer(transferId, buildTransfer(transferId, buildDebitOrCredit(account1Name, '25'), buildDebitOrCredit(account2Name, '25'))))
+  .then(prepared => fulfillTransfer(transferId, fulfillment))
+  .then(fulfilled => {
+    Request.get('/transfers/' + transferId + '/fulfillment')
+      .expect(200, function (err, res) {
+        if (err) return assert.end(err)
+        assert.equal(res.text, fulfillment)
+        assert.end()
       })
-    })
+      .expect('Content-Type', 'text/plain; charset=utf-8')
   })
 })
 
@@ -301,26 +370,6 @@ Test('return error when retrieving fulfillment if transfer not executed', functi
   })
 })
 
-Test('return error when preparing existing transfer', function (assert) {
-  let account1Name = generateAccountName()
-  let account2Name = generateAccountName()
-
-  createAccount(account1Name).then(() => {
-    createAccount(account2Name).then(() => {
-      let transferId = generateTransferId()
-      let transfer = buildTransfer(transferId, buildDebitOrCredit(account1Name, '50'), buildDebitOrCredit(account2Name, '50'))
-      prepareTransfer(transferId, transfer).then(() => {
-        prepareTransfer(transferId, transfer)
-          .expect(422, function (err, res) {
-            if (err) return assert.end(err)
-            assert.pass()
-            assert.end()
-          })
-      })
-    })
-  })
-})
-
 Test('return error when fulfilling non-existing transfer', function (assert) {
   let fulfillment = 'cf:0:_v8'
 
@@ -334,7 +383,7 @@ Test('return error when fulfilling non-existing transfer', function (assert) {
     })
 })
 
-Test('return error when fulfilling already fulfilled transfer', function (assert) {
+Test('return fulfillment when fulfilling already fulfilled transfer', function (assert) {
   let fulfillment = 'cf:0:_v8'
   let account1Name = generateAccountName()
   let account2Name = generateAccountName()
@@ -345,11 +394,12 @@ Test('return error when fulfilling already fulfilled transfer', function (assert
       prepareTransfer(transferId, buildTransfer(transferId, buildDebitOrCredit(account1Name, '25'), buildDebitOrCredit(account2Name, '25'))).then(() => {
         fulfillTransfer(transferId, fulfillment).then(() => {
           fulfillTransfer(transferId, fulfillment)
-            .expect(422, function (err, res) {
+            .expect(200, function (err, res) {
               if (err) return assert.end(err)
-              assert.pass()
+              assert.equal(res.text, fulfillment)
               assert.end()
             })
+            .expect('Content-Type', 'text/plain; charset=utf-8')
         })
       })
     })

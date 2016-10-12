@@ -1,17 +1,19 @@
 'use strict'
 
+const src = '../../../../src'
 const Sinon = require('sinon')
 const Test = require('tapes')(require('tape'))
 const Boom = require('boom')
 const P = require('bluebird')
 const Uuid = require('uuid4')
-const Validator = require('../../../../src/api/transfers/validator')
-const Config = require('../../../../src/lib/config')
-const Handler = require('../../../../src/api/transfers/handler')
-const Model = require('../../../../src/api/transfers/model')
-const ValidationError = require('../../../../src/errors/validation-error')
-const AlreadyPreparedError = require('../../../../src/errors/already-prepared-error')
-const UnpreparedTransferError = require('../../../../src/errors/unprepared-transfer-error')
+const Validator = require(`${src}/api/transfers/validator`)
+const Config = require(`${src}/lib/config`)
+const Handler = require(`${src}/api/transfers/handler`)
+const Model = require(`${src}/api/transfers/model`)
+const AlreadyExistsError = require(`${src}/errors/already-exists-error`)
+const NotFoundError = require(`${src}/errors/not-found-error`)
+const ValidationError = require(`${src}/errors/validation-error`)
+const UnpreparedTransferError = require(`${src}/errors/unprepared-transfer-error`)
 
 function createRequest (id, payload) {
   let requestId = id || Uuid()
@@ -132,11 +134,11 @@ Test('transfer handler', function (handlerTest) {
         expires_at: '2015-06-16T00:00:01.000Z'
       }
 
-      let error = new AlreadyPreparedError()
+      let error = new AlreadyExistsError()
       sandbox.stub(Model, 'prepare').returns(P.reject(error))
 
       let reply = function (response) {
-        let boomError = Boom.badData("Can't re-prepare an existing transfer.")
+        let boomError = Boom.badData('The specified entity already exists and may not be modified.')
         assert.deepEqual(response, boomError)
         assert.end()
       }
@@ -189,9 +191,7 @@ Test('transfer handler', function (handlerTest) {
     fulfillTransferTest.test('return error if transfer has no domain events', function (assert) {
       let fulfillment = { id: '3a2a1d9e-8640-4d2d-b06c-84f2cd613204', fulfillment: 'cf:0:_v8' }
 
-      let error = new Error('')
-      error.originalErrorMessage = 'No domainEvents for aggregate of type Transfer'
-      sandbox.stub(Model, 'fulfill').returns(P.reject(error))
+      sandbox.stub(Model, 'fulfill').returns(P.reject(new NotFoundError()))
 
       let reply = function (response) {
         let boomError = Boom.notFound()

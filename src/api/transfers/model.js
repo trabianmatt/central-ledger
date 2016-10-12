@@ -3,7 +3,7 @@
 const Moment = require('moment')
 const P = require('bluebird')
 const Db = require('../../lib/db')
-const Eventric = require('../../lib/eventric')
+const Eventric = require('../../eventric')
 
 function parseIdFor (transfer) {
   return transfer.id.substr(transfer.id.lastIndexOf('/') + 1)
@@ -22,14 +22,16 @@ exports.prepare = (transfer) => {
           expires_at: transfer.expires_at
         })
       })
-      .then(() => {
+      .then(result => {
+        let t = result.transfer
         return {
           id: transfer.id,
-          ledger: transfer.ledger,
-          debits: transfer.debits,
-          credits: transfer.credits,
-          execution_condition: transfer.execution_condition,
-          expires_at: transfer.expires_at
+          ledger: t.ledger,
+          debits: t.debits,
+          credits: t.credits,
+          execution_condition: t.execution_condition,
+          expires_at: t.expires_at,
+          existing: result.existing
         }
       })
     )
@@ -44,8 +46,8 @@ exports.fulfill = (fulfillment) => {
           fulfillment: fulfillment.fulfillment
         })
       })
-      .then(() => {
-        return fulfillment.fulfillment
+      .then(t => {
+        return t.fulfillment
       })
   )
 }

@@ -3,7 +3,7 @@
 const Glue = require('glue')
 const manifest = require('./manifest')
 const Db = require('./lib/db')
-const Eventric = require('./lib/eventric')
+const Eventric = require('./eventric')
 
 const composeOptions = { relativeTo: __dirname }
 

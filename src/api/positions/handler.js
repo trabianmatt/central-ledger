@@ -3,7 +3,7 @@ const Decimal = require('decimal.js')
 
 const TransfersModel = require('../transfers/model')
 const Handle = require('../../lib/handler')
-const PositionCalculator = require('./positionCalculator')
+const PositionCalculator = require('./position-calculator')
 
 function buildResponse (positionFor) {
   let response = { positions: [] }

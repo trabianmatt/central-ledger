@@ -8,14 +8,14 @@ const Config = require('../../../../src/lib/config')
 const Handler = require('../../../../src/api/accounts/handler')
 const Model = require('../../../../src/models/accounts')
 
-var createGet = name => {
+let createGet = name => {
   return {
     params: { name: name || 'name' },
     server: { log: () => {} }
   }
 }
 
-var createPost = payload => {
+let createPost = payload => {
   return {
     payload: payload || {},
     server: { log: () => { } }

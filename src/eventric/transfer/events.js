@@ -14,13 +14,7 @@ module.exports = {
     this.credits = credits
     this.execution_condition = execution_condition
     this.expires_at = expires_at
-    return {
-      ledger,
-      debits,
-      credits,
-      execution_condition,
-      expires_at
-    }
+    return this
   },
 
   TransferExecuted({
@@ -37,14 +31,7 @@ module.exports = {
     this.execution_condition = execution_condition
     this.expires_at = expires_at
     this.fulfillment = fulfillment
-    return {
-      ledger,
-      debits,
-      credits,
-      execution_condition,
-      expires_at,
-      fulfillment
-    }
+    return this
   }
   /*eslint-enable */
 }

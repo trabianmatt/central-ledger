@@ -72,6 +72,11 @@ done
 set -o pipefail && run_test_command
 test_exit_code=$?
 
+if [ "$test_exit_code" != 0 ]
+then
+  docker logs centralledger_central-ledger_1
+fi
+
 shutdown_and_remove
 
 exit "$test_exit_code"

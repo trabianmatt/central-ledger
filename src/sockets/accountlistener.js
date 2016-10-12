@@ -5,7 +5,7 @@ function AccountListeners () {
 }
 
 AccountListeners.prototype._getNameSockets = function (name) {
-  var nameArray = this._accounts[name] = this._accounts[name] || []
+  let nameArray = this._accounts[name] = this._accounts[name] || []
   return nameArray
 }
 

@@ -1,9 +1,7 @@
 'use strict'
 
 const CryptoConditions = require('../../cryptoConditions/conditions')
-const CryptoFulfillments = require('../../cryptoConditions/fulfillments')
-const TransferState = require('./transferState')
-const UnpreparedTransferError = require('../../errors/unprepared-transfer-error')
+const TransferState = require('./transfer-state')
 
 class Transfer {
   create ({
@@ -25,19 +23,14 @@ class Transfer {
   }
 
   fulfill ({ fulfillment }) {
-    if (this.state !== TransferState.PREPARED) {
-      throw new UnpreparedTransferError()
+    let payload = {
+      ledger: this.ledger,
+      debits: this.debits,
+      credits: this.credits,
+      execution_condition: this.execution_condition,
+      expires_at: this.expires_at,
+      fulfillment: fulfillment
     }
-
-    CryptoFulfillments.validateConditionFulfillment(this.execution_condition, fulfillment)
-
-    var payload = {}
-    payload.ledger = this.ledger
-    payload.debits = this.debits
-    payload.credits = this.credits
-    payload.execution_condition = this.execution_condition
-    payload.expires_at = this.expires_at
-    payload.fulfillment = fulfillment
 
     return this.$emitDomainEvent('TransferExecuted', payload)
   }
@@ -49,10 +42,13 @@ class Transfer {
     this.execution_condition = event.payload.execution_condition
     this.expires_at = event.payload.expires_at
     this.state = TransferState.PREPARED
+    return this
   }
 
   handleTransferExecuted (event) {
     this.state = TransferState.EXECUTED
+    this.fulfillment = event.payload.fulfillment
+    return this
   }
 }
 

@@ -20,6 +20,11 @@ function getConnection () {
   return connection
 }
 
+function resetConnection () {
+  connection = null
+}
+
 module.exports = {
-  connect: getConnection
+  connect: getConnection,
+  resetConnection: resetConnection
 }

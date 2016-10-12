@@ -4,11 +4,11 @@ const Model = require('./model')
 const Validator = require('./validator')
 const Handle = require('../../lib/handler')
 const Config = require('../../lib/config')
-const TransferState = require('../../eventric/transfer/transferState')
+const TransferState = require('../../eventric/transfer/transfer-state')
 const ValidationError = require('../../errors/validation-error')
 const P = require('bluebird')
 const NotFoundError = require('../../errors/not-found-error')
-const AlreadyPreparedError = require('../../errors/already-prepared-error')
+const AlreadyExistsError = require('../../errors/already-exists-error')
 const UnpreparedTransferError = require('../../errors/unprepared-transfer-error')
 
 let buildPrepareTransferResponse = (record) => {
@@ -49,16 +49,11 @@ let buildGetTransferFulfillmentResponse = (record) => {
   return record.fulfillment
 }
 
-function AggregateNotFoundError (e) {
-  return e.originalErrorMessage.includes('No domainEvents for aggregate of type Transfer')
-}
-
 exports.prepareTransfer = function (request, reply) {
   return Validator.validate(request.payload, request.params.id)
     .then(Model.prepare)
-    .then(Handle.createResponse(reply, buildPrepareTransferResponse))
-    .catch(ValidationError, Handle.unprocessableEntity(reply))
-    .catch(AlreadyPreparedError, Handle.unprocessableEntity(reply, "Can't re-prepare an existing transfer."))
+    .then(Handle.putResponse(reply, buildPrepareTransferResponse))
+    .catch(ValidationError, AlreadyExistsError, Handle.unprocessableEntity(reply))
     .catch(Handle.error(request, reply))
 }
 
@@ -70,8 +65,8 @@ exports.fulfillTransfer = function (request, reply) {
 
   return Model.fulfill(fulfillment)
     .then(Handle.getResponse(reply, x => x, { contentType: 'text/plain' }))
-    .catch(UnpreparedTransferError, Handle.unprocessableEntity(reply, "Can't execute a non-prepared transfer."))
-    .catch(AggregateNotFoundError, Handle.notFound(reply))
+    .catch(UnpreparedTransferError, Handle.unprocessableEntity(reply, 'Can\'t execute a non-prepared transfer.'))
+    .catch(NotFoundError, Handle.notFound(reply))
     .catch(Handle.error(request, reply))
 }
 

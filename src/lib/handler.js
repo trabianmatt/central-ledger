@@ -18,6 +18,13 @@ exports.getResponse = (reply, buildResponse, options) => {
   }
 }
 
+exports.putResponse = (reply, buildResponse, created) => {
+  return (entity) => {
+    reply(buildResponse(entity)).code((entity.existing === true) ? 200 : 201)
+    return null
+  }
+}
+
 exports.createResponse = (reply, buildResponse) => {
   return (entity) => {
     reply(buildResponse(entity)).code(201)
@@ -49,7 +56,7 @@ exports.notFound = (reply) => {
 
 exports.unprocessableEntity = (reply, message) => {
   return (e) => {
-    reply(Boom.badData(message || e.message))
+    reply(Boom.badData(message || e.originalErrorMessage || e.message))
     return null
   }
 }

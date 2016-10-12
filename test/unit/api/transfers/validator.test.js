@@ -10,7 +10,7 @@ const Validator = require('../../../../src/api/transfers/validator')
 const ValidationError = require('../../../../src/errors/validation-error')
 const P = require('bluebird')
 
-var assertValidationError = (promise, assert, message) => {
+let assertValidationError = (promise, assert, message) => {
   promise.then(a => {
     assert.fail()
     assert.end()
@@ -29,11 +29,11 @@ Test('transfer validator', (test) => {
   let originalHostName
   let sandbox
 
-  var goodTransfer = function () {
+  let goodTransfer = function () {
     transferId = Uuid()
     const accountName = 'some_account_name'
     const transferIdUri = `${hostname}/transfers/${transferId}`
-    var accountUri = `${hostname}/accounts/${accountName}`
+    let accountUri = `${hostname}/accounts/${accountName}`
     Accounts.getByName.withArgs(accountName).returns(P.resolve({}))
     UrlParser.nameFromAccountUri.withArgs(badAccountUri).returns(null)
     UrlParser.nameFromAccountUri.withArgs(accountUri).returns(accountName)
@@ -125,7 +125,7 @@ Test('transfer validator', (test) => {
   })
 
   test.test('return transfer if all checks pass', assert => {
-    var transfer = goodTransfer()
+    let transfer = goodTransfer()
     Validator.validate(transfer, transferId)
     .then(t => {
       assert.equal(t, transfer)

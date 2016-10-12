@@ -1,28 +1,30 @@
 'use strict'
 
 const Sinon = require('sinon')
-const Test = require('tape')
-const Proxyquire = require('proxyquire')
-const TransferState = require('../../../../src/eventric/transfer/transferState')
-const UnpreparedTransferError = require('../../../../src/errors/unprepared-transfer-error')
-
-function createTransfer (cryptoConditions, cryptoFulfillments) {
-  return Proxyquire('../../../../src/eventric/transfer/transfer',
-    {
-      '../../cryptoConditions/conditions': cryptoConditions,
-      '../../cryptoConditions/fulfillments': cryptoFulfillments
-    }
-  )
-}
+const Test = require('tapes')(require('tape'))
+const TransferState = require('../../../../src/eventric/transfer/transfer-state')
+const Transfer = require('../../../../src/eventric/transfer/transfer')
+const CryptoConditions = require('../../../../src/cryptoConditions/conditions')
 
 Test('transfer', function (transferTest) {
+  let sandbox
+
+  transferTest.beforeEach(t => {
+    sandbox = Sinon.sandbox.create()
+    sandbox.stub(CryptoConditions, 'validateCondition')
+    t.end()
+  })
+
+  transferTest.afterEach(t => {
+    sandbox.restore()
+    t.end()
+  })
+
   transferTest.test('create should', function (createTransferTest) {
     createTransferTest.test('emit TransferPrepared event', function (assert) {
-      let cryptoConditions = {
-        validateCondition: Sinon.stub().returns(true)
-      }
+      CryptoConditions.validateCondition.returns(true)
 
-      let transfer = new (createTransfer(cryptoConditions, {}))()
+      let transfer = new Transfer()
 
       let emitDomainEvent = Sinon.stub()
       transfer.$emitDomainEvent = emitDomainEvent
@@ -59,11 +61,9 @@ Test('transfer', function (transferTest) {
     })
 
     createTransferTest.test('throw an exception if execution condition validation fails', function (assert) {
-      let cryptoConditions = {
-        validateCondition: Sinon.stub().throws()
-      }
+      CryptoConditions.validateCondition.throws()
 
-      let transfer = new (createTransfer(cryptoConditions, {}))()
+      let transfer = new Transfer()
 
       let payload = {
         ledger: 'http://usd-ledger.example/USD',
@@ -94,11 +94,7 @@ Test('transfer', function (transferTest) {
 
   transferTest.test('fulfill should', function (fulfillTransferTest) {
     fulfillTransferTest.test('emit TransferExecuted event', function (assert) {
-      let cryptoFulfillments = {
-        validateConditionFulfillment: Sinon.stub().returns(true)
-      }
-
-      let transfer = new (createTransfer({}, cryptoFulfillments))()
+      let transfer = new Transfer()
       transfer.execution_condition = 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2'
       transfer.state = TransferState.PREPARED
 
@@ -114,44 +110,53 @@ Test('transfer', function (transferTest) {
       assert.end()
     })
 
-    fulfillTransferTest.test('throw exception if not pending', function (assert) {
-      let cryptoFulfillments = {
-        validateConditionFulfillment: Sinon.stub().returns(true)
-      }
-
-      let transfer = new (createTransfer({}, cryptoFulfillments))()
-      transfer.execution_condition = 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2'
-      transfer.state = null
-
-      let fulfillment = 'cf:0:_v8'
-
-      assert.throws(
-        () => transfer.fulfill({ fulfillment }),
-        UnpreparedTransferError
-      )
-      assert.end()
-    })
-
-    fulfillTransferTest.test('throw an exception if condition fulfillment validation fails', function (assert) {
-      let cryptoFulfillments = {
-        validateConditionFulfillment: Sinon.stub().throws()
-      }
-
-      let fulfillment = 'cf:0:_v8'
-      let transfer = new (createTransfer({}, cryptoFulfillments))()
-      transfer.state = TransferState.PREPARED
-      transfer.execution_condition = 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2'
-
-      let emitDomainEvent = Sinon.stub()
-      transfer.$emitDomainEvent = emitDomainEvent
-
-      assert.throws(
-        () => transfer.fulfill({ fulfillment })
-      )
-      assert.end()
-    })
-
     fulfillTransferTest.end()
   })
+
+  transferTest.test('handleTransferPrepared should', handleTransferPreparedTest => {
+    handleTransferPreparedTest.test('set transfer properties', t => {
+      let transfer = new Transfer()
+      let event = {
+        payload: {
+          ledger: 'ledger',
+          debits: 'debits',
+          credits: 'credits',
+          execution_condition: 'execution_condition',
+          expires_at: 'expires_at'
+        }
+      }
+      transfer.handleTransferPrepared(event)
+      t.equal(transfer.ledger, 'ledger')
+      t.equal(transfer.debits, 'debits')
+      t.equal(transfer.credits, 'credits')
+      t.equal(transfer.execution_condition, 'execution_condition')
+      t.equal(transfer.expires_at, 'expires_at')
+      t.equal(transfer.state, TransferState.PREPARED)
+      t.end()
+    })
+
+    handleTransferPreparedTest.end()
+  })
+
+  transferTest.test('handleTransferExecuted should', handleTest => {
+    handleTest.test('set transfer properties', t => {
+      let transfer = new Transfer()
+      let fulfillment = 'test'
+      t.notOk(transfer.state)
+      t.notOk(transfer.fulfillment)
+
+      transfer.handleTransferExecuted({
+        payload: {
+          fulfillment: fulfillment
+        }
+      })
+
+      t.equal(transfer.state, TransferState.EXECUTED)
+      t.equal(transfer.fulfillment, fulfillment)
+      t.end()
+    })
+    handleTest.end()
+  })
+
   transferTest.end()
 })

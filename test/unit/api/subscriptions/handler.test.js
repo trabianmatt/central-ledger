@@ -1,16 +1,12 @@
 'use strict'
 
-const Proxyquire = require('proxyquire')
+const src = '../../../../src'
 const Sinon = require('sinon')
-const Test = require('tape')
+const Test = require('tapes')(require('tape'))
 const Boom = require('boom')
 const P = require('bluebird')
-
-function createHandler (model) {
-  return Proxyquire('../../../../src/api/subscriptions/handler', {
-    './model': model
-  })
-}
+const Handler = require(`${src}/api/subscriptions/handler`)
+const Model = require(`${src}/api/subscriptions/model`)
 
 function createRequest (id, payload) {
   let requestId = id || 12
@@ -25,13 +21,26 @@ function createRequest (id, payload) {
 }
 
 Test('subscription handler', function (handlerTest) {
+  let sandbox
+
+  handlerTest.beforeEach(t => {
+    sandbox = Sinon.sandbox.create()
+    sandbox.stub(Model, 'getById')
+    sandbox.stub(Model, 'create')
+    t.end()
+  })
+
+  handlerTest.afterEach(t => {
+    sandbox.restore()
+    t.end()
+  })
+
   handlerTest.test('getSubscriptionById should', function (getSubscriptionByIdTest) {
     getSubscriptionByIdTest.test('get subscription by request id', function (t) {
       let id = 12
       let subscription = { subscriptionUuid: 'test', url: 'test', secret: 'test', createdDate: new Date() }
-      let model = {
-        getById: Sinon.stub().returns(P.resolve(subscription))
-      }
+      Model.getById.returns(P.resolve(subscription))
+
       let reply = function (response) {
         t.equal(response.id, subscription.subscriptionUuid)
         t.equal(response.url, subscription.url)
@@ -43,33 +52,30 @@ Test('subscription handler', function (handlerTest) {
           }
         }
       }
-      createHandler(model).getSubscriptionById(createRequest(id), reply)
+      Handler.getSubscriptionById(createRequest(id), reply)
     })
 
     getSubscriptionByIdTest.test('return 404 if subscription null', function (t) {
-      let model = {
-        getById: Sinon.stub().returns(P.resolve(null))
-      }
+      Model.getById.returns(P.resolve(null))
+
       let reply = function (response) {
         t.deepEqual(response, Boom.notFound())
         t.end()
       }
 
-      createHandler(model).getSubscriptionById(createRequest(), reply)
+      Handler.getSubscriptionById(createRequest(), reply)
     })
 
     getSubscriptionByIdTest.test('return error if model throws error', function (t) {
       let error = new Error()
-      let model = {
-        getById: function () { return P.reject(error) }
-      }
+      Model.getById.returns(P.reject(error))
 
       let reply = function (response) {
         t.deepEqual(response, Boom.wrap(error))
         t.end()
       }
 
-      createHandler(model).getSubscriptionById(createRequest(), reply)
+      Handler.getSubscriptionById(createRequest(), reply)
     })
 
     getSubscriptionByIdTest.end()
@@ -79,9 +85,7 @@ Test('subscription handler', function (handlerTest) {
     createSubscriptionTest.test('return created subscription', function (t) {
       let payload = { url: 'url', secret: 'secret' }
       let subscription = { subscriptionUuid: 'test', url: 'test', secret: 'test', createdDate: new Date() }
-      let model = {
-        create: Sinon.stub().withArgs(payload).returns(P.resolve(subscription))
-      }
+      Model.create.withArgs(payload).returns(P.resolve(subscription))
 
       let reply = function (response) {
         t.equal(response.id, subscription.subscriptionUuid)
@@ -95,21 +99,19 @@ Test('subscription handler', function (handlerTest) {
         }
       }
 
-      createHandler(model).createSubscription(createRequest(12, payload), reply)
+      Handler.createSubscription(createRequest(12, payload), reply)
     })
 
     createSubscriptionTest.test('return error if model throws error', function (t) {
       let error = new Error()
-      let model = {
-        create: function () { return P.reject(error) }
-      }
+      Model.create.returns(P.reject(error))
 
       let reply = function (response) {
         t.deepEqual(response, Boom.wrap(error))
         t.end()
       }
 
-      createHandler(model).createSubscription(createRequest(), reply)
+      Handler.createSubscription(createRequest(), reply)
     })
 
     createSubscriptionTest.end()

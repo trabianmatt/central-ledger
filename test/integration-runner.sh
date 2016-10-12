@@ -40,7 +40,7 @@ source $env_file
 
 >&2 echo "Postgres is starting"
 stop_docker
-docker run --name postgres-int -d -p 5433:5432 -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD -e POSTGRES_USER=$POSTGRES_USER "postgres:9.4" > /dev/null 2>&1
+docker run --name postgres-int -d -p 15432:5432 -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD -e POSTGRES_USER=$POSTGRES_USER "postgres:9.4" > /dev/null 2>&1
 
 until is_psql_up; do
   >&2 echo "Postgres is unavailable - sleeping"
@@ -53,7 +53,7 @@ psql <<'EOSQL'
 	  CREATE DATABASE "central_ledger_integration";
 EOSQL
 
-export CLEDG_DATABASE_URI="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5433/central_ledger_integration"
+export CLEDG_DATABASE_URI="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:15432/central_ledger_integration"
 
 >&2 echo "Running migrations"
 npm run migrate > /dev/null 2>&1

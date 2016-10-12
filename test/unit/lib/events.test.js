@@ -30,8 +30,8 @@ Test('events', function (eventTest) {
       let spy = Sinon.spy()
       let Events = require(EventsPath)
       Events.onTransferExecuted(spy)
-      var resource = { id: 12 }
-      var relatedResources = { execution_condition_fulfillment: 'cf:0:_v8' }
+      let resource = { id: 12 }
+      let relatedResources = { execution_condition_fulfillment: 'cf:0:_v8' }
       Events.emitTransferExecuted(resource, relatedResources)
       t.ok(spy.calledWith({ resource: resource, related_resources: relatedResources }))
       t.end()

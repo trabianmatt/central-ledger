@@ -1,5 +1,6 @@
 .git
 .gitignore
+.istanbul.yml
 node_modules/
 test/
 coverage/
