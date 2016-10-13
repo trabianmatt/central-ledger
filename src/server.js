@@ -1,27 +1,17 @@
 'use strict'
 
 const Glue = require('glue')
-const manifest = require('./manifest')
+const Manifest = require('./manifest')
 const Db = require('./lib/db')
 const Eventric = require('./eventric')
+const Migrator = require('./lib/migrator')
 
 const composeOptions = { relativeTo: __dirname }
 
-module.exports = new Promise((resolve, reject) => {
-  let s
-  Db.connect().then(db => {
-    // This is done here to replay all events through projections before starting the server.
-    return Eventric.getContext()
-  })
-  .then(context => {
-    return Glue.compose(manifest, composeOptions)
-  })
-  .then(server => {
-    s = server
-    return server.start()
-  })
-  .then(() => s.log('info', 'Server running at: ' + s.info.uri))
-  .catch(err => {
-    throw err
-  })
-})
+// Migrations must run before connecting to the database, due to the way Massive loads all database objects on initialization.
+// Eventric.getContext is called to replay all events through projections (creating the read-model) before starting the server.
+module.exports = Migrator.migrate()
+  .then(() => Db.connect())
+  .then(() => Eventric.getContext())
+  .then(() => Glue.compose(Manifest, composeOptions))
+  .then(server => server.start().then(() => server.log('info', `Server running at: ${server.info.uri}`)))

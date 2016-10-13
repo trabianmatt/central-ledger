@@ -9,5 +9,4 @@ RUN cd $(npm root -g)/npm \
     && npm install --production
 
 EXPOSE 3000
-CMD npm run migrate && \
-    npm start
+CMD npm start

@@ -1,3 +1,5 @@
+'use strict'
+
 const Test = require('tape')
 const Sinon = require('sinon')
 const EventsPath = '../../../src/lib/events'

@@ -1,3 +1,5 @@
+'use strict'
+
 const Test = require('tape')
 const Uuid = require('uuid4')
 const Config = require('../../../src/lib/config')
