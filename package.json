@@ -10,6 +10,11 @@
   "config": {
     "db": "--config ./config/db-migrate.json"
   },
+  "standard": {
+    "ignore": [
+      "/migrations/**"
+    ]
+  },
   "scripts": {
     "start": "node src/server.js",
     "dev": "npm run docker:stop && docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d",

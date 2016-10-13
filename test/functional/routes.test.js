@@ -77,10 +77,9 @@ Test('return metadata', function (assert) {
       assert.equal(res.body.currency_symbol, null)
       assert.equal(res.body.precision, 10)
       assert.equal(res.body.scale, 2)
-      assert.equal(Object.keys(res.body.urls).length, 9)
+      assert.equal(Object.keys(res.body.urls).length, 8)
       assert.equal(res.body.urls.health, `http://${hostname}/health`)
       assert.equal(res.body.urls.account, `http://${hostname}/accounts/:name`)
-      assert.equal(res.body.urls.subscription, `http://${hostname}/subscriptions/:id`)
       assert.equal(res.body.urls.accounts, `http://${hostname}/accounts`)
       assert.equal(res.body.urls.transfer, `http://${hostname}/transfers/:id`)
       assert.equal(res.body.urls.transfer_fulfillment, `http://${hostname}/transfers/:id/fulfillment`)
@@ -107,32 +106,6 @@ Test('return health', function (assert) {
       if (err) return assert.end(err)
       assert.equal(res.body.status, 'OK')
       assert.end()
-    })
-    .expect('Content-Type', /json/)
-})
-
-Test('post and get a subscription', function (assert) {
-  let subscription = {
-    'url': 'http://localhost/blah',
-    'secret': 'secret'
-  }
-
-  Request.post('/subscriptions')
-    .send(subscription)
-    .expect(201, function (err, res) {
-      if (err) return assert.end(err)
-      let expectedId = res.body.id
-      let expectedUrl = res.body.url
-      let expectedCreated = res.body.created
-      Request.get('/subscriptions/' + expectedId)
-        .expect('Content-Type', /json/)
-        .expect(200, function (err, res) {
-          if (err) return assert.end(err)
-          assert.equal(expectedId, res.body.id)
-          assert.equal(expectedUrl, res.body.url)
-          assert.equal(expectedCreated, res.body.created)
-          assert.end()
-        })
     })
     .expect('Content-Type', /json/)
 })
