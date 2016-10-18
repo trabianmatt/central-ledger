@@ -1,9 +1,9 @@
 'use strict'
 
-const Boom = require('boom')
 const NotFoundError = require('../errors/not-found-error')
+const SchemaValidationError = require('../errors/schema-validation-error')
 
-exports.getResponse = (reply, buildResponse, options) => {
+let getResponse = (reply, buildResponse, options) => {
   return (entity) => {
     options = options || {}
     if (entity) {
@@ -18,45 +18,82 @@ exports.getResponse = (reply, buildResponse, options) => {
   }
 }
 
-exports.putResponse = (reply, buildResponse, created) => {
+let putResponse = (reply, buildResponse, created) => {
   return (entity) => {
     reply(buildResponse(entity)).code((entity.existing === true) ? 200 : 201)
     return null
   }
 }
 
-exports.createResponse = (reply, buildResponse) => {
+let createResponse = (reply, buildResponse) => {
   return (entity) => {
     reply(buildResponse(entity)).code(201)
     return null
   }
 }
 
-exports.error = (request, reply) => {
+let error = (request, reply) => {
   return (e) => {
+    let body = {
+      'id': 'InternalServerError',
+      'message': 'The server encountered an unexpected condition which prevented it from fulfilling the request.'
+    }
+
     request.server.log(['error'], e)
-    reply(Boom.wrap(e))
+    reply(body).code(500)
     return null
   }
 }
 
-exports.badRequest = (reply, message) => {
+let badRequest = (reply) => {
   return (e) => {
-    reply(Boom.badRequest(message))
+    let body = {
+      'id': e.id || 'InvalidBodyError',
+      'message': e.message || 'The submitted JSON entity does not match the required schema.'
+    }
+
+    if (e.validationErrors) body.validationErrors = e.validationErrors
+
+    reply(body).code(400)
     return null
   }
 }
 
-exports.notFound = (reply) => {
+let notFound = (reply) => {
   return (e) => {
-    reply(Boom.notFound())
+    let body = {
+      'id': e.id || 'NotFoundError',
+      'message': e.originalErrorMessage || e.message || 'The requested resource could not be found.'
+    }
+
+    reply(body).code(404)
     return null
   }
 }
 
-exports.unprocessableEntity = (reply, message) => {
+let unprocessableEntity = (reply, message) => {
   return (e) => {
-    reply(Boom.badData(message || e.originalErrorMessage || e.message))
+    let body = {
+      'id': e.id || 'UnprocessableEntityError',
+      'message': message || e.originalErrorMessage || e.message || 'The provided entity is syntactically correct, but there is a generic semantic problem with it.'
+    }
+
+    reply(body).code(422)
     return null
   }
+}
+
+let failAction = function (request, reply, source, error) {
+  return badRequest(reply)(new SchemaValidationError(error.data.details))
+}
+
+module.exports = {
+  getResponse,
+  putResponse,
+  createResponse,
+  error,
+  badRequest,
+  notFound,
+  unprocessableEntity,
+  failAction
 }

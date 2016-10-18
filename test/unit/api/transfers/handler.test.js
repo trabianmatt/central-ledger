@@ -3,7 +3,6 @@
 const src = '../../../../src'
 const Sinon = require('sinon')
 const Test = require('tapes')(require('tape'))
-const Boom = require('boom')
 const P = require('bluebird')
 const Uuid = require('uuid4')
 const Validator = require(`${src}/api/transfers/validator`)
@@ -105,10 +104,15 @@ Test('transfer handler', function (handlerTest) {
       let transferId = Uuid()
       sandbox.stub(Validator, 'validate').withArgs(payload, transferId).returns(P.reject(new ValidationError(errorMessage)))
 
+      let expectedResponse = { id: 'UnprocessableEntityError', message: errorMessage }
       let reply = response => {
-        let boomError = Boom.badData(errorMessage)
-        assert.deepEqual(response, boomError)
-        assert.end()
+        assert.deepEqual(response, expectedResponse)
+        return {
+          code: statusCode => {
+            assert.equal(statusCode, 422)
+            assert.end()
+          }
+        }
       }
 
       Handler.prepareTransfer(createRequest(transferId, payload), reply)
@@ -137,10 +141,15 @@ Test('transfer handler', function (handlerTest) {
       let error = new AlreadyExistsError()
       sandbox.stub(Model, 'prepare').returns(P.reject(error))
 
-      let reply = function (response) {
-        let boomError = Boom.badData('The specified entity already exists and may not be modified.')
-        assert.deepEqual(response, boomError)
-        assert.end()
+      let expectedResponse = { id: 'UnprocessableEntityError', message: 'The specified entity already exists and may not be modified.' }
+      let reply = response => {
+        assert.deepEqual(response, expectedResponse)
+        return {
+          code: statusCode => {
+            assert.equal(statusCode, 422)
+            assert.end()
+          }
+        }
       }
 
       Handler.prepareTransfer(createRequest(Uuid(), payload), reply)
@@ -175,14 +184,18 @@ Test('transfer handler', function (handlerTest) {
 
     fulfillTransferTest.test('return error if transfer is not prepared', function (assert) {
       let fulfillment = { id: '3a2a1d9e-8640-4d2d-b06c-84f2cd613204', fulfillment: 'cf:0:_v8' }
-
       let error = new UnpreparedTransferError()
       sandbox.stub(Model, 'fulfill').returns(P.reject(error))
 
-      let reply = function (response) {
-        let boomError = Boom.badData("Can't execute a non-prepared transfer.")
-        assert.deepEqual(response, boomError)
-        assert.end()
+      let expectedResponse = { id: 'UnprocessableEntityError', message: 'The provided entity is syntactically correct, but there is a generic semantic problem with it.' }
+      let reply = response => {
+        assert.deepEqual(response, expectedResponse)
+        return {
+          code: statusCode => {
+            assert.equal(statusCode, 422)
+            assert.end()
+          }
+        }
       }
 
       Handler.fulfillTransfer(createRequest(fulfillment.id, fulfillment.fulfillment), reply)
@@ -193,10 +206,15 @@ Test('transfer handler', function (handlerTest) {
 
       sandbox.stub(Model, 'fulfill').returns(P.reject(new NotFoundError()))
 
-      let reply = function (response) {
-        let boomError = Boom.notFound()
-        assert.deepEqual(response, boomError)
-        assert.end()
+      let expectedResponse = { id: 'NotFoundError', message: 'The requested resource could not be found.' }
+      let reply = response => {
+        assert.deepEqual(response, expectedResponse)
+        return {
+          code: statusCode => {
+            assert.equal(statusCode, 404)
+            assert.end()
+          }
+        }
       }
 
       Handler.fulfillTransfer(createRequest(fulfillment.id, fulfillment.fulfillment), reply)
@@ -225,24 +243,36 @@ Test('transfer handler', function (handlerTest) {
       Handler.getTransferById(createRequest(id), reply)
     })
 
-    getTransferByIdTest.test('return 404 if transfer null', function (t) {
+    getTransferByIdTest.test('return 404 if transfer null', function (assert) {
       sandbox.stub(Model, 'getById').returns(P.resolve(null))
 
-      let reply = function (response) {
-        t.deepEqual(response, Boom.notFound())
-        t.end()
+      let expectedResponse = { id: 'NotFoundError', message: 'The requested resource could not be found.' }
+      let reply = response => {
+        assert.deepEqual(response, expectedResponse)
+        return {
+          code: statusCode => {
+            assert.equal(statusCode, 404)
+            assert.end()
+          }
+        }
       }
 
       Handler.getTransferById(createRequest(), reply)
     })
 
-    getTransferByIdTest.test('return error if model throws error', function (t) {
+    getTransferByIdTest.test('return error if model throws error', function (assert) {
       let error = new Error()
       sandbox.stub(Model, 'getById').returns(P.reject(error))
 
-      let reply = function (response) {
-        t.deepEqual(response, Boom.wrap(error))
-        t.end()
+      let expectedResponse = { id: 'InternalServerError', message: 'The server encountered an unexpected condition which prevented it from fulfilling the request.' }
+      let reply = response => {
+        assert.deepEqual(response, expectedResponse)
+        return {
+          code: statusCode => {
+            assert.equal(statusCode, 500)
+            assert.end()
+          }
+        }
       }
 
       Handler.getTransferById(createRequest(), reply)
@@ -276,38 +306,56 @@ Test('transfer handler', function (handlerTest) {
       Handler.getTransferFulfillment(createRequest(id), reply)
     })
 
-    getTransferFulfillmentTest.test('return 404 if transfer not executed', function (t) {
+    getTransferFulfillmentTest.test('return 404 if transfer not executed', function (assert) {
       let id = Uuid()
 
       let transfer = { transferUuid: id, fulfillment: 'cf:0:_v8', state: 'prepared' }
       sandbox.stub(Model, 'getById').returns(P.resolve(transfer))
 
-      let reply = function (response) {
-        t.deepEqual(response, Boom.notFound())
-        t.end()
+      let expectedResponse = { id: 'NotFoundError', message: 'The requested resource could not be found.' }
+      let reply = response => {
+        assert.deepEqual(response, expectedResponse)
+        return {
+          code: statusCode => {
+            assert.equal(statusCode, 404)
+            assert.end()
+          }
+        }
       }
 
       Handler.getTransferFulfillment(createRequest(), reply)
     })
 
-    getTransferFulfillmentTest.test('return 404 if transfer null', function (t) {
+    getTransferFulfillmentTest.test('return 404 if transfer null', function (assert) {
       sandbox.stub(Model, 'getById').returns(P.resolve(null))
 
-      let reply = function (response) {
-        t.deepEqual(response, Boom.notFound())
-        t.end()
+      let expectedResponse = { id: 'NotFoundError', message: 'The requested resource could not be found.' }
+      let reply = response => {
+        assert.deepEqual(response, expectedResponse)
+        return {
+          code: statusCode => {
+            assert.equal(statusCode, 404)
+            assert.end()
+          }
+        }
       }
 
       Handler.getTransferFulfillment(createRequest(), reply)
     })
 
-    getTransferFulfillmentTest.test('return error if model throws error', function (t) {
+    getTransferFulfillmentTest.test('return error if model throws error', function (assert) {
       let error = new Error()
       sandbox.stub(Model, 'getById').returns(P.reject(error))
 
-      let reply = function (response) {
-        t.deepEqual(response, Boom.wrap(error))
-        t.end()
+      let expectedResponse = { id: 'InternalServerError', message: 'The server encountered an unexpected condition which prevented it from fulfilling the request.' }
+      let reply = response => {
+        assert.deepEqual(response, expectedResponse)
+        return {
+          code: statusCode => {
+            assert.equal(statusCode, 500)
+            assert.end()
+          }
+        }
       }
 
       Handler.getTransferFulfillment(createRequest(), reply)

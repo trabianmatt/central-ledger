@@ -1,5 +1,6 @@
 const Handler = require('./handler')
 const Joi = require('joi')
+const BaseHandler = require('../../lib/handler')
 const tags = ['api', 'transfers']
 
 module.exports = [{
@@ -37,7 +38,8 @@ module.exports = [{
         })).required().description('Credits of the transfer'),
         execution_condition: Joi.string().trim().max(65535).required().description('Execution condition of transfer'),
         expires_at: Joi.string().isoDate().required().description('When the transfer expires')
-      }
+      },
+      failAction: BaseHandler.failAction
     }
   }
 },
@@ -51,7 +53,8 @@ module.exports = [{
     validate: {
       params: {
         id: Joi.string().guid().required().description('Id of transfer to retrieve')
-      }
+      },
+      failAction: BaseHandler.failAction
     }
   }
 },
@@ -68,7 +71,8 @@ module.exports = [{
       params: {
         id: Joi.string().guid().required().description('Id of transfer to fulfill')
       },
-      payload: Joi.string().trim().max(65535).required().description('Fulfillment of the execution condition')
+      payload: Joi.string().trim().max(65535).required().description('Fulfillment of the execution condition'),
+      failAction: BaseHandler.failAction
     }
   }
 },
@@ -85,7 +89,8 @@ module.exports = [{
       params: {
         id: Joi.string().guid().required().description('Id of transfer to reject')
       },
-      payload: Joi.string().trim().max(65535).required().description('Rejection reason')
+      payload: Joi.string().trim().max(65535).required().description('Rejection reason'),
+      failAction: BaseHandler.failAction
     }
   }
 },
@@ -99,7 +104,8 @@ module.exports = [{
     validate: {
       params: {
         id: Joi.string().guid().required().description('Id of transfer to retrieve fulfillment for')
-      }
+      },
+      failAction: BaseHandler.failAction
     }
   }
 }]

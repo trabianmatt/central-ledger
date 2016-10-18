@@ -32,10 +32,10 @@ function assertNotFoundError (assert, response) {
   assert.equal(response.result.error, 'Not Found')
 }
 
-function assertBadRequestError (assert, response, message) {
-  assert.equal(response.statusCode, 400)
-  assert.equal(response.result.error, 'Bad Request')
-  assert.equal(response.result.message, message)
+function assertBadRequestError (assert, response, validationErrors) {
+  assert.equal(response.result.id, 'InvalidBodyError')
+  assert.equal(response.result.message, 'The submitted JSON entity does not match the required schema.')
+  assert.deepEqual(response.result.validationErrors, validationErrors)
 }
 
 module.exports = {

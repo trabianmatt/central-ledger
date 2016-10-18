@@ -2,7 +2,6 @@
 
 const Sinon = require('sinon')
 const Test = require('tapes')(require('tape'))
-const Boom = require('boom')
 const P = require('bluebird')
 const Config = require('../../../../src/lib/config')
 const Handler = require('../../../../src/api/accounts/handler')
@@ -65,9 +64,15 @@ Test('accounts handler', function (handlerTest) {
 
     getByNameTest.test('return 404 if account null', assert => {
       sandbox.stub(Model, 'getByName').returns(P.resolve(null))
+      let expectedResponse = { id: 'NotFoundError', message: 'The requested resource could not be found.' }
       let reply = response => {
-        assert.deepEqual(response, Boom.notFound())
-        assert.end()
+        assert.deepEqual(response, expectedResponse)
+        return {
+          code: statusCode => {
+            assert.equal(statusCode, 404)
+            assert.end()
+          }
+        }
       }
 
       Handler.getByName(createGet(), reply)
@@ -76,9 +81,15 @@ Test('accounts handler', function (handlerTest) {
     getByNameTest.test('return error if model throws error', assert => {
       let error = new Error()
       sandbox.stub(Model, 'getByName').returns(P.reject(error))
+      let expectedResponse = { id: 'InternalServerError', message: 'The server encountered an unexpected condition which prevented it from fulfilling the request.' }
       let reply = response => {
-        assert.deepEqual(response, Boom.wrap(error))
-        assert.end()
+        assert.deepEqual(response, expectedResponse)
+        return {
+          code: statusCode => {
+            assert.equal(statusCode, 500)
+            assert.end()
+          }
+        }
       }
 
       Handler.getByName(createGet(), reply)
@@ -117,9 +128,15 @@ Test('accounts handler', function (handlerTest) {
       let account = { name: payload.name, createdDate: new Date() }
       sandbox.stub(Model, 'getByName').withArgs(payload.name).returns(P.resolve(account))
 
-      let reply = function (response) {
-        assert.deepEqual(response, Boom.badRequest('The account has already been registered'))
-        assert.end()
+      let expectedResponse = { id: 'UnprocessableEntityError', message: 'The account has already been registered' }
+      let reply = response => {
+        assert.deepEqual(response, expectedResponse)
+        return {
+          code: statusCode => {
+            assert.equal(statusCode, 422)
+            assert.end()
+          }
+        }
       }
 
       Handler.create(createPost(payload), reply)
@@ -130,9 +147,15 @@ Test('accounts handler', function (handlerTest) {
       let error = new Error()
       sandbox.stub(Model, 'getByName').returns(P.reject(error))
 
+      let expectedResponse = { id: 'InternalServerError', message: 'The server encountered an unexpected condition which prevented it from fulfilling the request.' }
       let reply = response => {
-        assert.deepEqual(response, Boom.wrap(error))
-        assert.end()
+        assert.deepEqual(response, expectedResponse)
+        return {
+          code: statusCode => {
+            assert.equal(statusCode, 500)
+            assert.end()
+          }
+        }
       }
 
       Handler.create(createPost(payload), reply)
@@ -144,9 +167,15 @@ Test('accounts handler', function (handlerTest) {
       sandbox.stub(Model, 'getByName').returns(P.resolve(null))
       sandbox.stub(Model, 'create').returns(P.reject(error))
 
+      let expectedResponse = { id: 'InternalServerError', message: 'The server encountered an unexpected condition which prevented it from fulfilling the request.' }
       let reply = response => {
-        assert.deepEqual(response, Boom.wrap(error))
-        assert.end()
+        assert.deepEqual(response, expectedResponse)
+        return {
+          code: statusCode => {
+            assert.equal(statusCode, 500)
+            assert.end()
+          }
+        }
       }
 
       Handler.create(createPost(payload), reply)

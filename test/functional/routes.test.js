@@ -141,10 +141,9 @@ Test('ensure an account name can only be registered once', function (assert) {
     .expect(201, function (err, res) {
       if (err) return assert.end(err)
       createAccount(accountName)
-        .expect(400, function (err, res) {
+        .expect(422, function (err, res) {
           if (err) return assert.end(err)
-          assert.equal(res.body.statusCode, 400)
-          assert.equal(res.body.error, 'Bad Request')
+          assert.equal(res.body.id, 'UnprocessableEntityError')
           assert.equal(res.body.message, 'The account has already been registered')
           assert.end()
         })
@@ -222,7 +221,7 @@ Test('return error when preparing existing transfer with changed properties', t 
     prepareTransfer(transferId, transfer)
     .expect(422, (err, res) => {
       if (err) return t.end(err)
-      t.equal(res.body.error, 'Unprocessable Entity')
+      t.equal(res.body.id, 'UnprocessableEntityError')
       t.equal(res.body.message, 'The specified entity already exists and may not be modified.')
       t.end()
     })
@@ -244,7 +243,7 @@ Test('return error when preparing fulfilled transfer', t => {
     prepareTransfer(transferId, transfer)
     .expect(422, (err, res) => {
       if (err) return t.end(err)
-      t.equal(res.body.error, 'Unprocessable Entity')
+      t.equal(res.body.id, 'UnprocessableEntityError')
       t.equal(res.body.message, 'The specified entity already exists and may not be modified.')
       t.end()
     })
@@ -335,6 +334,8 @@ Test('return error when retrieving fulfillment if transfer not executed', functi
         Request.get('/transfers/' + transferId + '/fulfillment')
           .expect(404, function (err, res) {
             if (err) return assert.end(err)
+            assert.equal(res.body.id, 'NotFoundError')
+            assert.equal(res.body.message, 'The requested resource could not be found.')
             assert.pass()
             assert.end()
           })
@@ -351,6 +352,8 @@ Test('return error when fulfilling non-existing transfer', function (assert) {
     .send(fulfillment)
     .expect(404, function (err, res) {
       if (err) return assert.end(err)
+      assert.equal(res.body.id, 'NotFoundError')
+      assert.equal(res.body.message, 'The requested resource could not be found.')
       assert.pass()
       assert.end()
     })

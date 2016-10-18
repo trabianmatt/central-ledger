@@ -39,7 +39,7 @@ exports.create = (request, reply) => {
     .then(handleExistingRecord())
     .then(createAccount(request.payload))
     .then(Handle.createResponse(reply, buildResponse))
-    .catch(RecordExistsError, Handle.badRequest(reply, 'The account has already been registered'))
+    .catch(RecordExistsError, Handle.unprocessableEntity(reply, 'The account has already been registered'))
     .catch(Handle.error(request, reply))
 }
 

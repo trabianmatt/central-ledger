@@ -65,7 +65,7 @@ exports.fulfillTransfer = function (request, reply) {
 
   return Model.fulfill(fulfillment)
     .then(Handle.getResponse(reply, x => x, { contentType: 'text/plain' }))
-    .catch(UnpreparedTransferError, Handle.unprocessableEntity(reply, 'Can\'t execute a non-prepared transfer.'))
+    .catch(UnpreparedTransferError, Handle.unprocessableEntity(reply))
     .catch(NotFoundError, Handle.notFound(reply))
     .catch(Handle.error(request, reply))
 }
