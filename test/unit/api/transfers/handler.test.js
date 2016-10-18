@@ -9,6 +9,7 @@ const Validator = require(`${src}/api/transfers/validator`)
 const Config = require(`${src}/lib/config`)
 const Handler = require(`${src}/api/transfers/handler`)
 const Model = require(`${src}/api/transfers/model`)
+const TransfersReadModel = require(`${src}/models/transfers-read-model`)
 const AlreadyExistsError = require(`${src}/errors/already-exists-error`)
 const NotFoundError = require(`${src}/errors/not-found-error`)
 const ValidationError = require(`${src}/errors/validation-error`)
@@ -34,6 +35,8 @@ Test('transfer handler', function (handlerTest) {
   handlerTest.beforeEach(t => {
     sandbox = Sinon.sandbox.create()
     sandbox.stub(Validator, 'validate', a => P.resolve(a))
+    sandbox.stub(Model, 'reject')
+    sandbox.stub(Model, 'fulfill')
     originalHostName = Config.HOSTNAME
     Config.HOSTNAME = hostname
     t.end()
@@ -162,7 +165,7 @@ Test('transfer handler', function (handlerTest) {
     fulfillTransferTest.test('return fulfilled transfer', function (assert) {
       let fulfillment = { id: '3a2a1d9e-8640-4d2d-b06c-84f2cd613204', fulfillment: 'cf:0:_v8' }
 
-      sandbox.stub(Model, 'fulfill').returns(P.resolve(fulfillment.fulfillment))
+      Model.fulfill.returns(P.resolve(fulfillment.fulfillment))
 
       let reply = function (response) {
         assert.equal(response, fulfillment.fulfillment)
@@ -185,7 +188,7 @@ Test('transfer handler', function (handlerTest) {
     fulfillTransferTest.test('return error if transfer is not prepared', function (assert) {
       let fulfillment = { id: '3a2a1d9e-8640-4d2d-b06c-84f2cd613204', fulfillment: 'cf:0:_v8' }
       let error = new UnpreparedTransferError()
-      sandbox.stub(Model, 'fulfill').returns(P.reject(error))
+      Model.fulfill.returns(P.reject(error))
 
       let expectedResponse = { id: 'UnprocessableEntityError', message: 'The provided entity is syntactically correct, but there is a generic semantic problem with it.' }
       let reply = response => {
@@ -204,7 +207,7 @@ Test('transfer handler', function (handlerTest) {
     fulfillTransferTest.test('return error if transfer has no domain events', function (assert) {
       let fulfillment = { id: '3a2a1d9e-8640-4d2d-b06c-84f2cd613204', fulfillment: 'cf:0:_v8' }
 
-      sandbox.stub(Model, 'fulfill').returns(P.reject(new NotFoundError()))
+      Model.fulfill.returns(P.reject(new NotFoundError()))
 
       let expectedResponse = { id: 'NotFoundError', message: 'The requested resource could not be found.' }
       let reply = response => {
@@ -223,12 +226,63 @@ Test('transfer handler', function (handlerTest) {
     fulfillTransferTest.end()
   })
 
+  handlerTest.test('reject transfer', rejectTransferTest => {
+    rejectTransferTest.test('should return 200', assert => {
+      let rejectReason = 'error reason'
+      let request = {
+        params: { id: '3a2a1d9e-8640-4d2d-b06c-84f2cd613204' },
+        payload: rejectReason
+      }
+
+      Model.reject.returns(P.resolve(rejectReason))
+      let reply = function (response) {
+        assert.equal(response, rejectReason)
+        return {
+          code: statusCode => {
+            assert.equal(200, statusCode)
+            return {
+              type: function (type) {
+                assert.equal(type, 'text/plain')
+                assert.end()
+              }
+            }
+          }
+        }
+      }
+      Handler.rejectTransfer(request, reply)
+    })
+
+    rejectTransferTest.test('return error if transfer has no domain events', function (assert) {
+      let rejectReason = 'error reason'
+      let request = {
+        params: { id: '3a2a1d9e-8640-4d2d-b06c-84f2cd613204' },
+        payload: rejectReason
+      }
+      Model.reject.returns(P.reject(new NotFoundError()))
+
+      let expectedResponse = { id: 'NotFoundError', message: 'The requested resource could not be found.' }
+      let reply = response => {
+        assert.deepEqual(response, expectedResponse)
+        return {
+          code: statusCode => {
+            assert.equal(statusCode, 404)
+            assert.end()
+          }
+        }
+      }
+
+      Handler.rejectTransfer(request, reply)
+    })
+
+    rejectTransferTest.end()
+  })
+
   handlerTest.test('getTransferById should', function (getTransferByIdTest) {
     getTransferByIdTest.test('get transfer by transfer id', function (assert) {
       let id = Uuid()
 
       let transfer = { transferUuid: id }
-      sandbox.stub(Model, 'getById').returns(P.resolve(transfer))
+      sandbox.stub(TransfersReadModel, 'getById').returns(P.resolve(transfer))
 
       let reply = function (response) {
         assert.equal(response.id, `${hostname}/transfers/${transfer.transferUuid}`)
@@ -244,8 +298,7 @@ Test('transfer handler', function (handlerTest) {
     })
 
     getTransferByIdTest.test('return 404 if transfer null', function (assert) {
-      sandbox.stub(Model, 'getById').returns(P.resolve(null))
-
+      sandbox.stub(TransfersReadModel, 'getById').returns(P.resolve(null))
       let expectedResponse = { id: 'NotFoundError', message: 'The requested resource could not be found.' }
       let reply = response => {
         assert.deepEqual(response, expectedResponse)
@@ -262,7 +315,7 @@ Test('transfer handler', function (handlerTest) {
 
     getTransferByIdTest.test('return error if model throws error', function (assert) {
       let error = new Error()
-      sandbox.stub(Model, 'getById').returns(P.reject(error))
+      sandbox.stub(TransfersReadModel, 'getById').returns(P.reject(error))
 
       let expectedResponse = { id: 'InternalServerError', message: 'The server encountered an unexpected condition which prevented it from fulfilling the request.' }
       let reply = response => {
@@ -286,7 +339,7 @@ Test('transfer handler', function (handlerTest) {
       let id = Uuid()
 
       let transfer = { transferUuid: id, fulfillment: 'cf:0:_v8', state: 'executed' }
-      sandbox.stub(Model, 'getById').returns(P.resolve(transfer))
+      sandbox.stub(TransfersReadModel, 'getById').returns(P.resolve(transfer))
 
       let reply = function (response) {
         assert.equal(response, transfer.fulfillment)
@@ -310,7 +363,7 @@ Test('transfer handler', function (handlerTest) {
       let id = Uuid()
 
       let transfer = { transferUuid: id, fulfillment: 'cf:0:_v8', state: 'prepared' }
-      sandbox.stub(Model, 'getById').returns(P.resolve(transfer))
+      sandbox.stub(TransfersReadModel, 'getById').returns(P.resolve(transfer))
 
       let expectedResponse = { id: 'NotFoundError', message: 'The requested resource could not be found.' }
       let reply = response => {
@@ -327,7 +380,7 @@ Test('transfer handler', function (handlerTest) {
     })
 
     getTransferFulfillmentTest.test('return 404 if transfer null', function (assert) {
-      sandbox.stub(Model, 'getById').returns(P.resolve(null))
+      sandbox.stub(TransfersReadModel, 'getById').returns(P.resolve(null))
 
       let expectedResponse = { id: 'NotFoundError', message: 'The requested resource could not be found.' }
       let reply = response => {
@@ -345,7 +398,7 @@ Test('transfer handler', function (handlerTest) {
 
     getTransferFulfillmentTest.test('return error if model throws error', function (assert) {
       let error = new Error()
-      sandbox.stub(Model, 'getById').returns(P.reject(error))
+      sandbox.stub(TransfersReadModel, 'getById').returns(P.reject(error))
 
       let expectedResponse = { id: 'InternalServerError', message: 'The server encountered an unexpected condition which prevented it from fulfilling the request.' }
       let reply = response => {
@@ -362,33 +415,6 @@ Test('transfer handler', function (handlerTest) {
     })
 
     getTransferFulfillmentTest.end()
-  })
-
-  handlerTest.test('reject transfer', rejectTransferTest => {
-    rejectTransferTest.test('should return 200', assert => {
-      let payload = 'error reason'
-      let request = {
-        params: { id: '3a2a1d9e-8640-4d2d-b06c-84f2cd613204' },
-        payload: payload
-      }
-      let reply = function (response) {
-        assert.equal(response, payload)
-        return {
-          code: statusCode => {
-            assert.equal(200, statusCode)
-            return {
-              type: function (type) {
-                assert.equal(type, 'text/plain')
-                assert.end()
-              }
-            }
-          }
-        }
-      }
-      Handler.rejectTransfer(request, reply)
-    })
-
-    rejectTransferTest.end()
   })
 
   handlerTest.end()

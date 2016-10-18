@@ -50,6 +50,10 @@ function fulfillTransfer (transferId, fulfillment) {
   return Request.put('/transfers/' + transferId + '/fulfillment').set('Content-Type', 'text/plain').send(fulfillment)
 }
 
+function rejectTransfer (transferId, reason) {
+  return Request.put('/transfers/' + transferId + '/rejection').set('Content-Type', 'text/plain').send(reason)
+}
+
 function findAccountPositions (positions, accountName) {
   return positions.find(function (p) {
     return p.account === buildAccountUrl(accountName)
@@ -385,15 +389,68 @@ Test('return fulfillment when fulfilling already fulfilled transfer', function (
 Test('reject a transfer', function (assert) {
   let reason = 'rejection reason'
 
-  Request.put('/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/rejection')
-    .set('Content-Type', 'text/plain')
-    .send(reason)
+  let account1Name = generateAccountName()
+  let account2Name = generateAccountName()
+  let transferId = generateTransferId()
+
+  createAccount(account1Name)
+  .then(() => createAccount(account2Name))
+  .then(() => prepareTransfer(transferId, buildTransfer(transferId, buildDebitOrCredit(account1Name, '25'), buildDebitOrCredit(account2Name, '25'))))
+  .then(() => {
+    rejectTransfer(transferId, reason)
     .expect(200, function (err, res) {
       if (err) assert.end(err)
       assert.equal(res.text, reason)
       assert.end()
     })
     .expect('Content-Type', 'text/plain; charset=utf-8')
+  })
+})
+
+Test('return reason when rejecting a rejected transfer', t => {
+  let reason = 'some reason'
+  let transferId = generateTransferId()
+
+  let account1Name = generateAccountName()
+  let account2Name = generateAccountName()
+
+  createAccount(account1Name)
+  .then(() => createAccount(account2Name))
+  .then(() => prepareTransfer(transferId, buildTransfer(transferId, buildDebitOrCredit(account1Name, '25'), buildDebitOrCredit(account2Name, '25'))))
+  .then(() => rejectTransfer(transferId, reason))
+  .then(() => {
+    rejectTransfer(transferId, reason)
+    .expect(200, (err, res) => {
+      if (err) t.end(err)
+      t.equal(res.text, reason)
+      t.end()
+    })
+    .expect('Content-Type', 'text/plain; charset=utf-8')
+  })
+})
+
+Test('return error when rejecting fulfulled transfer', t => {
+  let reason = 'some reason'
+  let transferId = generateTransferId()
+  let fulfillment = 'cf:0:_v8'
+
+  let account1Name = generateAccountName()
+  let account2Name = generateAccountName()
+
+  createAccount(account1Name)
+  .then(() => createAccount(account2Name))
+  .then(() => prepareTransfer(transferId, buildTransfer(transferId, buildDebitOrCredit(account1Name, '25'), buildDebitOrCredit(account2Name, '25'))))
+  .then(() => fulfillTransfer(transferId, fulfillment))
+  .then(() => {
+    rejectTransfer(transferId, reason)
+    .expect(422, (err, res) => {
+      if (err) return t.end(err)
+      t.equal(res.body.id, 'UnprocessableEntityError')
+      t.equal(res.body.message, 'The provided entity is syntactically correct, but there is a generic semantic problem with it.')
+      t.end()
+    })
+    .expect('Content-Type', /json/)
+  })
 })
 
 Test('return net positions', function (assert) {
@@ -402,35 +459,30 @@ Test('return net positions', function (assert) {
   let account2Name = generateAccountName()
   let account3Name = generateAccountName()
 
-  createAccount(account1Name).then(() => {
-    createAccount(account2Name).then(() => {
-      createAccount(account3Name).then(() => {
-        let transfer1Id = generateTransferId()
-        let transfer2Id = generateTransferId()
-        let transfer3Id = generateTransferId()
+  createAccount(account1Name)
+  .then(() => createAccount(account2Name))
+  .then(() => createAccount(account3Name))
+  .then(() => {
+    let transfer1Id = generateTransferId()
+    let transfer2Id = generateTransferId()
+    let transfer3Id = generateTransferId()
 
-        prepareTransfer(transfer1Id, buildTransfer(transfer1Id, buildDebitOrCredit(account1Name, '25'), buildDebitOrCredit(account2Name, '25'))).then(() => {
-          prepareTransfer(transfer2Id, buildTransfer(transfer2Id, buildDebitOrCredit(account1Name, '10'), buildDebitOrCredit(account3Name, '10'))).then(() => {
-            prepareTransfer(transfer3Id, buildTransfer(transfer3Id, buildDebitOrCredit(account3Name, '15'), buildDebitOrCredit(account2Name, '15'))).then(() => {
-              fulfillTransfer(transfer1Id, fulfillment).then(() => {
-                fulfillTransfer(transfer2Id, fulfillment).then(() => {
-                  fulfillTransfer(transfer3Id, fulfillment).then(() => {
-                    Request.get('/positions')
-                      .expect(200, function (err, res) {
-                        if (err) assert.end(err)
-                        assert.deepEqual(findAccountPositions(res.body.positions, account1Name), buildAccountPosition(account1Name, 35, 0))
-                        assert.deepEqual(findAccountPositions(res.body.positions, account2Name), buildAccountPosition(account2Name, 0, 40))
-                        assert.deepEqual(findAccountPositions(res.body.positions, account3Name), buildAccountPosition(account3Name, 15, 10))
-                        assert.end()
-                      })
-                      .expect('Content-Type', /json/)
-                  })
-                })
-              })
-            })
-          })
+    prepareTransfer(transfer1Id, buildTransfer(transfer1Id, buildDebitOrCredit(account1Name, '25'), buildDebitOrCredit(account2Name, '25')))
+    .then(() => prepareTransfer(transfer2Id, buildTransfer(transfer2Id, buildDebitOrCredit(account1Name, '10'), buildDebitOrCredit(account3Name, '10'))))
+    .then(() => prepareTransfer(transfer3Id, buildTransfer(transfer3Id, buildDebitOrCredit(account3Name, '15'), buildDebitOrCredit(account2Name, '15'))))
+    .then(() => fulfillTransfer(transfer1Id, fulfillment))
+    .then(() => fulfillTransfer(transfer2Id, fulfillment))
+    .then(() => fulfillTransfer(transfer3Id, fulfillment))
+    .then(() => {
+      Request.get('/positions')
+        .expect(200, function (err, res) {
+          if (err) assert.end(err)
+          assert.deepEqual(findAccountPositions(res.body.positions, account1Name), buildAccountPosition(account1Name, 35, 0))
+          assert.deepEqual(findAccountPositions(res.body.positions, account2Name), buildAccountPosition(account2Name, 0, 40))
+          assert.deepEqual(findAccountPositions(res.body.positions, account3Name), buildAccountPosition(account3Name, 15, 10))
+          assert.end()
         })
-      })
+        .expect('Content-Type', /json/)
     })
   })
 })

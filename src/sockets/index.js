@@ -6,11 +6,6 @@ const Events = require('../lib/events')
 const UrlParser = require('../lib/urlparser')
 const AccountListeners = require('./accountlistener')
 
-function convertTransfer (transfer) {
-  transfer.resource.id = UrlParser.toTransferUri(transfer.resource.id)
-  return transfer
-}
-
 function getAccounts (transfer) {
   let credits = transfer.credits || []
   let debits = transfer.debits || []
@@ -20,8 +15,7 @@ function getAccounts (transfer) {
 let listeners = new AccountListeners()
 
 let transferHandler = (msg) => {
-  let transfer = convertTransfer(msg)
-  getAccounts(transfer.resource).forEach(a => UrlParser.nameFromAccountUri(a, (err, accountName) => {
+  getAccounts(msg.resource).forEach(a => UrlParser.nameFromAccountUri(a, (err, accountName) => {
     if (!err) {
       listeners.send(accountName, msg)
     }

@@ -3,26 +3,20 @@
 const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const P = require('bluebird')
-const Path = require('path')
-const Pmock = require('pmock')
 const DbMigrate = require('db-migrate')
 const Migrator = require('../../../src/lib/migrator')
-
-let self = this
+const Config = require('../../../src/lib/config')
 
 Test('migrator', function (migratorTest) {
-  let cwd = '/test'
   let sandbox
 
   migratorTest.beforeEach(t => {
-    self.cwd = Pmock.cwd(cwd)
     sandbox = Sinon.sandbox.create()
     sandbox.stub(DbMigrate, 'getInstance')
     t.end()
   })
 
   migratorTest.afterEach(t => {
-    self.cwd.reset()
     sandbox.restore()
     t.end()
   })
@@ -38,7 +32,11 @@ Test('migrator', function (migratorTest) {
           let getInstanceStubArg2 = DbMigrate.getInstance.firstCall.args[1]
 
           assert.equal(getInstanceStubArg1, true)
-          assert.equal(getInstanceStubArg2.config, Path.join(cwd, 'config/db-migrate.json'))
+          assert.deepEqual(getInstanceStubArg2.config, {
+            defaultEnv: 'local',
+            'sql-file': true,
+            local: Config.DATABASE_URI
+          })
           assert.equal(upStub.callCount, 1)
           assert.end()
         })

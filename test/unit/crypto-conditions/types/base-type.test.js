@@ -1,7 +1,7 @@
 'use strict'
 
 const Test = require('tape')
-const BaseType = require('../../../../src/cryptoConditions/types/base-type')
+const BaseType = require('../../../../src/crypto-conditions/types/base-type')
 
 Test('converts payload to buffer if not already a buffer', function (assert) {
   let payload = 'Test payload'

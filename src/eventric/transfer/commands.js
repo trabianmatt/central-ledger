@@ -8,8 +8,7 @@ const NotFoundError = require('../../errors/not-found-error')
 module.exports = {
   PrepareTransfer (proposed) {
     let {id, ledger, debits, credits, execution_condition, expires_at} = proposed
-    return P.resolve()
-    .then(() => this.$aggregate.load('Transfer', id))
+    return P.resolve(this.$aggregate.load('Transfer', id))
     .then(existing => Validator.validateExistingOnPrepare(proposed, existing))
     .then(existing => { return { existing: true, transfer: existing } })
     .catch(AggregateNotFoundError, e => {
@@ -27,21 +26,32 @@ module.exports = {
     })
   },
 
-  FulfillTransfer ({
-      id, fulfillment
-    }) {
-    return P.resolve()
-      .then(() => this.$aggregate.load('Transfer', id))
-      .then(transfer => { return Validator.validateFulfillment(transfer, fulfillment) })
-      .then(result => {
-        let transfer = result.transfer
-        if (result.previouslyFulfilled) {
-          return transfer
-        } else {
+  FulfillTransfer ({ id, fulfillment }) {
+    return P.resolve(this.$aggregate.load('Transfer', id))
+      .then(transfer => {
+        return Validator.validateFulfillment(transfer, fulfillment)
+        .then(({ previouslyFulfilled }) => {
+          if (previouslyFulfilled) { return transfer }
           transfer.fulfill({fulfillment})
           return transfer.$save().then(() => transfer)
-        }
-      }).catch(AggregateNotFoundError, () => {
+        })
+      })
+      .catch(AggregateNotFoundError, () => {
+        throw new NotFoundError()
+      })
+  },
+
+  RejectTransfer ({ id, rejection_reason }) {
+    return P.resolve(this.$aggregate.load('Transfer', id))
+      .then(transfer => {
+        return Validator.validateReject(transfer, rejection_reason)
+        .then(result => {
+          if (result.alreadyRejected) return { transfer, rejection_reason }// eslint-disable-line
+          transfer.reject({ rejection_reason: rejection_reason })
+          return transfer.$save().then(() => { return { transfer, rejection_reason } }) // eslint-disable-line
+        })
+      })
+      .catch(AggregateNotFoundError, () => {
         throw new NotFoundError()
       })
   }

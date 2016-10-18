@@ -3,21 +3,21 @@
 const src = '../../../../src'
 const Test = require('tapes')(require('tape'))
 const Eventric = require('eventric')
-const ET = require(`${src}/eventric/index`)
 const P = require('bluebird')
 const Sinon = require('sinon')
-const Transfer = require(`${src}/eventric/transfer/transfer`)
-const TransferCommands = require(`${src}/eventric/transfer/commands`)
-const TransferEvents = require(`${src}/eventric/transfer/events`)
-const CryptoConditions = require(`${src}/cryptoConditions/conditions`)
+const TransferInitialize = require(`${src}/eventric/transfer/initialize`)
+const TransferProjection = require(`${src}/eventric/transfer/projection`)
+const PostgresStore = require(`${src}/eventric/postgres-store`)
+const CryptoConditions = require(`${src}/crypto-conditions/conditions`)
 const AlreadyExistsError = require(`${src}/errors/already-exists-error`)
+const UnpreparedTransferError = require(`${src}/errors/unprepared-transfer-error`)
 
 let createTransfer = () => {
   return {
     id: 'test',
     ledger: 'ledger',
-    debits: 'debits',
-    credits: 'credits',
+    debits: [{ amount: 10, account: 'test' }],
+    credits: [{ amount: 10, account: 'test' }],
     execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
     expires_at: 'expires_at'
   }
@@ -38,15 +38,15 @@ Test('Transfer aggregate', aggregateTest => {
   aggregateTest.beforeEach(t => {
     sandbox = Sinon.sandbox.create()
     sandbox.stub(CryptoConditions, 'validateCondition')
+    sandbox.stub(TransferProjection)
+    TransferProjection.initialize.yields()
     CryptoConditions.validateCondition.returns(true)
     context = Eventric.context('TestContext')
-    context.defineDomainEvents(TransferEvents)
-    context.addAggregate('Transfer', Transfer)
-    context.addCommandHandlers(TransferCommands)
+    PostgresStore.default = {}
+    TransferInitialize.setupContext(context)
     context.initialize()
-      .then(() => ET.setupTransferId(context))
+      .then(() => TransferInitialize.onContextInitialized(context))
       .then(_t => t.end())
-      .catch(console.log.bind(console))
   })
 
   aggregateTest.afterEach(t => {
@@ -58,30 +58,36 @@ Test('Transfer aggregate', aggregateTest => {
   aggregateTest.test('PrepareTransfer should', createTest => {
     createTest.test('return transfer', t => {
       let transfer = createTransfer()
-      context.command('PrepareTransfer', transfer)
+      P.resolve(context.command('PrepareTransfer', transfer))
         .then(result => {
           t.equal(result.existing, false)
           compareTransfers(t, result.transfer, transfer)
           t.end()
         })
-        .catch(console.log.bind(console))
+        .catch(e => {
+          t.fail(e)
+          t.end()
+        })
     })
 
     createTest.test('return existing transfer if preparing again', t => {
       let transfer = createTransfer()
-      context.command('PrepareTransfer', transfer)
+      P.resolve(context.command('PrepareTransfer', transfer))
       .then(prepared => context.command('PrepareTransfer', transfer))
       .then(result => {
         t.equal(result.existing, true)
         compareTransfers(t, result.transfer, transfer)
         t.end()
       })
-      .catch(console.log.bind(console))
+      .catch(e => {
+        t.fail(e)
+        t.end()
+      })
     })
 
     createTest.test('reject if transfer does not equal prepared', t => {
       let transfer = createTransfer()
-      P.resolve().then(() => context.command('PrepareTransfer', transfer))
+      P.resolve(context.command('PrepareTransfer', transfer))
       .then(prepared => {
         let second = createTransfer()
         second.ledger = 'other'
@@ -92,7 +98,6 @@ Test('Transfer aggregate', aggregateTest => {
         t.end()
       })
       .catch(AlreadyExistsError, e => {
-        console.log(e.name)
         t.equal(e.originalErrorMessage, AlreadyExistsError.prototype.message)
         t.end()
       })
@@ -109,7 +114,7 @@ Test('Transfer aggregate', aggregateTest => {
     fulfillTest.test('load and fulfill transfer', t => {
       let transfer = createTransfer()
       let fulfillment = 'cf:0:_v8'
-      context.command('PrepareTransfer', transfer)
+      P.resolve(context.command('PrepareTransfer', transfer))
       .then(() => {
         return context.command('FulfillTransfer', { id: transfer.id, fulfillment })
       })
@@ -117,25 +122,113 @@ Test('Transfer aggregate', aggregateTest => {
         compareTransfers(t, fulfilledTransfer, transfer)
         t.equal(fulfilledTransfer.fulfillment, fulfillment)
         t.end()
-      }).catch(console.log.bind(console))
+      }).catch(e => {
+        t.fail(e)
+        t.end()
+      })
     })
 
     fulfillTest.test('return previouslyFulfilled transfer', t => {
       let transfer = createTransfer()
       let fulfillment = 'cf:0:_v8'
-      context.command('PrepareTransfer', transfer)
+      P.resolve(context.command('PrepareTransfer', transfer))
       .then(prepared => { return context.command('FulfillTransfer', { id: transfer.id, fulfillment }) })
       .then(f => { return context.command('FulfillTransfer', { id: transfer.id, fulfillment }) })
       .then(fulfilledTransfer => {
         compareTransfers(t, fulfilledTransfer, transfer)
         t.equal(fulfilledTransfer.fulfillment, fulfillment)
-        t.equal(fulfilledTransfer.ledger, transfer.ledger)
         t.end()
       })
-      .catch(console.log.bind(console))
+      .catch(e => {
+        t.fail(e)
+        t.end()
+      })
+    })
+
+    fulfillTest.test('throw when fulfilling previously Fulfilled transfer with different condition', t => {
+      let transfer = createTransfer()
+      let fulfillment = 'cf:0:_v9'
+      P.resolve(context.command('PrepareTransfer', transfer))
+      .then(prepared => context.command('FulfillTransfer', { id: transfer.id, fulfillment }))
+      .then(f => context.command('FulfillTransfer', { id: transfer.id, fulfillment: 'not ' + fulfillment }))
+      .then(fulfilledTransfer => {
+        t.fail('Expected exception')
+        t.end
+      })
+      .catch(UnpreparedTransferError, e => {
+        t.pass()
+        t.end()
+      })
+      .catch(e => {
+        t.fail(e)
+        t.end()
+      })
     })
 
     fulfillTest.end()
   })
+
+  aggregateTest.test('RejectTransfer should', rejectTest => {
+    rejectTest.test('Load and reject transfer', t => {
+      let originalTransfer = createTransfer()
+      let rejectionReason = 'I do not want it'
+
+      P.resolve(context.command('PrepareTransfer', originalTransfer))
+      .then(prepared => context.command('RejectTransfer', { id: originalTransfer.id, rejection_reason: rejectionReason }))
+      .then(({transfer, rejection_reason}) => {
+        compareTransfers(t, transfer, originalTransfer)
+        t.equal(rejection_reason, rejectionReason)
+        t.equal(transfer.rejection_reason, 'cancelled')
+        t.end()
+      })
+      .catch(e => {
+        t.fail(e.message)
+        t.end()
+      })
+    })
+
+    rejectTest.test('return existing rejected transfer', t => {
+      let originalTransfer = createTransfer()
+      let rejectionReason = 'no comment'
+
+      P.resolve(context.command('PrepareTransfer', originalTransfer))
+      .then(prepared => context.command('RejectTransfer', { id: originalTransfer.id, rejection_reason: rejectionReason }))
+      .then(() => context.command('RejectTransfer', { id: originalTransfer.id, rejection_reason: rejectionReason }))
+      .then(({ transfer, rejection_reason }) => {
+        compareTransfers(t, transfer, originalTransfer)
+        t.equal(rejection_reason, rejectionReason)
+        t.equal(transfer.rejection_reason, 'cancelled')
+        t.end()
+      })
+      .catch(e => {
+        t.fail(e.message)
+        t.end()
+      })
+    })
+
+    rejectTest.test('throw UnpreparedTransferError if rejecting rejected with different reason', t => {
+      let originalTransfer = createTransfer()
+      let rejectionReason = 'no comment'
+
+      P.resolve(context.command('PrepareTransfer', originalTransfer))
+      .then(prepared => context.command('RejectTransfer', { id: originalTransfer.id, rejection_reason: rejectionReason }))
+      .then(rejected => context.command('RejectTransfer', { id: originalTransfer.id, rejection_reason: 'not ' + rejectionReason }))
+      .then(i => {
+        t.fail('Expected exception to be thrown')
+        t.end()
+      })
+      .catch(UnpreparedTransferError, e => {
+        t.pass()
+        t.end()
+      })
+      .catch(e => {
+        t.fail(e)
+        t.end()
+      })
+    })
+
+    rejectTest.end()
+  })
+
   aggregateTest.end()
 })

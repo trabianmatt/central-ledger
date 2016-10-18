@@ -1,9 +1,11 @@
 'use strict'
 
+const src = '../../../../src'
 const Test = require('tape')
 const Moment = require('moment')
-const Db = require('../../../../src/lib/db')
-const Model = require('../../../../src/api/transfers/model')
+const Db = require(src + '/lib/db')
+const Model = require(src + '/api/transfers/model')
+const TransfersReadModel = require(src + '/models/transfers-read-model')
 
 let transferPreparedEvent = {
   id: 1,
@@ -108,7 +110,7 @@ Test('transfer model', function (modelTest) {
 
   modelTest.test('saveTransferPrepared should', function (transferPreparedTest) {
     transferPreparedTest.test('save a TransferPrepared event object to the read model', function (assert) {
-      Model.saveTransferPrepared(transferPreparedEvent)
+      TransfersReadModel.saveTransferPrepared(transferPreparedEvent)
         .then((transfer) => {
           assert.equal(transfer.transferUuid, transferPreparedEvent.aggregate.id)
           assert.equal(transfer.state, 'prepared')
@@ -136,7 +138,7 @@ Test('transfer model', function (modelTest) {
 
   modelTest.test('saveTransferExecuted should', function (transferExecutedTest) {
     transferExecutedTest.test('update the read model with TransferExecuted event object', function (assert) {
-      Model.saveTransferExecuted(transferExecutedEvent)
+      TransfersReadModel.saveTransferExecuted(transferExecutedEvent)
         .then((transfer) => {
           assert.equal(transfer.transferUuid, transferExecutedEvent.aggregate.id)
           assert.equal(transfer.state, 'executed')
@@ -154,7 +156,7 @@ Test('transfer model', function (modelTest) {
       Db.connect().then(db => db.transfers.countAsync())
         .then(count => {
           assert.ok(parseInt(count) > 0)
-          Model.truncateReadModel()
+          TransfersReadModel.truncateReadModel()
             .then(() => {
               Db.connect()
                 .then(db => {
@@ -173,9 +175,9 @@ Test('transfer model', function (modelTest) {
 
   modelTest.test('getById should', function (getByIdTest) {
     getByIdTest.test('retrieve transfer from read model by id', function (assert) {
-      Model.saveTransferPrepared(transferPreparedEvent)
+      TransfersReadModel.saveTransferPrepared(transferPreparedEvent)
         .then((saved) => {
-          Model.getById(saved.transferUuid)
+          TransfersReadModel.getById(saved.transferUuid)
             .then((found) => {
               assert.notEqual(found, saved)
               assert.deepEqual(found, saved)

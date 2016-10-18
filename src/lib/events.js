@@ -28,5 +28,11 @@ module.exports = {
       resource: resource,
       related_resources: relatedResources
     })
+  },
+  emitTransferRejected: function (resource, relatedResources) {
+    publish('transferRejected', {
+      resource: resource,
+      related_resources: relatedResources
+    })
   }
 }

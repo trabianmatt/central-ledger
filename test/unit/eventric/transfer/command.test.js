@@ -9,12 +9,32 @@ const Commands = require(`${src}/eventric/transfer/commands`)
 const Validator = require(`${src}/eventric/transfer/validator`)
 const NotFoundError = require(`${src}/errors/not-found-error`)
 
+let noAggregateFound = (id) => P.reject(new Error(`No domainEvents for aggregate of type Transfer with ${id} available`))
+
+let assertNotFound = (t, promise) => {
+  promise
+  .then(result => {
+    t.fail('Expected exception')
+    t.end()
+  })
+  .catch(NotFoundError, e => {
+    t.pass()
+    t.end()
+  })
+  .catch(e => {
+    t.fail('Wrong exception thrown')
+    t.end()
+  })
+}
+
 Test('Commands Test', commandsTest => {
   let sandbox
 
   commandsTest.beforeEach(t => {
     sandbox = Sinon.sandbox.create()
     sandbox.stub(Validator, 'validateExistingOnPrepare')
+    sandbox.stub(Validator, 'validateReject')
+    sandbox.stub(Validator, 'validateFulfillment')
     Commands.$aggregate = sandbox.stub()
     Commands.$aggregate.load = sandbox.stub()
     Commands.$aggregate.create = sandbox.stub()
@@ -64,7 +84,7 @@ Test('Commands Test', commandsTest => {
         $setIdForCreation: () => {},
         $save: () => P.resolve()
       }
-      Commands.$aggregate.load.withArgs('Transfer', id).returns(P.reject(new Error(`No domainEvents for aggregate of type Transfer with ${id} available`)))
+      Commands.$aggregate.load.withArgs('Transfer', id).returns(noAggregateFound(id))
       Commands.$aggregate.create.returns(P.resolve(transfer))
 
       Commands.PrepareTransfer({ id: id })
@@ -83,22 +103,103 @@ Test('Commands Test', commandsTest => {
       let id = Uuid()
       let fulfillment = 'test'
 
-      Commands.$aggregate.load.withArgs('Transfer', id).returns(P.reject(new Error(`No domainEvents for aggregate of type Transfer with ${id} available`)))
-      Commands.FulfillTransfer({ id: id, fulfillment: fulfillment })
-      .then(fulfilled => {
-        t.fail('Expected exception')
-        t.end()
-      })
-      .catch(NotFoundError, e => {
-        t.pass()
+      Commands.$aggregate.load.withArgs('Transfer', id).returns(noAggregateFound(id))
+      assertNotFound(t, Commands.FulfillTransfer({ id: id, fulfillment: fulfillment }))
+    })
+
+    fulfillTest.test('return error if Validator rejects', t => {
+      let id = Uuid()
+      let fulfillmentCondition = 'test'
+      let transfer = {}
+      let error = new Error()
+
+      Commands.$aggregate.load.withArgs('Transfer', id).returns(P.resolve(transfer))
+      Validator.validateFulfillment.returns(P.reject(error))
+
+      Commands.FulfillTransfer({ id: id, fulfillment: fulfillmentCondition })
+      .then(() => {
+        t.fail('Expected error to be thrown')
         t.end()
       })
       .catch(e => {
-        t.fail('Wrong exception thrown')
+        t.equal(e, error)
         t.end()
       })
     })
+
     fulfillTest.end()
+  })
+
+  commandsTest.test('Reject should', rejectTest => {
+    rejectTest.test('return NotFoundError id transfer not found', t => {
+      let id = Uuid()
+      let rejectionReason = 'test'
+      Commands.$aggregate.load.withArgs('Transfer', id).returns(noAggregateFound(id))
+      assertNotFound(t, Commands.RejectTransfer({ id: id, rejection_reason: rejectionReason }))
+    })
+
+    rejectTest.test('return error if Validator rejects', t => {
+      let id = Uuid()
+      let transfer = {}
+      Commands.$aggregate.load.withArgs('Transfer', id).returns(transfer)
+      let error = new Error('Validation failed')
+      Validator.validateReject.returns(P.reject(error))
+
+      Commands.RejectTransfer({ id: id, rejection_reason: 'reason' })
+      .then(() => {
+        t.fail('Expected exception')
+        t.end()
+      })
+      .catch(e => {
+        t.deepEqual(e, error)
+        t.end()
+      })
+    })
+
+    rejectTest.test('return rejection reason if already rejected', t => {
+      let id = Uuid()
+      let transfer = {}
+      let rejectionReason = 'here we go again'
+      Validator.validateReject.withArgs(transfer).returns(P.resolve({ alreadyRejected: true }))
+
+      Commands.$aggregate.load.withArgs('Transfer', id).returns(P.resolve(transfer))
+
+      Commands.RejectTransfer({ id: id, rejection_reason: rejectionReason })
+      .then(result => {
+        t.equal(result.rejection_reason, rejectionReason)
+        t.equal(result.transfer, transfer)
+        t.end()
+      })
+    })
+
+    rejectTest.test('reject and save transfer if not already rejected', t => {
+      let id = Uuid()
+      let transfer = {}
+      let rejectionReason = 'here we go again'
+      let rejectStub = sandbox.stub()
+      let saveStub = sandbox.stub()
+      saveStub.returns(P.resolve())
+
+      transfer.$save = saveStub
+      transfer.reject = rejectStub
+
+      Validator.validateReject.withArgs(transfer).returns(P.resolve({ alreadyRejected: false }))
+
+      Commands.$aggregate.load.withArgs('Transfer', id).returns(P.resolve(transfer))
+
+      Commands.RejectTransfer({ id: id, rejection_reason: rejectionReason })
+      .then(result => {
+        t.equal(result.rejection_reason, rejectionReason)
+        t.equal(result.transfer, transfer)
+        t.ok(rejectStub.calledOnce)
+        let rejectArgs = rejectStub.firstCall.args
+        t.deepEqual(rejectArgs[0], { rejection_reason: rejectionReason })
+        t.ok(saveStub.calledOnce)
+        t.end()
+      })
+    })
+
+    rejectTest.end()
   })
   commandsTest.end()
 })

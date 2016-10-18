@@ -1,33 +1,33 @@
 'use strict'
 
-const TransfersModel = require('../../api/transfers/model')
+const TransfersReadModel = require('../../models/transfers-read-model')
 
 module.exports = {
   initialize (params, done) {
-    TransfersModel.truncateReadModel()
+    return TransfersReadModel.truncateReadModel()
       .then(() => done())
       .catch((err) => {
-        console.log('Error truncating read model', err)
+        console.error('Error truncating read model', err)
       })
   },
 
   handleTransferPrepared (event) {
-    return TransfersModel.saveTransferPrepared(event)
+    return TransfersReadModel.saveTransferPrepared(event)
       .then((transfer) => {
-        console.log('Saved TransferPrepared event for transfer ' + transfer.transferUuid)
+        console.info('Saved TransferPrepared event for transfer ' + transfer.transferUuid)
       })
       .catch((err) => {
-        console.log('Error saving TransferPrepared event', err)
+        console.error('Error saving TransferPrepared event', err)
       })
   },
 
   handleTransferExecuted (event) {
-    return TransfersModel.saveTransferExecuted(event)
+    return TransfersReadModel.saveTransferExecuted(event)
       .then((transfer) => {
-        console.log('Saved TransferExecuted event for transfer ' + transfer.transferUuid)
+        console.info('Saved TransferExecuted event for transfer ' + transfer.transferUuid)
       })
       .catch((err) => {
-        console.log('Error saving TransferExecuted event', err)
+        console.error('Error saving TransferExecuted event', err)
       })
   }
 }

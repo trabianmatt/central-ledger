@@ -2,7 +2,7 @@
 
 const Test = require('tape')
 const Base64Url = require('urlsafe-base64')
-const Conditions = require('../../../src/cryptoConditions/conditions')
+const Conditions = require('../../../src/crypto-conditions/conditions')
 const ParseError = require('../../../src/errors/parse-error')
 const ValidationError = require('../../../src/errors/validation-error')
 const UnsupportedCryptoTypeError = require('../../../src/errors/unsupported-crypto-type-error')

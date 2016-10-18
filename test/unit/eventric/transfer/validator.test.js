@@ -5,9 +5,9 @@ const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const _ = require('lodash')
 const Validator = require(`${src}/eventric/transfer/validator`)
-const TransferState = require(`${src}/eventric/transfer/transfer-state`)
+const TransferState = require(`${src}/eventric/transfer/state`)
 const UnpreparedTransferError = require(`${src}/errors/unprepared-transfer-error`)
-const CryptoFulfillments = require(`${src}/cryptoConditions/fulfillments`)
+const CryptoFulfillments = require(`${src}/crypto-conditions/fulfillments`)
 const AlreadyExistsError = require(`${src}/errors/already-exists-error`)
 
 Test('validator tests', validatorTest => {
@@ -35,7 +35,6 @@ Test('validator tests', validatorTest => {
       Validator.validateFulfillment(transfer, fulfillment)
       .then(result => {
         t.equal(result.previouslyFulfilled, true)
-        t.equal(result.transfer, transfer)
         t.end()
       })
     })
@@ -48,6 +47,7 @@ Test('validator tests', validatorTest => {
       Validator.validateFulfillment(transfer, 'test-fulfillment')
       .then(() => {
         t.fail('Expected exception')
+        t.end()
       })
       .catch(UnpreparedTransferError, e => {
         t.ok(e instanceof UnpreparedTransferError)
@@ -66,7 +66,10 @@ Test('validator tests', validatorTest => {
       }
 
       Validator.validateFulfillment(transfer, fulfillment)
-      .then(() => { t.fail('Expected exception') })
+      .then(() => {
+        t.fail('Expected exception')
+        t.end()
+      })
       .catch(e => {
         t.equal(e, error)
         t.end()
@@ -82,7 +85,6 @@ Test('validator tests', validatorTest => {
       Validator.validateFulfillment(transfer, 'fulfillment')
       .then(result => {
         t.equal(result.previouslyFulfilled, false)
-        t.equal(result.transfer, transfer)
         t.end()
       })
     })
@@ -238,5 +240,62 @@ Test('validator tests', validatorTest => {
 
     existingPrepareTest.end()
   })
+
+  validatorTest.test('validateReject should', rejectTest => {
+    rejectTest.test('return alreadyRejected if state is rejected and any credit has the same reason', t => {
+      let rejectionReason = 'r-e-j-e-c-t find out what it means to me'
+      let transfer = {
+        state: TransferState.REJECTED,
+        credits: [
+          { rejection_reason: rejectionReason }
+        ]
+      }
+
+      Validator.validateReject(transfer, rejectionReason)
+      .then(result => {
+        t.equal(result.alreadyRejected, true)
+        t.end()
+      })
+    })
+
+    rejectTest.test('throw UnpreparedTransferError is state is not prepared', t => {
+      let rejectionReason = 'Dear John,'
+      let transfer = {
+        state: TransferState.REJECTED,
+        rejection_reason: 'not ' + rejectionReason
+      }
+
+      Validator.validateReject(transfer, rejectionReason)
+      .then(() => {
+        t.fail('Expected exception to be thrown')
+        t.end()
+      }).catch(UnpreparedTransferError, e => {
+        t.pass()
+        t.end()
+      }).catch(e => {
+        t.fail(e.message)
+        t.end()
+      })
+    })
+
+    rejectTest.test('return alreadyReject false if all transfer is not rejected', t => {
+      let rejectionReason = "It's not you, it's me"
+      let transfer = {
+        state: TransferState.PREPARED
+      }
+
+      Validator.validateReject(transfer, rejectionReason)
+      .then(result => {
+        t.equal(result.alreadyRejected, false)
+        t.end()
+      })
+      .catch(e => {
+        t.fail(e.message)
+        t.end()
+      })
+    })
+    rejectTest.end()
+  })
+
   validatorTest.end()
 })

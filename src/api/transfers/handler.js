@@ -1,12 +1,12 @@
 'use strict'
 
 const Model = require('./model')
+const TransfersReadModel = require('../../models/transfers-read-model')
 const Validator = require('./validator')
 const Handle = require('../../lib/handler')
 const Config = require('../../lib/config')
-const TransferState = require('../../eventric/transfer/transfer-state')
+const TransferState = require('../../eventric/transfer/state')
 const ValidationError = require('../../errors/validation-error')
-const P = require('bluebird')
 const NotFoundError = require('../../errors/not-found-error')
 const AlreadyExistsError = require('../../errors/already-exists-error')
 const UnpreparedTransferError = require('../../errors/unprepared-transfer-error')
@@ -71,19 +71,27 @@ exports.fulfillTransfer = function (request, reply) {
 }
 
 exports.rejectTransfer = function (request, reply) {
-  let reason = request.payload
-  return P.resolve(reason).then(Handle.getResponse(reply, x => x, { contentType: 'text/plain' }))
+  let rejection = {
+    id: request.params.id,
+    rejection_reason: request.payload
+  }
+
+  return Model.reject(rejection)
+  .then(Handle.getResponse(reply, x => x, { contentType: 'text/plain' }))
+  .catch(UnpreparedTransferError, Handle.unprocessableEntity(reply))
+  .catch(NotFoundError, Handle.notFound(reply))
+  .catch(Handle.error(request, reply))
 }
 
 exports.getTransferById = function (request, reply) {
-  return Model.getById(request.params.id)
+  return TransfersReadModel.getById(request.params.id)
     .then(Handle.getResponse(reply, buildGetTransferResponse))
     .catch(NotFoundError, Handle.notFound(reply))
     .catch(Handle.error(request, reply))
 }
 
 exports.getTransferFulfillment = function (request, reply) {
-  return Model.getById(request.params.id)
+  return TransfersReadModel.getById(request.params.id)
     .then((transfer) => {
       if (transfer && transfer.state !== TransferState.EXECUTED) {
         throw new NotFoundError()

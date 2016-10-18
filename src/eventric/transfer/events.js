@@ -1,8 +1,7 @@
 'use strict'
 
 module.exports = {
-  /*eslint-disable */
-  TransferPrepared({
+  TransferPrepared ({
     ledger,
     debits,
     credits,
@@ -12,26 +11,18 @@ module.exports = {
     this.ledger = ledger
     this.debits = debits
     this.credits = credits
-    this.execution_condition = execution_condition
-    this.expires_at = expires_at
+    this.execution_condition = execution_condition // eslint-disable-line
+    this.expires_at = expires_at // eslint-disable-line
     return this
   },
 
-  TransferExecuted({
-    ledger,
-    debits,
-    credits,
-    execution_condition,
-    expires_at,
-    fulfillment
-  }) {
-    this.ledger = ledger
-    this.debits = debits
-    this.credits = credits
-    this.execution_condition = execution_condition
-    this.expires_at = expires_at
+  TransferExecuted ({ fulfillment }) {
     this.fulfillment = fulfillment
     return this
+  },
+
+  TransferRejected ({ rejection_reason }) {
+    this.rejection_reason = rejection_reason // eslint-disable-line
+    return this
   }
-  /*eslint-enable */
 }

@@ -1,7 +1,7 @@
 'use strict'
 
-const CryptoConditions = require('../../cryptoConditions/conditions')
-const TransferState = require('./transfer-state')
+const CryptoConditions = require('../../crypto-conditions/conditions')
+const TransferState = require('./state')
 
 class Transfer {
   create ({
@@ -22,17 +22,12 @@ class Transfer {
     })
   }
 
-  fulfill ({ fulfillment }) {
-    let payload = {
-      ledger: this.ledger,
-      debits: this.debits,
-      credits: this.credits,
-      execution_condition: this.execution_condition,
-      expires_at: this.expires_at,
-      fulfillment: fulfillment
-    }
-
+  fulfill (payload) {
     return this.$emitDomainEvent('TransferExecuted', payload)
+  }
+
+  reject (payload) {
+    return this.$emitDomainEvent('TransferRejected', payload)
   }
 
   handleTransferPrepared (event) {
@@ -48,6 +43,20 @@ class Transfer {
   handleTransferExecuted (event) {
     this.state = TransferState.EXECUTED
     this.fulfillment = event.payload.fulfillment
+    return this
+  }
+
+  handleTransferRejected (event) {
+    let { rejection_reason } = event.payload
+    let credits = this.credits || []
+    credits.forEach(c => {
+      c.rejection_reason = rejection_reason // eslint-disable-line
+      c.rejected = true
+    })
+    this.state = TransferState.REJECTED
+    this.rejection_reason = 'cancelled'
+    this.timeline = this.timeline || {}
+    this.timeline.rejected_at = new Date(event.timestamp).toISOString()
     return this
   }
 }

@@ -2,29 +2,27 @@
 
 const P = require('bluebird')
 const _ = require('lodash')
-const TransferState = require('./transfer-state')
-const CryptoFulfillments = require('../../cryptoConditions/fulfillments')
+const TransferState = require('./state')
+const CryptoFulfillments = require('../../crypto-conditions/fulfillments')
 const UnpreparedTransferError = require('../../errors/unprepared-transfer-error')
 const AlreadyExistsError = require('../../errors/already-exists-error')
 
-exports.validateFulfillment = (transfer, fulfillment) => {
+exports.validateFulfillment = ({state, fulfillment, execution_condition}, fulfillmentCondition) => {
   return P.resolve().then(() => {
-    if (transfer.state === TransferState.EXECUTED && transfer.fulfillment === fulfillment) {
+    if (state === TransferState.EXECUTED && fulfillment === fulfillmentCondition) {
       return {
-        previouslyFulfilled: true,
-        transfer
+        previouslyFulfilled: true
       }
     }
 
-    if (transfer.state !== TransferState.PREPARED) {
+    if (state !== TransferState.PREPARED) {
       throw new UnpreparedTransferError()
     }
 
-    CryptoFulfillments.validateConditionFulfillment(transfer.execution_condition, fulfillment)
+    CryptoFulfillments.validateConditionFulfillment(execution_condition, fulfillmentCondition)
 
     return {
-      previouslyFulfilled: false,
-      transfer
+      previouslyFulfilled: false
     }
   })
 }
@@ -35,5 +33,19 @@ exports.validateExistingOnPrepare = (proposed, existing) => {
       throw new AlreadyExistsError()
     }
     return existing
+  })
+}
+
+exports.validateReject = ({state, credits = []}, rejectionReason) => {
+  return P.resolve().then(() => {
+    if (state === TransferState.REJECTED && credits.some(x => x.rejection_reason === rejectionReason)) {
+      return { alreadyRejected: true }
+    }
+
+    if (state !== TransferState.PREPARED) {
+      throw new UnpreparedTransferError()
+    }
+
+    return { alreadyRejected: false }
   })
 }

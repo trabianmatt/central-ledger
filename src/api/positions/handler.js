@@ -1,7 +1,7 @@
 'use strict'
 const Decimal = require('decimal.js')
 
-const TransfersModel = require('../transfers/model')
+const TransfersReadModel = require('../../models/transfers-read-model')
 const Handle = require('../../lib/handler')
 const PositionCalculator = require('./position-calculator')
 
@@ -61,7 +61,7 @@ function createPositions (executedTransfers) {
 }
 
 exports.perform = (request, reply) => {
-  TransfersModel.getExecuted()
+  TransfersReadModel.getExecuted()
     .then(createPositions)
     .then(Handle.getResponse(reply, buildResponse))
 }
