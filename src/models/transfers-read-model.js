@@ -2,9 +2,15 @@
 
 const Moment = require('moment')
 const Db = require('../lib/db')
+const TransferState = require('../eventric/transfer/state')
 
 exports.getExecuted = () => {
-  return Db.connect().then(db => db.transfers.findAsync({ state: 'executed' }))
+  return Db.connect().then(db => db.transfers.findAsync({ state: TransferState.EXECUTED }))
+}
+
+exports.findExpired = (expirationDate) => {
+  let expiresAt = (expirationDate || new Date()).toISOString()
+  return Db.connect().then(db => db.transfers.findAsync({ state: TransferState.PREPARED, 'expiresAt <': expiresAt }))
 }
 
 exports.saveTransferPrepared = (preparedEvent) => {
@@ -12,7 +18,7 @@ exports.saveTransferPrepared = (preparedEvent) => {
     .then(db => db.transfers.insertAsync(
       {
         transferUuid: preparedEvent.aggregate.id,
-        state: 'prepared',
+        state: TransferState.PREPARED,
         ledger: preparedEvent.payload.ledger,
         debitAccount: preparedEvent.payload.debits[0].account,
         debitAmount: preparedEvent.payload.debits[0].amount,
@@ -45,14 +51,14 @@ exports.saveTransferExecuted = (executedEvent) => {
         throw new Error('The transfer ' + executedEvent.aggregate.id + ' has not been saved as prepared yet')
       }
 
-      if (transfer.state === 'executed') {
+      if (transfer.state === TransferState.EXECUTED) {
         throw new Error('The transfer ' + transfer.transferUuid + ' has already been saved as executed')
       }
 
       return db.transfers.updateAsync(
         {
           transferUuid: transfer.transferUuid,
-          state: 'executed',
+          state: TransferState.EXECUTED,
           fulfillment: executedEvent.payload.fulfillment,
           executedDate: Moment(executedEvent.timestamp)
         })

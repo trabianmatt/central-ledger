@@ -31,6 +31,7 @@ class Transfer {
   }
 
   handleTransferPrepared (event) {
+    this.id = event.aggregate.id
     this.ledger = event.payload.ledger
     this.debits = event.payload.debits
     this.credits = event.payload.credits

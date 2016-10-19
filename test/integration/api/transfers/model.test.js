@@ -3,57 +3,77 @@
 const src = '../../../../src'
 const Test = require('tape')
 const Moment = require('moment')
+const Uuid = require('uuid4')
 const Db = require(src + '/lib/db')
 const Model = require(src + '/api/transfers/model')
-const TransfersReadModel = require(src + '/models/transfers-read-model')
+const TransfersReadModel = require('../../../../src/models/transfers-read-model')
 
-let transferPreparedEvent = {
-  id: 1,
-  name: 'TransferPrepared',
-  payload: {
-    ledger: 'http://central-ledger.example',
-    debits: [{
-      account: 'http://central-ledger.example/accounts/dfsp1',
-      amount: '50'
-    }],
-    credits: [{
-      account: 'http://central-ledger.example/accounts/dfsp2',
-      amount: '50'
-    }],
-    execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
-    expires_at: '2015-06-16T00:00:01.000Z'
-  },
-  aggregate: {
-    id: '1d4f2a70-e0d6-42dc-9efb-6d23060ccd6f',
-    name: 'Transfer'
-  },
-  context: 'Ledger',
-  timestamp: 1474471273588
+let pastDate = () => {
+  let d = new Date()
+  d.setDate(d.getDate() - 5)
+  return d
 }
 
-let transferExecutedEvent = {
-  id: 2,
-  name: 'TransferExecuted',
-  payload: {
-    ledger: 'http://central-ledger.example',
-    debits: [{
-      account: 'http://central-ledger.example/accounts/dfsp1',
-      amount: '50'
-    }],
-    credits: [{
-      account: 'http://central-ledger.example/accounts/dfsp2',
-      amount: '50'
-    }],
-    execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
-    expires_at: '2015-06-16T00:00:01.000Z',
-    fulfillment: 'cf:0:_v8'
-  },
-  aggregate: {
-    id: '1d4f2a70-e0d6-42dc-9efb-6d23060ccd6f',
-    name: 'Transfer'
-  },
-  context: 'Ledger',
-  timestamp: 1474471284081
+let futureDate = () => {
+  let d = new Date()
+  d.setDate(d.getDate() + 5)
+  return d
+}
+
+let transferPreparedEvent = (aggregateId) => {
+  let d = futureDate()
+  let id = aggregateId || Uuid()
+  return {
+    id: 1,
+    name: 'TransferPrepared',
+    payload: {
+      ledger: 'http://central-ledger.example',
+      debits: [{
+        account: 'http://central-ledger.example/accounts/dfsp1',
+        amount: '50'
+      }],
+      credits: [{
+        account: 'http://central-ledger.example/accounts/dfsp2',
+        amount: '50'
+      }],
+      execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
+      expires_at: d.toISOString()
+    },
+    aggregate: {
+      id: id,
+      name: 'Transfer'
+    },
+    context: 'Ledger',
+    timestamp: 1474471273588
+  }
+}
+
+let transferExecutedEvent = (aggregateId) => {
+  let d = futureDate()
+  return {
+    id: 2,
+    name: 'TransferExecuted',
+    payload: {
+      ledger: 'http://central-ledger.example',
+      debits: [{
+        account: 'http://central-ledger.example/accounts/dfsp1',
+        amount: '50'
+      }],
+      credits: [{
+        account: 'http://central-ledger.example/accounts/dfsp2',
+        amount: '50'
+      }],
+      execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
+      expires_at: d.toISOString(),
+      fulfillment: 'cf:0:_v8'
+    },
+    aggregate: {
+      id: aggregateId,
+      name: 'Transfer'
+    },
+    context: 'Ledger',
+    timestamp: 1474471284081
+  }
 }
 
 Test('transfer model', function (modelTest) {
@@ -110,25 +130,26 @@ Test('transfer model', function (modelTest) {
 
   modelTest.test('saveTransferPrepared should', function (transferPreparedTest) {
     transferPreparedTest.test('save a TransferPrepared event object to the read model', function (assert) {
-      TransfersReadModel.saveTransferPrepared(transferPreparedEvent)
+      let event = transferPreparedEvent()
+      TransfersReadModel.saveTransferPrepared(event)
         .then((transfer) => {
-          assert.equal(transfer.transferUuid, transferPreparedEvent.aggregate.id)
+          assert.equal(transfer.transferUuid, event.aggregate.id)
           assert.equal(transfer.state, 'prepared')
-          assert.equal(transfer.ledger, transferPreparedEvent.payload.ledger)
-          assert.equal(transfer.debitAccount, transferPreparedEvent.payload.debits[0].account)
-          assert.equal(transfer.debitAmount, parseFloat(transferPreparedEvent.payload.debits[0].amount).toFixed(2))
+          assert.equal(transfer.ledger, event.payload.ledger)
+          assert.equal(transfer.debitAccount, event.payload.debits[0].account)
+          assert.equal(transfer.debitAmount, parseFloat(event.payload.debits[0].amount).toFixed(2))
           assert.notOk(transfer.debitMemo)
           assert.notOk(transfer.debitInvoice)
-          assert.equal(transfer.creditAccount, transferPreparedEvent.payload.credits[0].account)
-          assert.equal(transfer.creditAmount, parseFloat(transferPreparedEvent.payload.credits[0].amount).toFixed(2))
+          assert.equal(transfer.creditAccount, event.payload.credits[0].account)
+          assert.equal(transfer.creditAmount, parseFloat(event.payload.credits[0].amount).toFixed(2))
           assert.notOk(transfer.creditMemo)
           assert.notOk(transfer.creditInvoice)
-          assert.equal(transfer.executionCondition, transferPreparedEvent.payload.execution_condition)
+          assert.equal(transfer.executionCondition, event.payload.execution_condition)
           assert.notOk(transfer.cancellationCondition)
           assert.notOk(transfer.rejectReason)
-          assert.deepEqual(transfer.expiresAt, Moment(transferPreparedEvent.payload.expires_at).toDate())
+          assert.deepEqual(transfer.expiresAt, Moment(event.payload.expires_at).toDate())
           assert.notOk(transfer.additionalInfo)
-          assert.deepEqual(transfer.preparedDate, Moment(transferPreparedEvent.timestamp).toDate())
+          assert.deepEqual(transfer.preparedDate, Moment(event.timestamp).toDate())
           assert.end()
         })
     })
@@ -138,14 +159,19 @@ Test('transfer model', function (modelTest) {
 
   modelTest.test('saveTransferExecuted should', function (transferExecutedTest) {
     transferExecutedTest.test('update the read model with TransferExecuted event object', function (assert) {
-      TransfersReadModel.saveTransferExecuted(transferExecutedEvent)
+      let preparedEvent = transferPreparedEvent()
+      TransfersReadModel.saveTransferPrepared(preparedEvent)
+      .then(() => {
+        let executedEvent = transferExecutedEvent(preparedEvent.aggregate.id)
+        return TransfersReadModel.saveTransferExecuted(executedEvent)
         .then((transfer) => {
-          assert.equal(transfer.transferUuid, transferExecutedEvent.aggregate.id)
+          assert.equal(transfer.transferUuid, executedEvent.aggregate.id)
           assert.equal(transfer.state, 'executed')
-          assert.equal(transfer.fulfillment, transferExecutedEvent.payload.fulfillment)
-          assert.deepEqual(transfer.executedDate, Moment(transferExecutedEvent.timestamp).toDate())
+          assert.equal(transfer.fulfillment, executedEvent.payload.fulfillment)
+          assert.deepEqual(transfer.executedDate, Moment(executedEvent.timestamp).toDate())
           assert.end()
         })
+      })
     })
 
     transferExecutedTest.end()
@@ -175,7 +201,7 @@ Test('transfer model', function (modelTest) {
 
   modelTest.test('getById should', function (getByIdTest) {
     getByIdTest.test('retrieve transfer from read model by id', function (assert) {
-      TransfersReadModel.saveTransferPrepared(transferPreparedEvent)
+      TransfersReadModel.saveTransferPrepared(transferPreparedEvent())
         .then((saved) => {
           TransfersReadModel.getById(saved.transferUuid)
             .then((found) => {
@@ -187,6 +213,31 @@ Test('transfer model', function (modelTest) {
     })
 
     getByIdTest.end()
+  })
+
+  modelTest.test('findExpired should', expiredTest => {
+    expiredTest.test('retrieve prepared transfers with past expires at', t => {
+      let event = transferPreparedEvent()
+      let d = pastDate()
+      event.payload.expires_at = d.toISOString()
+
+      let futureEvent = transferPreparedEvent()
+      let future = futureDate()
+      futureEvent.payload.expires_at = future.toISOString()
+
+      TransfersReadModel.saveTransferPrepared(event)
+      .then(() => TransfersReadModel.saveTransferPrepared(futureEvent))
+      .then(() => {
+        TransfersReadModel.findExpired()
+        .then((found) => {
+          t.equal(found.length, 1)
+          t.equal(found[0].transferUuid, event.aggregate.id)
+          t.end()
+        })
+      })
+    })
+
+    expiredTest.end()
   })
 
   modelTest.end()

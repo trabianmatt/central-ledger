@@ -56,6 +56,11 @@ Test('manifest', function (manifestTest) {
       assert.end()
     })
 
+    registrationsTest.test('register webhooks plugin', function (assert) {
+      assert.ok(findPluginByPath(Manifest.registrations, './webhooks'))
+      assert.end()
+    })
+
     registrationsTest.test('register sockets plugin', function (assert) {
       assert.ok(findPluginByPath(Manifest.registrations, './sockets'))
       assert.end()

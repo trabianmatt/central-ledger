@@ -5,7 +5,7 @@ const Test = require('tapes')(require('tape'))
 const Eventric = require('eventric')
 const P = require('bluebird')
 const Sinon = require('sinon')
-const TransferInitialize = require(`${src}/eventric/transfer/initialize`)
+const Transfer = require(`${src}/eventric/transfer`)
 const TransferProjection = require(`${src}/eventric/transfer/projection`)
 const PostgresStore = require(`${src}/eventric/postgres-store`)
 const CryptoConditions = require(`${src}/crypto-conditions/conditions`)
@@ -24,6 +24,7 @@ let createTransfer = () => {
 }
 
 let compareTransfers = (assert, transfer1, transfer2) => {
+  assert.equal(transfer1.id, transfer2.id)
   assert.equal(transfer1.ledger, transfer2.ledger)
   assert.equal(transfer1.debits, transfer2.debits)
   assert.equal(transfer1.credits, transfer2.credits)
@@ -43,9 +44,9 @@ Test('Transfer aggregate', aggregateTest => {
     CryptoConditions.validateCondition.returns(true)
     context = Eventric.context('TestContext')
     PostgresStore.default = {}
-    TransferInitialize.setupContext(context)
+    Transfer.setupContext(context)
     context.initialize()
-      .then(() => TransferInitialize.onContextInitialized(context))
+      .then(() => Transfer.onContextInitialized(context))
       .then(_t => t.end())
   })
 

@@ -9,6 +9,7 @@ const Uuid = require('uuid4')
 const Db = require(`${src}/lib/db`)
 const UrlParser = require(`${src}/lib/urlparser`)
 const TransfersReadModel = require(`${src}/models/transfers-read-model`)
+const TransferState = require('../../../src/eventric/transfer/state')
 
 function setupTransfersDb (transfers) {
   let db = { transfers: transfers }
@@ -251,6 +252,25 @@ Test('transfer model', function (modelTest) {
     })
 
     getByIdTest.end()
+  })
+
+  modelTest.test('findExpired should', findExpiredTest => {
+    findExpiredTest.test('find transfer by state and expires_at', t => {
+      let transfer1 = { id: Uuid() }
+      let transfer2 = { id: Uuid() }
+      let expirationDate = new Date()
+      let findAsync = sandbox.stub().returns(Promise.resolve([ transfer1, transfer2 ]))
+      setupTransfersDb({ findAsync: findAsync })
+
+      TransfersReadModel.findExpired(expirationDate)
+      .then(found => {
+        let findAsyncArg = findAsync.firstCall.args[0]
+        t.equal(findAsyncArg.state, TransferState.PREPARED)
+        t.equal(findAsyncArg['expiresAt <'], expirationDate.toISOString())
+        t.end()
+      })
+    })
+    findExpiredTest.end()
   })
 
   modelTest.end()

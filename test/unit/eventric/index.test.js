@@ -6,7 +6,7 @@ const Eventric = require('eventric')
 const P = require('bluebird')
 const Index = require('../../../src/eventric/index')
 const PostgresStore = require('../../../src/eventric/postgres-store')
-const TransferInitialize = require('../../../src/eventric/transfer/initialize')
+const Transfer = require('../../../src/eventric/transfer')
 
 Test('Eventric index', indexTest => {
   let sandbox
@@ -15,8 +15,8 @@ Test('Eventric index', indexTest => {
     sandbox = Sinon.sandbox.create()
     sandbox.stub(Eventric, 'context')
     sandbox.stub(Eventric, 'setStore')
-    sandbox.stub(TransferInitialize, 'setupContext')
-    sandbox.stub(TransferInitialize, 'onContextInitialized')
+    sandbox.stub(Transfer, 'setupContext')
+    sandbox.stub(Transfer, 'onContextInitialized')
     t.end()
   })
 
@@ -36,8 +36,8 @@ Test('Eventric index', indexTest => {
       Index.getContext()
       .then(ctx => {
         t.ok(Eventric.setStore.calledWith(PostgresStore.default, {}))
-        t.ok(TransferInitialize.setupContext.calledWith(stubCtx))
-        t.ok(TransferInitialize.onContextInitialized.calledWith(stubCtx))
+        t.ok(Transfer.setupContext.calledWith(stubCtx))
+        t.ok(Transfer.onContextInitialized.calledWith(stubCtx))
         t.end()
       })
     })

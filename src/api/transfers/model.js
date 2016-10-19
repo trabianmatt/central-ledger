@@ -2,11 +2,11 @@
 
 const Events = require('../../lib/events')
 const UrlParser = require('../../lib/urlparser')
-const Transfer = require('../../eventric/transfer')
+const Commands = require('../../commands/transfer')
 
-let cleanTransfer = (transfer, id) => {
+let cleanTransfer = (transfer) => {
   return {
-    id: id || UrlParser.toTransferUri(transfer.id),
+    id: UrlParser.toTransferUri(transfer.id),
     ledger: transfer.ledger,
     credits: transfer.credits,
     debits: transfer.debits,
@@ -25,9 +25,9 @@ exports.prepare = (transfer) => {
     execution_condition: transfer.execution_condition,
     expires_at: transfer.expires_at
   }
-  return Transfer.prepare(payload)
+  return Commands.prepare(payload)
     .then(result => {
-      let t = cleanTransfer(result.transfer, transfer.id)
+      let t = cleanTransfer(result.transfer)
       Events.emitTransferPrepared(t)
       t.existing = result.existing
       return t
@@ -35,7 +35,7 @@ exports.prepare = (transfer) => {
 }
 
 exports.fulfill = (fulfillment) => {
-  return Transfer.fulfill(fulfillment)
+  return Commands.fulfill(fulfillment)
   .then(transfer => {
     let t = cleanTransfer(transfer)
     Events.emitTransferExecuted(t, { execution_condition_fulfillment: fulfillment.fulfillment })
@@ -44,7 +44,7 @@ exports.fulfill = (fulfillment) => {
 }
 
 exports.reject = (rejection) => {
-  return Transfer.reject(rejection)
+  return Commands.reject(rejection)
   .then(result => {
     let t = cleanTransfer(result.transfer)
     Events.emitTransferRejected(t)

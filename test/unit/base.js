@@ -8,9 +8,7 @@ function setup () {
   const server = new Hapi.Server()
   server.connection({port: 8000})
 
-  server.register({
-    register: require('../../src/api')
-  })
+  server.register([require('../../src/api'), require('../../src/webhooks')])
 
   fixtures.server = server
 

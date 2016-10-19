@@ -21,6 +21,7 @@ module.exports = {
     },
     { plugin: 'blipp' },
     { plugin: './api' },
+    { plugin: './webhooks' },
     { plugin: './sockets' },
     {
       plugin: {

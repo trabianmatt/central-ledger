@@ -9,6 +9,7 @@ const Validator = require(`${src}/api/transfers/validator`)
 const Config = require(`${src}/lib/config`)
 const Handler = require(`${src}/api/transfers/handler`)
 const Model = require(`${src}/api/transfers/model`)
+const Service = require('../../../../src/services/transfer')
 const TransfersReadModel = require(`${src}/models/transfers-read-model`)
 const AlreadyExistsError = require(`${src}/errors/already-exists-error`)
 const NotFoundError = require(`${src}/errors/not-found-error`)
@@ -37,6 +38,7 @@ Test('transfer handler', function (handlerTest) {
     sandbox.stub(Validator, 'validate', a => P.resolve(a))
     sandbox.stub(Model, 'reject')
     sandbox.stub(Model, 'fulfill')
+    sandbox.stub(Service, 'rejectExpired')
     originalHostName = Config.HOSTNAME
     Config.HOSTNAME = hostname
     t.end()

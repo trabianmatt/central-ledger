@@ -2,6 +2,7 @@
 
 const Sinon = require('sinon')
 const Test = require('tapes')(require('tape'))
+const Uuid = require('uuid4')
 const TransferState = require('../../../../src/eventric/transfer/state')
 const Transfer = require('../../../../src/eventric/transfer/transfer')
 const CryptoConditions = require('../../../../src/crypto-conditions/conditions')
@@ -131,7 +132,11 @@ Test('transfer', transferTest => {
   transferTest.test('handleTransferPrepared should', handleTransferPreparedTest => {
     handleTransferPreparedTest.test('set transfer properties', t => {
       let transfer = new Transfer()
+      let transferId = Uuid()
       let event = {
+        aggregate: {
+          id: transferId
+        },
         payload: {
           ledger: 'ledger',
           debits: 'debits',
@@ -141,6 +146,7 @@ Test('transfer', transferTest => {
         }
       }
       transfer.handleTransferPrepared(event)
+      t.equal(transfer.id, transferId)
       t.equal(transfer.ledger, 'ledger')
       t.equal(transfer.debits, 'debits')
       t.equal(transfer.credits, 'credits')

@@ -6,7 +6,7 @@ const Sinon = require('sinon')
 const P = require('bluebird')
 const Model = require(`${src}/api/transfers/model`)
 const Eventric = require(`${src}/eventric`)
-const Transfer = require(`${src}/eventric/transfer`)
+const Transfer = require(`${src}/commands/transfer`)
 const Events = require(`${src}/lib/events`)
 const UrlParser = require(`${src}/lib/urlparser`)
 
@@ -47,9 +47,17 @@ Test('transfer model', function (modelTest) {
       let transferId = '3a2a1d9e-8640-4d2d-b06c-84f2cd613204'
       let payload = createTransfer(transferId)
       UrlParser.idFromTransferUri.withArgs(payload.id).returns(transferId)
+      UrlParser.toTransferUri.withArgs(transferId).returns(payload.id)
       let expected = {
         existing: false,
-        transfer: payload
+        transfer: {
+          id: transferId,
+          ledger: payload.ledger,
+          credits: payload.credits,
+          debits: payload.debits,
+          execution_condition: payload.execution_condition,
+          expires_at: payload.expires_at
+        }
       }
       Transfer.prepare.returns(P.resolve(expected))
 
@@ -72,9 +80,17 @@ Test('transfer model', function (modelTest) {
       let transferId = '3a2a1d9e-8640-4d2d-b06c-84f2cd613204'
       let payload = createTransfer(transferId)
       UrlParser.idFromTransferUri.withArgs(payload.id).returns(transferId)
+      UrlParser.toTransferUri.withArgs(transferId).returns(payload.id)
       let expected = {
         existing: false,
-        transfer: payload
+        transfer: {
+          id: transferId,
+          ledger: payload.ledger,
+          credits: payload.credits,
+          debits: payload.debits,
+          execution_condition: payload.execution_condition,
+          expires_at: payload.expires_at
+        }
       }
       Transfer.prepare.returns(P.resolve(expected))
       Model.prepare(payload)

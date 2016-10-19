@@ -2,79 +2,47 @@
 
 const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
-const P = require('bluebird')
-const Eventric = require('../../../../src/eventric')
 const Transfer = require('../../../../src/eventric/transfer')
+const TransferEvents = require('../../../../src/eventric/transfer/events')
+const Aggregate = require('../../../../src/eventric/transfer/transfer')
+const Commands = require('../../../../src/eventric/transfer/commands')
+const Projection = require('../../../../src/eventric/transfer/projection')
 
-Test('Eventric Transfer index test', indexTest => {
-  let sandbox
+Test('Index should', initializeTest => {
+  initializeTest.test('setupContext should', setupTest => {
+    setupTest.test('add transfer objects to context', t => {
+      let context = {
+        defineDomainEvents: Sinon.stub(),
+        addAggregate: Sinon.stub(),
+        addCommandHandlers: Sinon.stub(),
+        addProjection: Sinon.stub()
+      }
+      Transfer.setupContext(context)
+      t.ok(context.defineDomainEvents.calledWith(TransferEvents))
+      t.ok(context.addAggregate.calledWith('Transfer', Aggregate))
+      t.ok(context.addCommandHandlers.calledWith(Commands))
+      t.ok(context.addProjection.calledWith(Projection))
 
-  indexTest.beforeEach(t => {
-    sandbox = Sinon.sandbox.create()
-    sandbox.stub(Eventric, 'getContext')
-    t.end()
-  })
-
-  indexTest.afterEach(t => {
-    sandbox.restore()
-    t.end()
-  })
-
-  indexTest.test('prepare should', prepareTest => {
-    prepareTest.test('execute prepare command on context', t => {
-      let command = sandbox.stub()
-      let expected = {}
-      command.returns(expected)
-      Eventric.getContext.returns(P.resolve({ command: command }))
-
-      let payload = {}
-
-      Transfer.prepare(payload)
-      .then(tfr => {
-        t.ok(command.calledWith('PrepareTransfer', payload))
-        t.equal(tfr, expected)
-        t.end()
-      })
+      t.end()
     })
-
-    prepareTest.end()
+    setupTest.end()
   })
 
-  indexTest.test('fulfill should', fulfillTest => {
-    fulfillTest.test('execute fulfill command on context', t => {
-      let command = sandbox.stub()
-      let expected = {}
-      command.returns(expected)
-      Eventric.getContext.returns(P.resolve({ command: command }))
+  initializeTest.test('onContextInitialized should', onInitTest => {
+    onInitTest.test('setup transfer id and return context', t => {
+      let context = {
+        _getAggregateRepository: Sinon.stub()
+      }
+      let aggregateRepository = {}
+      context._getAggregateRepository.returns(aggregateRepository)
+      t.notOk(aggregateRepository._installSaveFunctionOnAggregateInstance)
 
-      let payload = {}
-      Transfer.fulfill(payload)
-      .then(result => {
-        t.ok(command.calledWith('FulfillTransfer', payload))
-        t.equal(result, expected)
-        t.end()
-      })
+      let result = Transfer.onContextInitialized(context)
+      t.equal(result, context)
+      t.ok(aggregateRepository._installSaveFunctionOnAggregateInstance)
+      t.end()
     })
-    fulfillTest.end()
+    onInitTest.end()
   })
-
-  indexTest.test('reject should', rejectTest => {
-    rejectTest.test('execute reject command on context', t => {
-      let command = sandbox.stub()
-      let expected = {}
-      command.returns(expected)
-      Eventric.getContext.returns(P.resolve({ command: command }))
-
-      let rejection = {}
-      Transfer.reject(rejection)
-      .then(result => {
-        t.ok(command.calledWith('RejectTransfer', rejection))
-        t.equal(result, expected)
-        t.end()
-      })
-    })
-    rejectTest.end()
-  })
-
-  indexTest.end()
+  initializeTest.end()
 })
