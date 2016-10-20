@@ -9,7 +9,7 @@ exports.getExecuted = () => {
 }
 
 exports.findExpired = (expirationDate) => {
-  let expiresAt = (expirationDate || new Date()).toISOString()
+  let expiresAt = (expirationDate || Moment.utc()).toISOString()
   return Db.connect().then(db => db.transfers.findAsync({ state: TransferState.PREPARED, 'expiresAt <': expiresAt }))
 }
 

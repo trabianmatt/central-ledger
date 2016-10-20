@@ -3,9 +3,13 @@
 const Config = require('./lib/config')
 const Pack = require('../package')
 
+function stripEmpty (list) {
+  return list.filter(n => n)
+}
+
 module.exports = {
   connections: [{ port: Config.PORT }],
-  registrations: [
+  registrations: stripEmpty([
     { plugin: 'inert' },
     { plugin: 'vision' },
     {
@@ -22,6 +26,7 @@ module.exports = {
     { plugin: 'blipp' },
     { plugin: './api' },
     { plugin: './webhooks' },
+    (Config.EXPIRES_TIMEOUT) ? { plugin: './worker' } : null,
     { plugin: './sockets' },
     {
       plugin: {
@@ -57,5 +62,5 @@ module.exports = {
         }
       }
     }
-  ]
+  ])
 }

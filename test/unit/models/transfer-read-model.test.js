@@ -270,6 +270,25 @@ Test('transfer model', function (modelTest) {
         t.end()
       })
     })
+
+    findExpiredTest.test('default expires_at date', t => {
+      let transfer1 = { id: Uuid() }
+      let transfer2 = { id: Uuid() }
+      let findAsync = sandbox.stub().returns(Promise.resolve([ transfer1, transfer2 ]))
+      let expirationDate = new Date()
+      sandbox.stub(Moment, 'utc')
+      Moment.utc.returns(expirationDate)
+      setupTransfersDb({ findAsync: findAsync })
+
+      TransfersReadModel.findExpired()
+      .then(found => {
+        let findAsyncArg = findAsync.firstCall.args[0]
+        t.equal(findAsyncArg.state, TransferState.PREPARED)
+        t.equal(findAsyncArg['expiresAt <'], expirationDate.toISOString())
+        t.end()
+      })
+    })
+
     findExpiredTest.end()
   })
 

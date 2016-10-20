@@ -61,6 +61,10 @@
         {
           "name": "CLEDG_HOSTNAME",
           "value": "<HOSTNAME>"
+        },
+        {
+          "name": "CLEDG_EXPIRES_TIMEOUT",
+          "value": 1800000
         }
       ],
       "links": [

@@ -133,5 +133,25 @@ Test('transfer validator', (test) => {
     })
   })
 
+  test.test('return transfer if all checks pass but credits are undefined', assert => {
+    let transfer = goodTransfer()
+    delete transfer.credits
+    Validator.validate(transfer, transferId)
+    .then(t => {
+      assert.equal(t, transfer)
+      assert.end()
+    })
+  })
+
+  test.test('return transfer if all checks pass but debits are undefined', assert => {
+    let transfer = goodTransfer()
+    delete transfer.debits
+    Validator.validate(transfer, transferId)
+    .then(t => {
+      assert.equal(t, transfer)
+      assert.end()
+    })
+  })
+
   test.end()
 })

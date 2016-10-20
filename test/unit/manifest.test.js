@@ -1,18 +1,33 @@
 'use strict'
 
-const Test = require('tape')
+const Test = require('tapes')(require('tape'))
 const Pack = require('../../package')
 const Config = require('../../src/lib/config')
-const Manifest = require('../../src/manifest')
+
+let getManifest = () => {
+  return require('../../src/manifest')
+}
 
 Test('manifest', function (manifestTest) {
+  manifestTest.beforeEach(t => {
+    t.end()
+  })
+
+  manifestTest.afterEach(t => {
+    delete require.cache[require.resolve('../../src/manifest')]
+    delete Config.EXPIRES_TIMEOUT
+    t.end()
+  })
+
   manifestTest.test('connections should', function (connectionsTest) {
     connectionsTest.test('have connections section', function (assert) {
+      let Manifest = getManifest()
       assert.ok(Manifest.connections)
       assert.end()
     })
 
     connectionsTest.test('have one connection with configured port', function (assert) {
+      let Manifest = getManifest()
       assert.equal(Manifest.connections.length, 1)
       assert.equal(Manifest.connections[0].port, Config.PORT)
       assert.end()
@@ -22,6 +37,13 @@ Test('manifest', function (manifestTest) {
   })
 
   manifestTest.test('registrations should', function (registrationsTest) {
+    let Manifest
+
+    registrationsTest.beforeEach(t => {
+      Manifest = getManifest()
+      t.end()
+    })
+
     registrationsTest.test('have registrations section', function (assert) {
       assert.ok(Manifest.registrations)
       assert.end()
@@ -77,7 +99,22 @@ Test('manifest', function (manifestTest) {
       assert.end()
     })
 
+    registrationsTest.test('not register worker plugin by default', function (assert) {
+      assert.notOk(findPluginByPath(Manifest.registrations, './worker'))
+      assert.end()
+    })
+
     registrationsTest.end()
+  })
+
+  manifestTest.test('variable registrations should', varTest => {
+    varTest.test('should load worker plugin if Config.EXPIRES_TIMEOUT set', test => {
+      Config.EXPIRES_TIMEOUT = 5000
+      let Manifest = getManifest()
+      test.ok(findPluginByPath(Manifest.registrations, './worker'))
+      test.end()
+    })
+    varTest.end()
   })
 
   manifestTest.end()
