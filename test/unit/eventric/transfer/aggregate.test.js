@@ -170,7 +170,7 @@ Test('Transfer aggregate', aggregateTest => {
   })
 
   aggregateTest.test('RejectTransfer should', rejectTest => {
-    rejectTest.test('Load and reject transfer', t => {
+    rejectTest.test('load and reject transfer', t => {
       let originalTransfer = createTransfer()
       let rejectionReason = 'I do not want it'
 

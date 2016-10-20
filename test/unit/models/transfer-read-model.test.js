@@ -49,7 +49,7 @@ Test('transfer model', function (modelTest) {
         expires_at: '2015-06-16T00:00:01.000Z'
       },
       aggregate: {
-        id: '1d4f2a70-e0d6-42dc-9efb-6d23060ccd6f',
+        id: Uuid(),
         name: 'Transfer'
       },
       context: 'Ledger',
@@ -85,7 +85,7 @@ Test('transfer model', function (modelTest) {
     })
 
     savePreparedTest.test('return newly created transfer', function (assert) {
-      let newTransfer = { transferUuid: '1d4f2a70-e0d6-42dc-9efb-6d23060ccd6f' }
+      let newTransfer = { transferUuid: transferPreparedEvent.aggregate.id }
       let insertAsync = sandbox.stub().returns(newTransfer)
       setupTransfersDb({ insertAsync: insertAsync })
 
@@ -121,7 +121,7 @@ Test('transfer model', function (modelTest) {
         fulfillment: 'cf:0:_v8'
       },
       aggregate: {
-        id: '1d4f2a70-e0d6-42dc-9efb-6d23060ccd6f',
+        id: Uuid(),
         name: 'Transfer'
       },
       context: 'Ledger',
@@ -159,29 +159,68 @@ Test('transfer model', function (modelTest) {
           assert.end()
         })
         .catch(err => {
-          assert.equal(err.message, 'The transfer ' + transferExecutedEvent.aggregate.id + ' has not been saved as prepared yet')
-          assert.end()
-        })
-    })
-
-    saveExecutedTest.test('fail if transfer is already executed', function (assert) {
-      let foundTransfer = { transferUuid: transferExecutedEvent.aggregate.id, state: 'executed' }
-
-      let findOneAsync = sandbox.stub().returns(Promise.resolve(foundTransfer))
-      setupTransfersDb({ findOneAsync: findOneAsync })
-
-      TransfersReadModel.saveTransferExecuted(transferExecutedEvent)
-        .then(() => {
-          assert.fail('Should have thrown error')
-          assert.end()
-        })
-        .catch(err => {
-          assert.equal(err.message, 'The transfer ' + transferExecutedEvent.aggregate.id + ' has already been saved as executed')
+          assert.equal(err.message, 'The transfer ' + transferExecutedEvent.aggregate.id + ' must be in the prepared state to update to executed')
           assert.end()
         })
     })
 
     saveExecutedTest.end()
+  })
+
+  modelTest.test('saveTransferRejected should', function (saveRejectedTest) {
+    let transferRejectedEvent = {
+      id: 2,
+      name: 'TransferRejected',
+      payload: {
+        rejection_reason: 'this is a bad transfer'
+      },
+      aggregate: {
+        id: Uuid(),
+        name: 'Transfer'
+      },
+      context: 'Ledger',
+      timestamp: 1474471286000
+    }
+
+    saveRejectedTest.test('retrieve existing prepared transfer and update fields', function (assert) {
+      let foundTransfer = { transferUuid: transferRejectedEvent.aggregate.id, state: 'prepared' }
+
+      let findOneAsync = sandbox.stub().returns(Promise.resolve(foundTransfer))
+      let updateAsync = sandbox.stub()
+      setupTransfersDb({ findOneAsync: findOneAsync, updateAsync: updateAsync })
+
+      TransfersReadModel.saveTransferRejected(transferRejectedEvent)
+        .then(() => {
+          let findOneAsyncArg = findOneAsync.firstCall.args[0]
+          let updateAsyncArg = updateAsync.firstCall.args[0]
+
+          assert.equal(findOneAsyncArg.transferUuid, transferRejectedEvent.aggregate.id)
+          assert.equal(updateAsyncArg.transferUuid, foundTransfer.transferUuid)
+          assert.equal(updateAsyncArg.state, 'rejected')
+          assert.equal(updateAsyncArg.rejectionReason, 'cancelled')
+          assert.equal(updateAsyncArg.creditRejected, 1)
+          assert.equal(updateAsyncArg.creditRejectionMessage, transferRejectedEvent.payload.rejection_reason)
+          assert.deepEqual(updateAsyncArg.rejectedDate, Moment(transferRejectedEvent.timestamp))
+          assert.end()
+        })
+    })
+
+    saveRejectedTest.test('fail if prepared transfer not found', function (assert) {
+      let findOneAsync = sandbox.stub().returns(Promise.resolve(null))
+      setupTransfersDb({ findOneAsync: findOneAsync })
+
+      TransfersReadModel.saveTransferRejected(transferRejectedEvent)
+        .then(() => {
+          assert.fail('Should have thrown error')
+          assert.end()
+        })
+        .catch(err => {
+          assert.equal(err.message, 'The transfer ' + transferRejectedEvent.aggregate.id + ' must be in the prepared state to update to rejected')
+          assert.end()
+        })
+    })
+
+    saveRejectedTest.end()
   })
 
   modelTest.test('truncateReadTransfersReadModel should', function (truncateTest) {

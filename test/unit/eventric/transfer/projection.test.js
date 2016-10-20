@@ -14,6 +14,7 @@ Test('Projection', projectionTest => {
     sandbox.stub(TransfersReadModel, 'truncateReadModel')
     sandbox.stub(TransfersReadModel, 'saveTransferPrepared')
     sandbox.stub(TransfersReadModel, 'saveTransferExecuted')
+    sandbox.stub(TransfersReadModel, 'saveTransferRejected')
     sandbox.stub(console, 'error')
     sandbox.stub(console, 'info')
     t.end()
@@ -80,6 +81,7 @@ Test('Projection', projectionTest => {
         t.end()
       })
     })
+
     preparedTest.end()
   })
 
@@ -109,7 +111,39 @@ Test('Projection', projectionTest => {
         t.end()
       })
     })
+
     executedTest.end()
   })
+
+  projectionTest.test('handleTransferRejected should', rejectedTest => {
+    rejectedTest.test('saveTransferRejected and log to info', t => {
+      let event = {}
+      let transfer = { transferUuid: 'uuid' }
+
+      TransfersReadModel.saveTransferRejected.withArgs(event).returns(P.resolve(transfer))
+
+      Projection.handleTransferRejected(event)
+      .then(result => {
+        t.ok(TransfersReadModel.saveTransferRejected.calledOnce)
+        t.ok(console.info.calledWith('Saved TransferRejected event for transfer ' + transfer.transferUuid))
+        t.end()
+      })
+    })
+
+    rejectedTest.test('log error', t => {
+      let error = new Error()
+      let event = {}
+      TransfersReadModel.saveTransferRejected.withArgs(event).returns(P.reject(error))
+
+      Projection.handleTransferRejected(event)
+      .then(() => {
+        t.ok(console.error.calledWith('Error saving TransferRejected event', error))
+        t.end()
+      })
+    })
+
+    rejectedTest.end()
+  })
+
   projectionTest.end()
 })

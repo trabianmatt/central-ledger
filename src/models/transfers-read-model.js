@@ -44,15 +44,11 @@ exports.saveTransferExecuted = (executedEvent) => {
   return Db.connect()
     .then(conn => {
       db = conn
-      return db.transfers.findOneAsync({ transferUuid: executedEvent.aggregate.id })
+      return db.transfers.findOneAsync({ transferUuid: executedEvent.aggregate.id, state: TransferState.PREPARED })
     })
     .then(transfer => {
       if (!transfer) {
-        throw new Error('The transfer ' + executedEvent.aggregate.id + ' has not been saved as prepared yet')
-      }
-
-      if (transfer.state === TransferState.EXECUTED) {
-        throw new Error('The transfer ' + transfer.transferUuid + ' has already been saved as executed')
+        throw new Error('The transfer ' + executedEvent.aggregate.id + ' must be in the prepared state to update to executed')
       }
 
       return db.transfers.updateAsync(
@@ -62,6 +58,32 @@ exports.saveTransferExecuted = (executedEvent) => {
           fulfillment: executedEvent.payload.fulfillment,
           executedDate: Moment(executedEvent.timestamp)
         })
+    })
+}
+
+exports.saveTransferRejected = (rejectedEvent) => {
+  let db
+
+  return Db.connect()
+    .then(conn => {
+      db = conn
+      return db.transfers.findOneAsync({ transferUuid: rejectedEvent.aggregate.id, state: TransferState.PREPARED })
+    })
+    .then(transfer => {
+      if (!transfer) {
+        throw new Error('The transfer ' + rejectedEvent.aggregate.id + ' must be in the prepared state to update to rejected')
+      }
+
+      return db.transfers.updateAsync(
+        {
+          transferUuid: transfer.transferUuid,
+          state: TransferState.REJECTED,
+          rejectionReason: 'cancelled',
+          creditRejected: 1,
+          creditRejectionMessage: rejectedEvent.payload.rejection_reason,
+          rejectedDate: Moment(rejectedEvent.timestamp)
+        }
+      )
     })
 }
 

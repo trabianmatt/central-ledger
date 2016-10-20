@@ -283,11 +283,37 @@ Test('transfer handler', function (handlerTest) {
     getTransferByIdTest.test('get transfer by transfer id', function (assert) {
       let id = Uuid()
 
-      let transfer = { transferUuid: id }
-      sandbox.stub(TransfersReadModel, 'getById').returns(P.resolve(transfer))
+      let readModelTransfer = {
+        transferUuid: id,
+        ledger: hostname,
+        debitAccount: 'dfsp1',
+        debitAmount: '25',
+        creditAccount: 'dfsp2',
+        creditAmount: '15',
+        creditRejected: 0,
+        executionCondition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
+        expiresAt: '2015-06-16T00:00:01.000Z',
+        state: 'prepared',
+        preparedDate: new Date()
+      }
+      sandbox.stub(TransfersReadModel, 'getById').returns(P.resolve(readModelTransfer))
 
       let reply = function (response) {
-        assert.equal(response.id, `${hostname}/transfers/${transfer.transferUuid}`)
+        assert.equal(response.id, `${hostname}/transfers/${readModelTransfer.transferUuid}`)
+        assert.equal(response.ledger, readModelTransfer.ledger)
+        assert.equal(response.debits.length, 1)
+        assert.equal(response.debits[0].account, readModelTransfer.debitAccount)
+        assert.equal(response.debits[0].amount, readModelTransfer.debitAmount)
+        assert.equal(response.credits.length, 1)
+        assert.equal(response.credits[0].account, readModelTransfer.creditAccount)
+        assert.equal(response.credits[0].amount, readModelTransfer.creditAmount)
+        assert.notOk(response.credits[0].rejected)
+        assert.notOk(response.credits[0].rejection_message)
+        assert.equal(response.execution_condition, readModelTransfer.executionCondition)
+        assert.equal(response.expires_at, readModelTransfer.expiresAt)
+        assert.equal(response.state, readModelTransfer.state)
+        assert.ok(response.timeline)
+        assert.equal(response.timeline.prepared_at, readModelTransfer.preparedDate)
         return {
           code: function (statusCode) {
             assert.equal(statusCode, 200)

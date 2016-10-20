@@ -20,6 +20,7 @@ psql() {
 		"postgres:9.4" \
     --host postgres \
 		--username $POSTGRES_USER \
+    --dbname postgres \
 		--quiet --no-align --tuples-only \
 		"$@"
 }

@@ -51,7 +51,7 @@ class Transfer {
     let { rejection_reason } = event.payload
     let credits = this.credits || []
     credits.forEach(c => {
-      c.rejection_reason = rejection_reason // eslint-disable-line
+      c.rejection_message = rejection_reason // eslint-disable-line
       c.rejected = true
     })
     this.state = TransferState.REJECTED

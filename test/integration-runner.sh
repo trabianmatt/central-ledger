@@ -18,6 +18,7 @@ psql() {
 		"postgres:9.4" \
     --host postgres-int \
 		--username $POSTGRES_USER \
+    --dbname postgres \
 		--quiet --no-align --tuples-only \
 		"$@"
 }
@@ -54,7 +55,6 @@ psql <<'EOSQL'
 EOSQL
 
 export CLEDG_DATABASE_URI="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:15432/central_ledger_integration"
-export CLEDG_HOSTNAME="http://central-ledger.example"
 
 >&2 echo "Running migrations"
 npm run migrate > /dev/null 2>&1

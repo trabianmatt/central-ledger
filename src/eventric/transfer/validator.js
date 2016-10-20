@@ -38,7 +38,7 @@ exports.validateExistingOnPrepare = (proposed, existing) => {
 
 exports.validateReject = ({state, credits = []}, rejectionReason) => {
   return P.resolve().then(() => {
-    if (state === TransferState.REJECTED && credits.some(x => x.rejection_reason === rejectionReason)) {
+    if (state === TransferState.REJECTED && credits.some(x => x.rejection_message === rejectionReason)) {
       return { alreadyRejected: true }
     }
 

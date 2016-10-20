@@ -2,9 +2,10 @@
 
 const Test = require('tape')
 const Base = require('../../base')
+const Fixtures = require('../../../fixtures')
 
 Test('post and get an account', function (assert) {
-  let accountName = Base.generateAccountName()
+  let accountName = Fixtures.generateAccountName()
 
   Base.createAccount(accountName)
     .expect(201, (err, res) => {
@@ -28,7 +29,7 @@ Test('post and get an account', function (assert) {
 })
 
 Test('ensure an account name can only be registered once', function (assert) {
-  let accountName = Base.generateAccountName()
+  let accountName = Fixtures.generateAccountName()
 
   Base.createAccount(accountName)
     .expect(201, function (err, res) {

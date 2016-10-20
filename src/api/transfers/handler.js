@@ -4,7 +4,7 @@ const Model = require('./model')
 const TransfersReadModel = require('../../models/transfers-read-model')
 const Validator = require('./validator')
 const Handle = require('../../lib/handler')
-const Config = require('../../lib/config')
+const UrlParser = require('../../lib/urlparser')
 const TransferState = require('../../eventric/transfer/state')
 const ValidationError = require('../../errors/validation-error')
 const NotFoundError = require('../../errors/not-found-error')
@@ -25,7 +25,7 @@ let buildPrepareTransferResponse = (record) => {
 
 let buildGetTransferResponse = (record) => {
   return {
-    id: `${Config.HOSTNAME}/transfers/${record.transferUuid}`,
+    id: UrlParser.toTransferUri(record.transferUuid),
     ledger: record.ledger,
     debits: [{
       account: record.debitAccount,
@@ -33,14 +33,18 @@ let buildGetTransferResponse = (record) => {
     }],
     credits: [{
       account: record.creditAccount,
-      amount: record.creditAmount
+      amount: record.creditAmount,
+      rejected: Boolean(record.creditRejected),
+      rejection_message: record.creditRejectionMessage
     }],
     execution_condition: record.executionCondition,
     expires_at: record.expiresAt,
     state: record.state,
+    rejection_reason: record.rejectionReason,
     timeline: {
       prepared_at: record.preparedDate,
-      executed_at: record.executedDate
+      executed_at: record.executedDate,
+      rejected_at: record.rejectedDate
     }
   }
 }

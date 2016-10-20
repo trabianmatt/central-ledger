@@ -216,9 +216,9 @@ Test('transfer', transferTest => {
         payload: { rejection_reason: rejectionReason }
       })
       t.equal(result.credits[0].rejected, true)
-      t.equal(result.credits[0].rejection_reason, rejectionReason)
+      t.equal(result.credits[0].rejection_message, rejectionReason)
       t.equal(result.credits[1].rejected, true)
-      t.equal(result.credits[1].rejection_reason, rejectionReason)
+      t.equal(result.credits[1].rejection_message, rejectionReason)
       t.end()
     })
 
