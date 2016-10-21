@@ -1,2 +1,2 @@
 # central-ledger
-Central ledger hosted by a scheme to record and settle transfers. 
+Central ledger hosted by a scheme to record and settle transfers. .
