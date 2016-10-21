@@ -8,7 +8,7 @@ const Moment = require('moment')
 const Uuid = require('uuid4')
 const Db = require(`${src}/lib/db`)
 const UrlParser = require(`${src}/lib/urlparser`)
-const TransfersReadModel = require(`${src}/models/transfers-read-model`)
+const TransfersReadModel = require('../../../src/models/transfers-read-model')
 const TransferState = require('../../../src/eventric/transfer/state')
 
 function setupTransfersDb (transfers) {
@@ -291,6 +291,23 @@ Test('transfer model', function (modelTest) {
     })
 
     getByIdTest.end()
+  })
+
+  modelTest.test('getExecuted should', getExecutedTest => {
+    getExecutedTest.test('find transfers by EXECUTED state', test => {
+      let transfers = [{ transferUuid: Uuid() }, { transferUuid: Uuid() }]
+      let findAsync = sandbox.stub().returns(Promise.resolve(transfers))
+      setupTransfersDb({ findAsync: findAsync })
+
+      TransfersReadModel.getExecuted()
+      .then(found => {
+        let findAsyncArg = findAsync.firstCall.args[0]
+        test.equal(findAsyncArg.state, TransferState.EXECUTED)
+        test.deepEqual(found, transfers)
+        test.end()
+      })
+    })
+    getExecutedTest.end()
   })
 
   modelTest.test('findExpired should', findExpiredTest => {

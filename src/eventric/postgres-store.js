@@ -8,6 +8,15 @@ class PostgresStore {
   constructor () {
     this._getNextSequenceNumber = this._getNextSequenceNumber.bind(this)
     this._toDomainEvent = this._toDomainEvent.bind(this)
+    this._insertDomainEvent = this._insertDomainEvent.bind(this)
+    this._findAsync = this._findAsync.bind(this)
+  }
+
+  _findAsync (criteria, callback) {
+    Db.connect()
+    .then(db => db[this._tableName].findAsync(criteria))
+    .then(results => callback(null, results.map(this._toDomainEvent)))
+    .catch(e => callback(e, null))
   }
 
   _getNextSequenceNumber (db, domainEvent) {
@@ -32,6 +41,24 @@ class PostgresStore {
     }
   }
 
+  _insertDomainEvent (db, sequenceNumber, domainEvent) {
+    return db[this._tableName].insertAsync({
+      eventId: Uuid(),
+      name: domainEvent.name,
+      payload: domainEvent.payload,
+      aggregateId: domainEvent.aggregate.id,
+      aggregateName: domainEvent.aggregate.name,
+      sequenceNumber: sequenceNumber,
+      timestamp: (new Date(domainEvent.timestamp)).toISOString()
+    })
+    .catch(e => {
+      if (e.message.includes('duplicate key value violates unique constraint') && sequenceNumber === 1) {
+        throw new AlreadyExistsError()
+      }
+      throw e
+    })
+  }
+
   initialize (context) {
     this._context = context
     return Promise.resolve().then(() => {
@@ -41,66 +68,23 @@ class PostgresStore {
   }
 
   saveDomainEvent (domainEvent) {
-    return Db.connect().then(db => {
-      return this._getNextSequenceNumber(db, domainEvent).then(sequenceNumber => {
-        return db[this._tableName].insertAsync({
-          eventId: Uuid(),
-          name: domainEvent.name,
-          payload: domainEvent.payload,
-          aggregateId: domainEvent.aggregate.id,
-          aggregateName: domainEvent.aggregate.name,
-          sequenceNumber: sequenceNumber,
-          timestamp: (new Date(domainEvent.timestamp)).toISOString()
-        })
-        .catch(e => {
-          if (e.message.includes('duplicate key value violates unique constraint') && sequenceNumber === 1) {
-            throw new AlreadyExistsError()
-          }
-          throw e
-        })
-      })
-    })
+    return Db.connect()
+    .then(db => this._getNextSequenceNumber(db, domainEvent)
+        .then(sequenceNumber => this._insertDomainEvent(db, sequenceNumber, domainEvent))
+    )
     .then(result => this._toDomainEvent(result))
   }
 
   findDomainEventsByName (domainEventNames, callback) {
-    if (!(domainEventNames instanceof Array)) {
-      domainEventNames = [domainEventNames]
-    }
-    Db.connect()
-    .then(db => {
-      db[this._tableName].find({ name: domainEventNames }, (err, result) => {
-        if (err) callback(err)
-        else callback(null, result.map(this._toDomainEvent))
-      })
-    }).catch(e => callback(e, null))
+    this._findAsync({ name: [].concat(domainEventNames) }, callback)
   }
 
   findDomainEventsByAggregateId (aggregateIds, callback) {
-    if (!(aggregateIds instanceof Array)) {
-      aggregateIds = [aggregateIds]
-    }
-    Db.connect()
-    .then(db => {
-      db[this._tableName].find({ aggregateId: aggregateIds }, (err, result) => {
-        if (err) callback(err)
-        else callback(null, result.map(this._toDomainEvent))
-      })
-    })
+    this._findAsync({ aggregateId: [].concat(aggregateIds) }, callback)
   }
 
   findDomainEventsByNameAndAggregateId (domainEventNames, aggregateIds, callback) {
-    if (!(domainEventNames instanceof Array)) {
-      domainEventNames = [domainEventNames]
-    }
-    if (!(aggregateIds instanceof Array)) {
-      aggregateIds = [aggregateIds]
-    }
-    Db.connect()
-    .then(db => db[this._tableName].find({ name: domainEventNames, aggregateId: aggregateIds }, (err, result) => {
-      if (err) callback(err)
-      else callback(null, result.map(this._toDomainEvent))
-    }))
+    this._findAsync({ name: [].concat(domainEventNames), aggregateId: [].concat(aggregateIds) }, callback)
   }
 
   destroy () { }

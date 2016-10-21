@@ -22,11 +22,12 @@ Test('Eventric index', indexTest => {
 
   indexTest.afterEach(t => {
     sandbox.restore()
+
     t.end()
   })
 
   indexTest.test('getContext should', ctxTest => {
-    ctxTest.test('Setup default store and configure transfer', t => {
+    ctxTest.test('Setup default store and configure transfer only once', t => {
       let stubCtx = {
         initialize: () => P.resolve()
       }
@@ -38,6 +39,17 @@ Test('Eventric index', indexTest => {
         t.ok(Eventric.setStore.calledWith(PostgresStore.default, {}))
         t.ok(Transfer.setupContext.calledWith(stubCtx))
         t.ok(Transfer.onContextInitialized.calledWith(stubCtx))
+      })
+      .then(() => {
+        Eventric.setStore.reset()
+        Transfer.setupContext.reset()
+        Transfer.onContextInitialized.reset()
+        return Index.getContext()
+      })
+      .then(() => {
+        t.ok(Eventric.setStore.notCalled)
+        t.ok(Transfer.setupContext.notCalled)
+        t.ok(Transfer.onContextInitialized.notCalled)
         t.end()
       })
     })

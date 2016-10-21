@@ -25,7 +25,7 @@ test:
     - mkdir -p ./test/results
   override:
     - set -o pipefail && npm -s run test:xunit > ./test/results/tape.xml
-    - npm -s run test:coverage
+    - npm -s run test:coverage-check
     - npm -s run test:integration
     - npm -s run test:circle
   post:

@@ -18,7 +18,7 @@ let getResponse = (reply, buildResponse, options) => {
   }
 }
 
-let putResponse = (reply, buildResponse, created) => {
+let putResponse = (reply, buildResponse) => {
   return (entity) => {
     reply(buildResponse(entity)).code((entity.existing === true) ? 200 : 201)
     return null
