@@ -3,6 +3,8 @@
 const Events = require('../../lib/events')
 const UrlParser = require('../../lib/urlparser')
 const Commands = require('../../commands/transfer')
+const ExpiredTransferError = require('../../errors/expired-transfer-error')
+const UnpreparedTransferError = require('../../errors/unprepared-transfer-error')
 
 let cleanTransfer = (transfer) => {
   return {
@@ -40,6 +42,10 @@ exports.fulfill = (fulfillment) => {
     let t = cleanTransfer(transfer)
     Events.emitTransferExecuted(t, { execution_condition_fulfillment: fulfillment.fulfillment })
     return fulfillment.fulfillment
+  })
+  .catch(ExpiredTransferError, e => {
+    return this.reject({ id: fulfillment.id, rejection_reason: 'expired' })
+    .then(() => { throw new UnpreparedTransferError() })
   })
 }
 

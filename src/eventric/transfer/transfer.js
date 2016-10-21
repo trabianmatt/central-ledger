@@ -55,7 +55,7 @@ class Transfer {
       c.rejected = true
     })
     this.state = TransferState.REJECTED
-    this.rejection_reason = 'cancelled'
+    this.rejection_reason = 'cancelled' // eslint-disable-line
     this.timeline = this.timeline || {}
     this.timeline.rejected_at = new Date(event.timestamp).toISOString()
     return this

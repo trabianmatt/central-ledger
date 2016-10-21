@@ -3,6 +3,7 @@
 const src = '../../../../src'
 const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
+const Moment = require('moment')
 const _ = require('lodash')
 const Validator = require(`${src}/eventric/transfer/validator`)
 const TransferState = require(`${src}/eventric/transfer/state`)
@@ -12,15 +13,20 @@ const AlreadyExistsError = require(`${src}/errors/already-exists-error`)
 
 Test('validator tests', validatorTest => {
   let sandbox
+  let clock
+  let now = Moment('2016-06-16T00:00:01.000Z')
 
   validatorTest.beforeEach(t => {
     sandbox = Sinon.sandbox.create()
     sandbox.stub(CryptoFulfillments, 'validateConditionFulfillment')
+
+    clock = Sinon.useFakeTimers(now.unix())
     t.end()
   })
 
   validatorTest.afterEach(t => {
     sandbox.restore()
+    clock.restore()
     t.end()
   })
 
@@ -29,7 +35,8 @@ Test('validator tests', validatorTest => {
       let fulfillment = 'test-fulfillment'
       let transfer = {
         state: TransferState.EXECUTED,
-        fulfillment
+        fulfillment,
+        expires_at: now.clone().add(1, 'hour').unix()
       }
 
       Validator.validateFulfillment(transfer, fulfillment)
@@ -41,7 +48,8 @@ Test('validator tests', validatorTest => {
 
     fulfillmentTest.test('throw UnpreparedTransferError if transfer is not prepared', t => {
       let transfer = {
-        state: TransferState.EXECUTED
+        state: TransferState.EXECUTED,
+        expires_at: now.clone().add(1, 'hour').unix()
       }
 
       Validator.validateFulfillment(transfer, 'test-fulfillment')
@@ -62,7 +70,8 @@ Test('validator tests', validatorTest => {
       CryptoFulfillments.validateConditionFulfillment.withArgs(executionCondition, fulfillment).throws(error)
       let transfer = {
         state: TransferState.PREPARED,
-        execution_condition: executionCondition
+        execution_condition: executionCondition,
+        expires_at: now.clone().add(1, 'hour').unix()
       }
 
       Validator.validateFulfillment(transfer, fulfillment)
@@ -79,12 +88,32 @@ Test('validator tests', validatorTest => {
     fulfillmentTest.test('return not previouslyFulfilled if transfer passes all checks', t => {
       CryptoFulfillments.validateConditionFulfillment.returns(true)
       let transfer = {
-        state: TransferState.PREPARED
+        state: TransferState.PREPARED,
+        expires_at: now.clone().add(1, 'hour').unix()
       }
 
       Validator.validateFulfillment(transfer, 'fulfillment')
       .then(result => {
         t.equal(result.previouslyFulfilled, false)
+        t.end()
+      })
+    })
+
+    fulfillmentTest.test('throw error if current time is greater than expired_at', t => {
+      CryptoFulfillments.validateConditionFulfillment.returns(true)
+
+      let transfer = {
+        state: TransferState.PREPARED,
+        expires_at: now.clone().subtract(1, 'hour').unix()
+      }
+
+      Validator.validateFulfillment(transfer, 'fulfillment')
+      .then(result => {
+        t.fail('Expected exception')
+        t.end()
+      })
+      .catch(e => {
+        t.equal(e.name, 'ExpiredTransferError')
         t.end()
       })
     })

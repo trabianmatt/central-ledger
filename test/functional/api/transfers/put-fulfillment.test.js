@@ -1,6 +1,7 @@
 'use strict'
 
 const Test = require('tape')
+const Moment = require('moment')
 const Base = require('../../base')
 const Fixtures = require('../../../fixtures')
 
@@ -59,6 +60,30 @@ Test('PUT /transfer/:id/fulfillment', putTest => {
             test.end()
           })
           .expect('Content-Type', 'text/plain; charset=utf-8')
+      })
+  })
+
+  putTest.test('should return error when fulfilling expired transfer', test => {
+    let fulfillment = 'cf:0:_v8'
+    let account1Name = Fixtures.generateAccountName()
+    let account2Name = Fixtures.generateAccountName()
+    let transferId = Fixtures.generateTransferId()
+    let transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(account1Name, '25'), Fixtures.buildDebitOrCredit(account2Name, '25'))
+    transfer.expires_at = Moment.utc().subtract(1, 'hour').toISOString()
+
+    Base.createAccount(account1Name)
+      .then(() => Base.createAccount(account2Name))
+      .then(() => Base.prepareTransfer(transferId, transfer))
+      .then(() => {
+        Base.fulfillTransfer(transferId, fulfillment)
+          .expect(422, function (err, res) {
+            if (err) return test.end(err)
+            test.equal(res.body.id, 'UnprocessableEntityError')
+            test.equal(res.body.message, 'The provided entity is syntactically correct, but there is a generic semantic problem with it.')
+            test.pass()
+            test.end()
+          })
+          .expect('Content-Type', 'application/json; charset=utf-8')
       })
   })
 

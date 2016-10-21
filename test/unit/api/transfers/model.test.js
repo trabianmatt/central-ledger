@@ -9,6 +9,7 @@ const Eventric = require(`${src}/eventric`)
 const Transfer = require(`${src}/commands/transfer`)
 const Events = require(`${src}/lib/events`)
 const UrlParser = require(`${src}/lib/urlparser`)
+const ExpiredTransferError = require(`${src}/errors/expired-transfer-error`)
 
 let createTransfer = (transferId = '3a2a1d9e-8640-4d2d-b06c-84f2cd613204') => {
   return {
@@ -142,6 +143,24 @@ Test('transfer model', function (modelTest) {
           t.equal(args1.execution_condition_fulfillment, fulfillment)
           t.end()
         })
+    })
+
+    fulfillTest.test('reject and throw error if transfer is expired', assert => {
+      let fulfillment = 'cf:0:_v8'
+      let transfer = createTransfer()
+      let payload = { id: transfer.id, fulfillment }
+
+      Transfer.fulfill.withArgs(payload).returns(P.reject(new ExpiredTransferError()))
+      Transfer.reject.returns(P.resolve({ transfer, rejection_reason: 'expired' }))
+      Model.fulfill(payload)
+      .then(() => {
+        assert.fail('Expected exception')
+        assert.end()
+      })
+      .catch(e => {
+        assert.equal(e.name, 'UnpreparedTransferError')
+        assert.end()
+      })
     })
 
     fulfillTest.end()

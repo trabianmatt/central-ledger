@@ -5,12 +5,15 @@ const Test = require('tapes')(require('tape'))
 const Eventric = require('eventric')
 const P = require('bluebird')
 const Sinon = require('sinon')
+const Moment = require('moment')
 const Transfer = require(`${src}/eventric/transfer`)
 const TransferProjection = require(`${src}/eventric/transfer/projection`)
 const PostgresStore = require(`${src}/eventric/postgres-store`)
 const CryptoConditions = require(`${src}/crypto-conditions/conditions`)
 const AlreadyExistsError = require(`${src}/errors/already-exists-error`)
 const UnpreparedTransferError = require(`${src}/errors/unprepared-transfer-error`)
+
+let now = Moment('2016-06-16T00:00:01.000Z')
 
 let createTransfer = () => {
   return {
@@ -19,7 +22,7 @@ let createTransfer = () => {
     debits: [{ amount: 10, account: 'test' }],
     credits: [{ amount: 10, account: 'test' }],
     execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
-    expires_at: 'expires_at'
+    expires_at: now.clone().add(1, 'hour').toISOString()
   }
 }
 
@@ -35,11 +38,13 @@ let compareTransfers = (assert, transfer1, transfer2) => {
 Test('Transfer aggregate', aggregateTest => {
   let sandbox
   let context
+  let clock
 
   aggregateTest.beforeEach(t => {
     sandbox = Sinon.sandbox.create()
     sandbox.stub(CryptoConditions, 'validateCondition')
     sandbox.stub(TransferProjection)
+    clock = Sinon.useFakeTimers(now.unix())
     TransferProjection.initialize.yields()
     CryptoConditions.validateCondition.returns(true)
     context = Eventric.context('TestContext')
@@ -52,6 +57,7 @@ Test('Transfer aggregate', aggregateTest => {
 
   aggregateTest.afterEach(t => {
     sandbox.restore()
+    clock.restore()
     context.destroy()
     t.end()
   })
