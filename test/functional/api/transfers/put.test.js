@@ -3,6 +3,7 @@
 const Test = require('tape')
 const Base = require('../../base')
 const Fixtures = require('../../../fixtures')
+const TransferState = require('../../../../src/domain/transfer/state')
 
 Test('PUT /transfers', putTest => {
   putTest.test('should prepare a transfer', test => {
@@ -25,7 +26,7 @@ Test('PUT /transfers', putTest => {
             test.equal(res.body.credits[0].amount, parseInt(transfer.credits[0].amount))
             test.equal(res.body.execution_condition, transfer.execution_condition)
             test.equal(res.body.expires_at, transfer.expires_at)
-            test.equal(res.body.state, 'prepared')
+            test.equal(res.body.state, TransferState.PREPARED)
             test.end()
           })
           .expect('Content-Type', /json/)
@@ -53,7 +54,7 @@ Test('PUT /transfers', putTest => {
             test.equal(res.body.credits[0].amount, parseInt(transfer.credits[0].amount))
             test.equal(res.body.execution_condition, transfer.execution_condition)
             test.equal(res.body.expires_at, transfer.expires_at)
-            test.equal(res.body.state, 'prepared')
+            test.equal(res.body.state, TransferState.PREPARED)
             test.end()
           })
           .expect('Content-Type', /json/)

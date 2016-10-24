@@ -65,17 +65,17 @@ Test('Worker test', workerTest => {
       t.end()
     })
 
-    runTest.test('should call Service.rejectExpired once and after interval elapse', test => {
+    runTest.test('should call Service.rejectExpired after interval elapse', test => {
       let expiresTimeout = 1000
       sandbox.stub(Worker, 'rejectExpired')
       Worker.rejectExpired.returns(P.resolve([]))
       Config.EXPIRES_TIMEOUT = expiresTimeout
       let next = () => {
+        test.equal(Worker.rejectExpired.callCount, 0)
+        clock.tick(expiresTimeout)
         test.equal(Worker.rejectExpired.callCount, 1)
         clock.tick(expiresTimeout)
         test.equal(Worker.rejectExpired.callCount, 2)
-        clock.tick(expiresTimeout)
-        test.equal(Worker.rejectExpired.callCount, 3)
         test.end()
       }
       Worker.register({}, {}, next)

@@ -3,7 +3,9 @@
 const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const P = require('bluebird')
+const Uuid = require('uuid4')
 const Eventric = require('../../../../src/eventric')
+const RejectionType = require('../../../../src/domain/transfer/rejection-type')
 const Transfer = require('../../../../src/commands/transfer')
 
 Test('Eventric Transfer index test', indexTest => {
@@ -59,16 +61,33 @@ Test('Eventric Transfer index test', indexTest => {
   })
 
   indexTest.test('reject should', rejectTest => {
-    rejectTest.test('execute reject command on context', t => {
+    rejectTest.test('execute reject command type CANCELED on context', t => {
       let command = sandbox.stub()
       let expected = {}
       command.returns(expected)
       Eventric.getContext.returns(P.resolve({ command: command }))
 
-      let rejection = {}
+      let rejection = { id: Uuid(), rejection_reason: 'another excuse' }
       Transfer.reject(rejection)
       .then(result => {
-        t.ok(command.calledWith('RejectTransfer', rejection))
+        t.ok(command.calledWith('RejectTransfer', Sinon.match({ id: rejection.id, rejection_reason: rejection.rejection_reason, rejection_type: RejectionType.CANCELED })))
+        t.equal(result, expected)
+        t.end()
+      })
+    })
+    rejectTest.end()
+  })
+
+  indexTest.test('expire should', rejectTest => {
+    rejectTest.test('execute reject command type EXPIRED on context', t => {
+      let command = sandbox.stub()
+      let expected = {}
+      command.returns(expected)
+      Eventric.getContext.returns(P.resolve({ command: command }))
+      let transferId = Uuid()
+      Transfer.expire(transferId)
+      .then(result => {
+        t.ok(command.calledWith('RejectTransfer', Sinon.match({ id: transferId, rejection_reason: 'expired', rejection_type: RejectionType.EXPIRED })))
         t.equal(result, expected)
         t.end()
       })

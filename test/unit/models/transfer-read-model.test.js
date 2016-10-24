@@ -9,7 +9,8 @@ const Uuid = require('uuid4')
 const Db = require(`${src}/lib/db`)
 const UrlParser = require(`${src}/lib/urlparser`)
 const TransfersReadModel = require('../../../src/models/transfers-read-model')
-const TransferState = require('../../../src/eventric/transfer/state')
+const TransferState = require('../../../src/domain/transfer/state')
+const RejectionType = require('../../../src/domain/transfer/rejection-type')
 
 function setupTransfersDb (transfers) {
   let db = { transfers: transfers }
@@ -64,7 +65,7 @@ Test('transfer model', function (modelTest) {
         .then(() => {
           let insertAsyncArg = insertAsync.firstCall.args[0]
           assert.equal(insertAsyncArg.transferUuid, transferPreparedEvent.aggregate.id)
-          assert.equal(insertAsyncArg.state, 'prepared')
+          assert.equal(insertAsyncArg.state, TransferState.PREPARED)
           assert.equal(insertAsyncArg.ledger, transferPreparedEvent.payload.ledger)
           assert.equal(insertAsyncArg.debitAccount, transferPreparedEvent.payload.debits[0].account)
           assert.equal(insertAsyncArg.debitAmount, transferPreparedEvent.payload.debits[0].amount)
@@ -128,38 +129,19 @@ Test('transfer model', function (modelTest) {
       timestamp: 1474471284081
     }
 
-    saveExecutedTest.test('retrieve existing prepared transfer and update fields', function (assert) {
-      let foundTransfer = { transferUuid: transferExecutedEvent.aggregate.id, state: 'prepared' }
-
-      let findOneAsync = sandbox.stub().returns(Promise.resolve(foundTransfer))
+    saveExecutedTest.test('update transfer fields', function (assert) {
       let updateAsync = sandbox.stub()
-      setupTransfersDb({ findOneAsync: findOneAsync, updateAsync: updateAsync })
+      setupTransfersDb({ updateAsync: updateAsync })
 
       TransfersReadModel.saveTransferExecuted(transferExecutedEvent)
         .then(() => {
-          let findOneAsyncArg = findOneAsync.firstCall.args[0]
-          let updateAsyncArg = updateAsync.firstCall.args[0]
+          assert.ok(updateAsync.calledWith(Sinon.match({
+            transferUuid: transferExecutedEvent.aggregate.id,
+            state: TransferState.EXECUTED,
+            fulfillment: transferExecutedEvent.payload.fulfillment,
+            executedDate: Moment(transferExecutedEvent.timestamp)
+          })))
 
-          assert.equal(findOneAsyncArg.transferUuid, transferExecutedEvent.aggregate.id)
-          assert.equal(updateAsyncArg.transferUuid, foundTransfer.transferUuid)
-          assert.equal(updateAsyncArg.state, 'executed')
-          assert.equal(updateAsyncArg.fulfillment, transferExecutedEvent.payload.fulfillment)
-          assert.deepEqual(updateAsyncArg.executedDate, Moment(transferExecutedEvent.timestamp))
-          assert.end()
-        })
-    })
-
-    saveExecutedTest.test('fail if prepared transfer not found', function (assert) {
-      let findOneAsync = sandbox.stub().returns(Promise.resolve(null))
-      setupTransfersDb({ findOneAsync: findOneAsync })
-
-      TransfersReadModel.saveTransferExecuted(transferExecutedEvent)
-        .then(() => {
-          assert.fail('Should have thrown error')
-          assert.end()
-        })
-        .catch(err => {
-          assert.equal(err.message, 'The transfer ' + transferExecutedEvent.aggregate.id + ' must be in the prepared state to update to executed')
           assert.end()
         })
     })
@@ -182,41 +164,37 @@ Test('transfer model', function (modelTest) {
       timestamp: 1474471286000
     }
 
-    saveRejectedTest.test('retrieve existing prepared transfer and update fields', function (assert) {
-      let foundTransfer = { transferUuid: transferRejectedEvent.aggregate.id, state: 'prepared' }
-
-      let findOneAsync = sandbox.stub().returns(Promise.resolve(foundTransfer))
+    saveRejectedTest.test('update transfer fields', function (assert) {
       let updateAsync = sandbox.stub()
-      setupTransfersDb({ findOneAsync: findOneAsync, updateAsync: updateAsync })
+      setupTransfersDb({ updateAsync: updateAsync })
 
       TransfersReadModel.saveTransferRejected(transferRejectedEvent)
         .then(() => {
-          let findOneAsyncArg = findOneAsync.firstCall.args[0]
-          let updateAsyncArg = updateAsync.firstCall.args[0]
+          assert.ok(updateAsync.calledWith(Sinon.match({
+            transferUuid: transferRejectedEvent.aggregate.id,
+            state: TransferState.REJECTED,
+            rejectionReason: RejectionType.CANCELED,
+            creditRejected: 1,
+            creditRejectionMessage: transferRejectedEvent.payload.rejection_reason,
+            rejectedDate: Moment(transferRejectedEvent.timestamp)
+          })))
 
-          assert.equal(findOneAsyncArg.transferUuid, transferRejectedEvent.aggregate.id)
-          assert.equal(updateAsyncArg.transferUuid, foundTransfer.transferUuid)
-          assert.equal(updateAsyncArg.state, 'rejected')
-          assert.equal(updateAsyncArg.rejectionReason, 'cancelled')
-          assert.equal(updateAsyncArg.creditRejected, 1)
-          assert.equal(updateAsyncArg.creditRejectionMessage, transferRejectedEvent.payload.rejection_reason)
-          assert.deepEqual(updateAsyncArg.rejectedDate, Moment(transferRejectedEvent.timestamp))
           assert.end()
         })
     })
 
-    saveRejectedTest.test('fail if prepared transfer not found', function (assert) {
-      let findOneAsync = sandbox.stub().returns(Promise.resolve(null))
-      setupTransfersDb({ findOneAsync: findOneAsync })
+    saveRejectedTest.test('update rejectionReason if event provides one', test => {
+      let updateAsync = sandbox.stub()
+      setupTransfersDb({ updateAsync: updateAsync })
+      transferRejectedEvent.payload.rejection_type = RejectionType.EXPIRED
 
       TransfersReadModel.saveTransferRejected(transferRejectedEvent)
         .then(() => {
-          assert.fail('Should have thrown error')
-          assert.end()
-        })
-        .catch(err => {
-          assert.equal(err.message, 'The transfer ' + transferRejectedEvent.aggregate.id + ' must be in the prepared state to update to rejected')
-          assert.end()
+          test.ok(updateAsync.calledWith(Sinon.match({
+            state: TransferState.REJECTED,
+            rejectionReason: RejectionType.EXPIRED
+          })))
+          test.end()
         })
     })
 

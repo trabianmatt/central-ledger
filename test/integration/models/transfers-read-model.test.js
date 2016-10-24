@@ -6,6 +6,8 @@ const Moment = require('moment')
 const Db = require(`${src}/lib/db`)
 const TransfersReadModel = require(`${src}/models/transfers-read-model`)
 const Fixtures = require('../../fixtures')
+const RejectionType = require('../../../src/domain/transfer/rejection-type')
+const TransferState = require('../../../src/domain/transfer/state')
 
 let pastDate = () => {
   let d = new Date()
@@ -22,7 +24,7 @@ Test('transfers read model', function (modelTest) {
       TransfersReadModel.saveTransferPrepared(event)
         .then((transfer) => {
           assert.equal(transfer.transferUuid, event.aggregate.id)
-          assert.equal(transfer.state, 'prepared')
+          assert.equal(transfer.state, TransferState.PREPARED)
           assert.equal(transfer.ledger, event.payload.ledger)
           assert.equal(transfer.debitAccount, event.payload.debits[0].account)
           assert.equal(transfer.debitAmount, parseFloat(event.payload.debits[0].amount).toFixed(2))
@@ -58,7 +60,7 @@ Test('transfers read model', function (modelTest) {
           return TransfersReadModel.saveTransferExecuted(executedEvent)
             .then((transfer) => {
               assert.equal(transfer.transferUuid, executedEvent.aggregate.id)
-              assert.equal(transfer.state, 'executed')
+              assert.equal(transfer.state, TransferState.EXECUTED)
               assert.equal(transfer.fulfillment, executedEvent.payload.fulfillment)
               assert.deepEqual(transfer.executedDate, Moment(executedEvent.timestamp).toDate())
               assert.end()
@@ -78,12 +80,12 @@ Test('transfers read model', function (modelTest) {
 
       TransfersReadModel.saveTransferPrepared(preparedEvent)
         .then(() => {
-          let rejectedEvent = Fixtures.buildTransferRejectedEvent(transferId, 'terrible transfer')
+          let rejectedEvent = Fixtures.buildTransferRejectedEvent(transferId, 'terrible transfer', RejectionType.EXPIRED)
           return TransfersReadModel.saveTransferRejected(rejectedEvent)
             .then((transfer) => {
               assert.equal(transfer.transferUuid, rejectedEvent.aggregate.id)
-              assert.equal(transfer.state, 'rejected')
-              assert.equal(transfer.rejectionReason, 'cancelled')
+              assert.equal(transfer.state, TransferState.REJECTED)
+              assert.equal(transfer.rejectionReason, RejectionType.EXPIRED)
               assert.equal(transfer.creditRejected, 1)
               assert.equal(transfer.creditRejectionMessage, rejectedEvent.payload.rejection_reason)
               assert.deepEqual(transfer.rejectedDate, Moment(rejectedEvent.timestamp).toDate())

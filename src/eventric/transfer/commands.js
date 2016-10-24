@@ -41,13 +41,13 @@ module.exports = {
       })
   },
 
-  RejectTransfer ({ id, rejection_reason }) {
+  RejectTransfer ({ id, rejection_reason, rejection_type }) {
     return P.resolve(this.$aggregate.load('Transfer', id))
       .then(transfer => {
         return Validator.validateReject(transfer, rejection_reason)
         .then(result => {
           if (result.alreadyRejected) return { transfer, rejection_reason }// eslint-disable-line
-          transfer.reject({ rejection_reason: rejection_reason })
+          transfer.reject({ rejection_reason: rejection_reason, rejection_type: rejection_type }) // eslint-disable-line
           return transfer.$save().then(() => { return { transfer, rejection_reason } }) // eslint-disable-line
         })
       })

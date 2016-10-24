@@ -8,6 +8,7 @@ const Sinon = require('sinon')
 const Moment = require('moment')
 const Transfer = require(`${src}/eventric/transfer`)
 const TransferProjection = require(`${src}/eventric/transfer/projection`)
+const RejectionType = require(`${src}/domain/transfer/rejection-type`)
 const PostgresStore = require(`${src}/eventric/postgres-store`)
 const CryptoConditions = require(`${src}/crypto-conditions/conditions`)
 const AlreadyExistsError = require(`${src}/errors/already-exists-error`)
@@ -185,7 +186,25 @@ Test('Transfer aggregate', aggregateTest => {
       .then(({transfer, rejection_reason}) => {
         compareTransfers(t, transfer, originalTransfer)
         t.equal(rejection_reason, rejectionReason)
-        t.equal(transfer.rejection_reason, 'cancelled')
+        t.equal(transfer.rejection_reason, RejectionType.CANCELED)
+        t.end()
+      })
+      .catch(e => {
+        t.fail(e.message)
+        t.end()
+      })
+    })
+
+    rejectTest.test('load and expire transfer', t => {
+      let originalTransfer = createTransfer()
+      let rejectionReason = 'I do not want it'
+
+      P.resolve(context.command('PrepareTransfer', originalTransfer))
+      .then(prepared => context.command('RejectTransfer', { id: originalTransfer.id, rejection_reason: rejectionReason, rejection_type: RejectionType.EXPIRED }))
+      .then(({transfer, rejection_reason}) => {
+        compareTransfers(t, transfer, originalTransfer)
+        t.equal(rejection_reason, rejectionReason)
+        t.equal(transfer.rejection_reason, RejectionType.EXPIRED)
         t.end()
       })
       .catch(e => {
@@ -204,7 +223,7 @@ Test('Transfer aggregate', aggregateTest => {
       .then(({ transfer, rejection_reason }) => {
         compareTransfers(t, transfer, originalTransfer)
         t.equal(rejection_reason, rejectionReason)
-        t.equal(transfer.rejection_reason, 'cancelled')
+        t.equal(transfer.rejection_reason, RejectionType.CANCELED)
         t.end()
       })
       .catch(e => {

@@ -3,6 +3,8 @@
 const Test = require('tape')
 const Base = require('../../base')
 const Fixtures = require('../../../fixtures')
+const RejectionType = require('../../../../src/domain/transfer/rejection-type')
+const State = require('../../../../src/domain/transfer/state')
 
 Test('PUT /transfers/:id/reject', putTest => {
   putTest.test('should reject a transfer', test => {
@@ -24,6 +26,28 @@ Test('PUT /transfers/:id/reject', putTest => {
           test.end()
         })
         .expect('Content-Type', 'text/plain; charset=utf-8')
+      })
+  })
+
+  putTest.test('should set rejection_reason to canceled', test => {
+    let reason = 'rejection reason'
+
+    let account1Name = Fixtures.generateAccountName()
+    let account2Name = Fixtures.generateAccountName()
+    let transferId = Fixtures.generateTransferId()
+    let transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(account1Name, '25'), Fixtures.buildDebitOrCredit(account2Name, '25'))
+    Base.createAccount(account1Name)
+      .then(() => Base.createAccount(account2Name))
+      .then(() => Base.prepareTransfer(transferId, transfer))
+      .then(() => Base.rejectTransfer(transferId, reason))
+      .then(() => {
+        Base.getTransfer(transferId)
+          .expect(200, (err, res) => {
+            if (err) test.end(err)
+            test.equal(res.body.rejection_reason, RejectionType.CANCELED)
+            test.equal(res.body.state, State.REJECTED)
+            test.end()
+          })
       })
   })
 

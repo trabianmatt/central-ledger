@@ -18,7 +18,6 @@ exports.rejectExpired = rejectExpired
 
 exports.register = (server, options, next) => {
   if (Config.EXPIRES_TIMEOUT) {
-    this.rejectExpired()
     setInterval(this.rejectExpired, Config.EXPIRES_TIMEOUT)
   }
   next()

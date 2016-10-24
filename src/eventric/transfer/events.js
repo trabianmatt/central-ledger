@@ -1,5 +1,7 @@
 'use strict'
 
+const RejectionType = require('../../domain/transfer/rejection-type')
+
 module.exports = {
   TransferPrepared ({
     ledger,
@@ -21,8 +23,9 @@ module.exports = {
     return this
   },
 
-  TransferRejected ({ rejection_reason }) {
+  TransferRejected ({ rejection_reason, rejection_type }) {
     this.rejection_reason = rejection_reason // eslint-disable-line
+    this.rejection_type = rejection_type || RejectionType.CANCELED // eslint-disable-line
     return this
   }
 }

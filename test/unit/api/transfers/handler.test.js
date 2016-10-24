@@ -10,6 +10,7 @@ const Config = require(`${src}/lib/config`)
 const Handler = require(`${src}/api/transfers/handler`)
 const Model = require(`${src}/api/transfers/model`)
 const Service = require('../../../../src/services/transfer')
+const TransferState = require('../../../../src/domain/transfer/state')
 const TransfersReadModel = require(`${src}/models/transfers-read-model`)
 const AlreadyExistsError = require(`${src}/errors/already-exists-error`)
 const NotFoundError = require(`${src}/errors/not-found-error`)
@@ -90,7 +91,7 @@ Test('transfer handler', function (handlerTest) {
         assert.deepEqual(response.credits, transfer.credits)
         assert.equal(response.execution_condition, transfer.execution_condition)
         assert.equal(response.expires_at, transfer.expires_at)
-        assert.equal(response.state, 'prepared')
+        assert.equal(response.state, TransferState.PREPARED)
         return {
           code: function (statusCode) {
             assert.equal(statusCode, 201)
@@ -293,7 +294,7 @@ Test('transfer handler', function (handlerTest) {
         creditRejected: 0,
         executionCondition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
         expiresAt: '2015-06-16T00:00:01.000Z',
-        state: 'prepared',
+        state: TransferState.PREPARED,
         preparedDate: new Date()
       }
       sandbox.stub(TransfersReadModel, 'getById').returns(P.resolve(readModelTransfer))
@@ -366,7 +367,7 @@ Test('transfer handler', function (handlerTest) {
     getTransferFulfillmentTest.test('get fulfillment by transfer id', function (assert) {
       let id = Uuid()
 
-      let transfer = { transferUuid: id, fulfillment: 'cf:0:_v8', state: 'executed' }
+      let transfer = { transferUuid: id, fulfillment: 'cf:0:_v8', state: TransferState.EXECUTED }
       sandbox.stub(TransfersReadModel, 'getById').returns(P.resolve(transfer))
 
       let reply = function (response) {
@@ -390,7 +391,7 @@ Test('transfer handler', function (handlerTest) {
     getTransferFulfillmentTest.test('return 404 if transfer not executed', function (assert) {
       let id = Uuid()
 
-      let transfer = { transferUuid: id, fulfillment: 'cf:0:_v8', state: 'prepared' }
+      let transfer = { transferUuid: id, fulfillment: 'cf:0:_v8', state: TransferState.PREPARED }
       sandbox.stub(TransfersReadModel, 'getById').returns(P.resolve(transfer))
 
       let expectedResponse = { id: 'NotFoundError', message: 'The requested resource could not be found.' }

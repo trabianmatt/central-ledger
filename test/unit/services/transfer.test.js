@@ -13,7 +13,7 @@ Test('Transfer Service tests', serviceTest => {
   serviceTest.beforeEach(t => {
     sandbox = Sinon.sandbox.create()
     sandbox.stub(ReadModel, 'findExpired')
-    sandbox.stub(Commands, 'reject')
+    sandbox.stub(Commands, 'expire')
     t.end()
   })
 
@@ -27,12 +27,12 @@ Test('Transfer Service tests', serviceTest => {
       let transfers = [{ transferUuid: 1 }, { transferUuid: 2 }]
       ReadModel.findExpired.returns(P.resolve(transfers))
       transfers.forEach((x, i) => {
-        Commands.reject.onCall(i).returns(P.resolve({ transfer: { id: x.transferUuid }, rejection_reason: 'expired' }))
+        Commands.expire.onCall(i).returns(P.resolve({ transfer: { id: x.transferUuid }, rejection_reason: 'expired' }))
       })
       Service.rejectExpired()
       .then(x => {
         transfers.forEach(t => {
-          test.ok(Commands.reject.calledWith({ id: t.transferUuid, rejection_reason: 'expired' }))
+          test.ok(Commands.expire.calledWith(t.transferUuid))
         })
         test.deepEqual(x, transfers.map(t => t.transferUuid))
         test.end()

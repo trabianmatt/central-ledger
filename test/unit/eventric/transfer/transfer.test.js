@@ -3,7 +3,8 @@
 const Sinon = require('sinon')
 const Test = require('tapes')(require('tape'))
 const Uuid = require('uuid4')
-const TransferState = require('../../../../src/eventric/transfer/state')
+const TransferState = require('../../../../src/domain/transfer/state')
+const RejectionType = require('../../../../src/domain/transfer/rejection-type')
 const Transfer = require('../../../../src/eventric/transfer/transfer')
 const CryptoConditions = require('../../../../src/crypto-conditions/conditions')
 
@@ -117,13 +118,11 @@ Test('transfer', transferTest => {
       transfer.$emitDomainEvent = emitDomainEvent
 
       let rejectionReason = 'something bad happened'
-      let account = 'account'
+      let rejectionType = 'rejection-type'
 
-      transfer.reject({ rejection_reason: rejectionReason, account: account })
+      transfer.reject({ rejection_reason: rejectionReason, rejection_type: rejectionType })
 
-      let emitDomainEventArgs = emitDomainEvent.firstCall.args
-      t.equal(emitDomainEventArgs[0], 'TransferRejected')
-      t.deepEqual(emitDomainEventArgs[1], { rejection_reason: rejectionReason, account: account })
+      t.ok(emitDomainEvent.calledWith('TransferRejected', Sinon.match({ rejection_reason: rejectionReason, rejection_type: rejectionType })))
       t.end()
     })
     rejectTest.end()
@@ -181,7 +180,7 @@ Test('transfer', transferTest => {
   })
 
   transferTest.test('handleTransferRejected should', handleTest => {
-    handleTest.test('set transfer rejection_reason to cancelled and state and return transfer', t => {
+    handleTest.test('default transfer rejection_reason to cancelled and state and return transfer', t => {
       let transfer = new Transfer()
       let rejectionReason = 'Another bad apple'
       t.notOk(transfer.state)
@@ -193,8 +192,25 @@ Test('transfer', transferTest => {
       })
 
       t.deepEqual(result, transfer)
-      t.equal(transfer.state, 'rejected')
-      t.equal(transfer.rejection_reason, 'cancelled')
+      t.equal(transfer.state, TransferState.REJECTED)
+      t.equal(transfer.rejection_reason, RejectionType.CANCELED)
+      t.end()
+    })
+
+    handleTest.test('set transfer rejection_reason and state and return transfer', t => {
+      let transfer = new Transfer()
+      let rejectionReason = 'Another bad apple'
+      t.notOk(transfer.state)
+      t.notOk(transfer.rejection_reason)
+
+      let result = transfer.handleTransferRejected({
+        timestamp: new Date().getTime(),
+        payload: { rejection_reason: rejectionReason, rejection_type: RejectionType.EXPIRED }
+      })
+
+      t.deepEqual(result, transfer)
+      t.equal(transfer.state, TransferState.REJECTED)
+      t.equal(transfer.rejection_reason, RejectionType.EXPIRED)
       t.end()
     })
 

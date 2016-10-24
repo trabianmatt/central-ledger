@@ -3,6 +3,7 @@
 const Test = require('tape')
 const Base = require('../../base')
 const Fixtures = require('../../../fixtures')
+const TransferState = require('../../../../src/domain/transfer/state')
 
 Test('GET /transfers/:id', getTest => {
   getTest.test('should return transfer details', function (assert) {
@@ -26,7 +27,7 @@ Test('GET /transfers/:id', getTest => {
           assert.equal(res.body.credits[0].amount, parseInt(transfer.credits[0].amount).toFixed(2).toString())
           assert.equal(res.body.execution_condition, transfer.execution_condition)
           assert.equal(res.body.expires_at, transfer.expires_at)
-          assert.equal(res.body.state, 'prepared')
+          assert.equal(res.body.state, TransferState.PREPARED)
           assert.ok(res.body.timeline.prepared_at)
           assert.notOk(res.body.timeline.executed_at)
           assert.end()

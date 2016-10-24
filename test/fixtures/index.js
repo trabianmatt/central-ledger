@@ -1,6 +1,7 @@
 'use strict'
 
 const Uuid = require('uuid4')
+const RejectionType = require('../../src/domain/transfer/rejection-type')
 
 let accountCounter = 0
 let hostname = 'central-ledger'
@@ -85,12 +86,13 @@ function buildTransferExecutedEvent (transferId, debit, credit, expiresAt) {
   }
 }
 
-function buildTransferRejectedEvent (transferId, rejectionReason) {
+function buildTransferRejectedEvent (transferId, rejectionReason, rejectionType = RejectionType.CANCELED) {
   return {
     id: 2,
     name: 'TransferRejected',
     payload: {
-      rejection_reason: rejectionReason
+      rejection_reason: rejectionReason,
+      rejection_type: rejectionType
     },
     aggregate: {
       id: transferId,

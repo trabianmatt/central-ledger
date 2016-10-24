@@ -44,7 +44,7 @@ exports.fulfill = (fulfillment) => {
     return fulfillment.fulfillment
   })
   .catch(ExpiredTransferError, e => {
-    return this.reject({ id: fulfillment.id, rejection_reason: 'expired' })
+    return Commands.expire(fulfillment.id)
     .then(() => { throw new UnpreparedTransferError() })
   })
 }

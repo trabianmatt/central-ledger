@@ -33,6 +33,7 @@ Test('transfer model', function (modelTest) {
     sandbox.stub(Transfer, 'prepare')
     sandbox.stub(Transfer, 'fulfill')
     sandbox.stub(Transfer, 'reject')
+    sandbox.stub(Transfer, 'expire')
     sandbox.stub(Events, 'emitTransferPrepared')
     sandbox.stub(Events, 'emitTransferExecuted')
     t.end()
@@ -151,7 +152,7 @@ Test('transfer model', function (modelTest) {
       let payload = { id: transfer.id, fulfillment }
 
       Transfer.fulfill.withArgs(payload).returns(P.reject(new ExpiredTransferError()))
-      Transfer.reject.returns(P.resolve({ transfer, rejection_reason: 'expired' }))
+      Transfer.expire.withArgs(transfer.id).returns(P.resolve({ transfer, rejection_reason: 'expired' }))
       Model.fulfill(payload)
       .then(() => {
         assert.fail('Expected exception')

@@ -124,7 +124,7 @@ Test('Projection', projectionTest => {
 
       Projection.handleTransferRejected(event)
       .then(result => {
-        t.ok(TransfersReadModel.saveTransferRejected.calledOnce)
+        t.ok(TransfersReadModel.saveTransferRejected.calledWith(event))
         t.ok(console.info.calledWith('Saved TransferRejected event for transfer ' + transfer.transferUuid))
         t.end()
       })
