@@ -3,5 +3,6 @@
 module.exports = {
   PREPARED: 'prepared',
   EXECUTED: 'executed',
-  REJECTED: 'rejected'
+  REJECTED: 'rejected',
+  SETTLED: 'settled'
 }

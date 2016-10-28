@@ -33,5 +33,15 @@ Test('Events Test', eventsTest => {
     })
     rejectTest.end()
   })
+
+  eventsTest.test('TransferSettled should', settledTest => {
+    settledTest.test('Set settlement_id', t => {
+      let settlementId = 'settlement_id'
+      let result = Events.TransferSettled({ settlement_id: settlementId })
+      t.equal(result.settlement_id, settlementId)
+      t.end()
+    })
+    settledTest.end()
+  })
   eventsTest.end()
 })

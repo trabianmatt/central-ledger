@@ -27,5 +27,10 @@ module.exports = {
     this.rejection_reason = rejection_reason // eslint-disable-line
     this.rejection_type = rejection_type || RejectionType.CANCELED // eslint-disable-line
     return this
+  },
+
+  TransferSettled ({ settlement_id }) {
+    this.settlement_id = settlement_id // eslint-disable-line
+    return this
   }
 }
