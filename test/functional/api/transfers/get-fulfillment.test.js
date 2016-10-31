@@ -15,15 +15,17 @@ Test('GET /transfers/:id/fulfillment', getTest => {
     Base.createAccount(account1Name)
       .then(() => Base.createAccount(account2Name))
       .then(() => Base.prepareTransfer(transferId, transfer))
+      .delay(100)
       .then(() => Base.fulfillTransfer(transferId, fulfillment))
+      .delay(100)
       .then(() => {
         Base.getFulfillment(transferId)
-          .expect(200, function (err, res) {
-            if (err) return test.end(err)
+          .expect(200)
+          .expect('Content-Type', 'text/plain; charset=utf-8')
+          .then(res => {
             test.equal(res.text, fulfillment)
             test.end()
           })
-          .expect('Content-Type', 'text/plain; charset=utf-8')
       })
   })
 
@@ -36,10 +38,11 @@ Test('GET /transfers/:id/fulfillment', getTest => {
     Base.createAccount(account1Name)
       .then(() => Base.createAccount(account2Name))
       .then(() => Base.prepareTransfer(transferId, transfer))
+      .delay(100)
       .then(() => {
         Base.getFulfillment(transferId)
-          .expect(404, function (err, res) {
-            if (err) return test.end(err)
+          .expect(404)
+          .then(res => {
             test.equal(res.body.id, 'NotFoundError')
             test.equal(res.body.message, 'The requested resource could not be found.')
             test.pass()

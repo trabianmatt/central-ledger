@@ -6,11 +6,10 @@ const Sinon = require('sinon')
 const P = require('bluebird')
 const Moment = require('moment')
 const Uuid = require('uuid4')
-const Db = require(`${src}/lib/db`)
+const Db = require(`${src}/db`)
 const UrlParser = require(`${src}/lib/urlparser`)
-const TransfersReadModel = require('../../../src/models/transfers-read-model')
-const TransferState = require('../../../src/domain/transfer/state')
-const RejectionType = require('../../../src/domain/transfer/rejection-type')
+const TransfersReadModel = require(`${src}/models/transfers-read-model`)
+const TransferState = require(`${src}/domain/transfer/state`)
 
 function setupTransfersDb (transfers) {
   let db = { transfers: transfers }
@@ -32,65 +31,37 @@ Test('transfer model', function (modelTest) {
     t.end()
   })
 
-  modelTest.test('saveTransferPrepared should', function (savePreparedTest) {
-    let transferPreparedEvent = {
-      id: 1,
-      name: 'TransferPrepared',
-      payload: {
-        ledger: 'http://central-ledger.example',
-        debits: [{
-          account: 'http://central-ledger.example/accounts/dfsp1',
-          amount: '50'
-        }],
-        credits: [{
-          account: 'http://central-ledger.example/accounts/dfsp2',
-          amount: '50'
-        }],
-        execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
-        expires_at: '2015-06-16T00:00:01.000Z'
-      },
-      aggregate: {
-        id: Uuid(),
-        name: 'Transfer'
-      },
-      context: 'Ledger',
-      timestamp: 1474471273588
+  modelTest.test('saveTransfer should', function (saveTransferTest) {
+    let transferRecord = {
+      transferUuid: Uuid(),
+      state: TransferState.PREPARED,
+      ledger: 'http://central-ledger.example',
+      debitAccountId: 1,
+      debitAmount: '50',
+      creditAccountId: 2,
+      creditAmount: '50',
+      executionCondition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
+      expiresAt: '2015-06-16T00:00:01.000Z',
+      preparedDate: Moment(1474471273588)
     }
 
-    savePreparedTest.test('save transfer prepared event', function (assert) {
+    saveTransferTest.test('insert transfer record', function (assert) {
       let insertAsync = sandbox.stub()
       setupTransfersDb({ insertAsync: insertAsync })
 
-      TransfersReadModel.saveTransferPrepared(transferPreparedEvent)
+      TransfersReadModel.saveTransfer(transferRecord)
         .then(() => {
-          let insertAsyncArg = insertAsync.firstCall.args[0]
-          assert.equal(insertAsyncArg.transferUuid, transferPreparedEvent.aggregate.id)
-          assert.equal(insertAsyncArg.state, TransferState.PREPARED)
-          assert.equal(insertAsyncArg.ledger, transferPreparedEvent.payload.ledger)
-          assert.equal(insertAsyncArg.debitAccount, transferPreparedEvent.payload.debits[0].account)
-          assert.equal(insertAsyncArg.debitAmount, transferPreparedEvent.payload.debits[0].amount)
-          assert.notOk(insertAsyncArg.debitMemo)
-          assert.notOk(insertAsyncArg.debitInvoice)
-          assert.equal(insertAsyncArg.creditAccount, transferPreparedEvent.payload.credits[0].account)
-          assert.equal(insertAsyncArg.creditAmount, transferPreparedEvent.payload.credits[0].amount)
-          assert.notOk(insertAsyncArg.creditMemo)
-          assert.notOk(insertAsyncArg.creditInvoice)
-          assert.equal(insertAsyncArg.executionCondition, transferPreparedEvent.payload.execution_condition)
-          assert.notOk(insertAsyncArg.cancellationCondition)
-          assert.notOk(insertAsyncArg.rejectReason)
-          assert.equal(insertAsyncArg.expiresAt, transferPreparedEvent.payload.expires_at)
-          assert.notOk(insertAsyncArg.additionalInfo)
-          assert.deepEqual(insertAsyncArg.preparedDate, Moment(transferPreparedEvent.timestamp))
+          assert.ok(insertAsync.calledWith(Sinon.match(transferRecord)))
           assert.end()
         })
     })
 
-    savePreparedTest.test('return newly created transfer', function (assert) {
-      let newTransfer = { transferUuid: transferPreparedEvent.aggregate.id }
+    saveTransferTest.test('return newly created transfer', function (assert) {
+      let newTransfer = { transferUuid: Uuid() }
       let insertAsync = sandbox.stub().returns(newTransfer)
       setupTransfersDb({ insertAsync: insertAsync })
 
-      TransfersReadModel.saveTransferPrepared(transferPreparedEvent)
+      TransfersReadModel.saveTransfer(transferRecord)
         .then(t => {
           assert.equal(t, newTransfer)
           assert.end()
@@ -100,113 +71,37 @@ Test('transfer model', function (modelTest) {
         })
     })
 
-    savePreparedTest.end()
+    saveTransferTest.end()
   })
 
-  modelTest.test('saveTransferExecuted should', function (saveExecutedTest) {
-    let transferExecutedEvent = {
-      id: 2,
-      name: 'TransferExecuted',
-      payload: {
-        ledger: 'http://central-ledger.example',
-        debits: [{
-          account: 'http://central-ledger.example/accounts/dfsp1',
-          amount: '50'
-        }],
-        credits: [{
-          account: 'http://central-ledger.example/accounts/dfsp2',
-          amount: '50'
-        }],
-        execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
-        expires_at: '2015-06-16T00:00:01.000Z',
-        fulfillment: 'cf:0:_v8'
-      },
-      aggregate: {
-        id: Uuid(),
-        name: 'Transfer'
-      },
-      context: 'Ledger',
-      timestamp: 1474471284081
-    }
-
-    saveExecutedTest.test('update transfer fields', function (assert) {
+  modelTest.test('updateTransfer should', function (updateTransferTest) {
+    updateTransferTest.test('update transfer record', function (assert) {
       let updateAsync = sandbox.stub()
       setupTransfersDb({ updateAsync: updateAsync })
 
-      TransfersReadModel.saveTransferExecuted(transferExecutedEvent)
+      let transferId = Uuid()
+      let fields = { state: TransferState.EXECUTED, fulfillment: 'cf:0:_v8' }
+
+      TransfersReadModel.updateTransfer(transferId, fields)
         .then(() => {
           assert.ok(updateAsync.calledWith(Sinon.match({
-            transferUuid: transferExecutedEvent.aggregate.id,
-            state: TransferState.EXECUTED,
-            fulfillment: transferExecutedEvent.payload.fulfillment,
-            executedDate: Moment(transferExecutedEvent.timestamp)
+            transferUuid: transferId,
+            state: fields.state,
+            fulfillment: fields.fulfillment
           })))
-
           assert.end()
         })
     })
 
-    saveExecutedTest.end()
+    updateTransferTest.end()
   })
 
-  modelTest.test('saveTransferRejected should', function (saveRejectedTest) {
-    let transferRejectedEvent = {
-      id: 2,
-      name: 'TransferRejected',
-      payload: {
-        rejection_reason: 'this is a bad transfer'
-      },
-      aggregate: {
-        id: Uuid(),
-        name: 'Transfer'
-      },
-      context: 'Ledger',
-      timestamp: 1474471286000
-    }
-
-    saveRejectedTest.test('update transfer fields', function (assert) {
-      let updateAsync = sandbox.stub()
-      setupTransfersDb({ updateAsync: updateAsync })
-
-      TransfersReadModel.saveTransferRejected(transferRejectedEvent)
-        .then(() => {
-          assert.ok(updateAsync.calledWith(Sinon.match({
-            transferUuid: transferRejectedEvent.aggregate.id,
-            state: TransferState.REJECTED,
-            rejectionReason: RejectionType.CANCELED,
-            creditRejected: 1,
-            creditRejectionMessage: transferRejectedEvent.payload.rejection_reason,
-            rejectedDate: Moment(transferRejectedEvent.timestamp)
-          })))
-
-          assert.end()
-        })
-    })
-
-    saveRejectedTest.test('update rejectionReason if event provides one', test => {
-      let updateAsync = sandbox.stub()
-      setupTransfersDb({ updateAsync: updateAsync })
-      transferRejectedEvent.payload.rejection_type = RejectionType.EXPIRED
-
-      TransfersReadModel.saveTransferRejected(transferRejectedEvent)
-        .then(() => {
-          test.ok(updateAsync.calledWith(Sinon.match({
-            state: TransferState.REJECTED,
-            rejectionReason: RejectionType.EXPIRED
-          })))
-          test.end()
-        })
-    })
-
-    saveRejectedTest.end()
-  })
-
-  modelTest.test('truncateReadTransfersReadModel should', function (truncateTest) {
-    truncateTest.test('destroy all records', function (assert) {
+  modelTest.test('truncateTransfers should', function (truncateTest) {
+    truncateTest.test('destroy all transfers records', function (assert) {
       let destroyAsync = sandbox.stub()
       setupTransfersDb({ destroyAsync: destroyAsync })
 
-      TransfersReadModel.truncateReadModel()
+      TransfersReadModel.truncateTransfers()
         .then(() => {
           let destroyAsyncArg = destroyAsync.firstCall.args[0]
           assert.deepEqual(destroyAsyncArg, {})
@@ -233,10 +128,12 @@ Test('transfer model', function (modelTest) {
         })
     })
 
-    getByIdTest.test('return exception if db.findOneAsync throws', function (assert) {
+    getByIdTest.test('return exception if db.getTransferByIdAsync throws', function (assert) {
       let error = new Error()
-      let findOneAsync = function () { return Promise.reject(error) }
-      setupTransfersDb({ findOneAsync: findOneAsync })
+
+      let getTransferByIdAsync = function () { return Promise.reject(error) }
+      let db = { getTransferByIdAsync: getTransferByIdAsync }
+      Db.connect.returns(P.resolve(db))
 
       TransfersReadModel.getById(Uuid())
         .then(() => {
@@ -251,15 +148,17 @@ Test('transfer model', function (modelTest) {
 
     getByIdTest.test('find transfer by transferUuid', function (assert) {
       let id = Uuid()
-      let transfer = { id: id }
-      let findOneAsync = sandbox.stub().returns(Promise.resolve(transfer))
-      setupTransfersDb({ findOneAsync: findOneAsync })
+      let transfer = [{ id: id }]
+      let getTransferByIdAsync = sandbox.stub().returns(Promise.resolve(transfer))
+
+      let db = { getTransferByIdAsync: getTransferByIdAsync }
+      Db.connect.returns(P.resolve(db))
 
       TransfersReadModel.getById(id)
         .then(found => {
-          let findOneAsyncArg = findOneAsync.firstCall.args[0]
-          assert.equal(found, transfer)
-          assert.equal(findOneAsyncArg.transferUuid, id)
+          let getTransferByIdAsyncArg = getTransferByIdAsync.firstCall.args[0]
+          assert.equal(found, transfer[0])
+          assert.equal(getTransferByIdAsyncArg, id)
           assert.end()
         })
         .catch(err => {
@@ -271,21 +170,23 @@ Test('transfer model', function (modelTest) {
     getByIdTest.end()
   })
 
-  modelTest.test('getExecuted should', getExecutedTest => {
-    getExecutedTest.test('find transfers by EXECUTED state', test => {
+  modelTest.test('getTransfersByState should', getByStateTest => {
+    getByStateTest.test('find transfers by state', test => {
       let transfers = [{ transferUuid: Uuid() }, { transferUuid: Uuid() }]
-      let findAsync = sandbox.stub().returns(Promise.resolve(transfers))
-      setupTransfersDb({ findAsync: findAsync })
+      let getTransfersByStateAsync = sandbox.stub().returns(Promise.resolve(transfers))
 
-      TransfersReadModel.getExecuted()
-      .then(found => {
-        let findAsyncArg = findAsync.firstCall.args[0]
-        test.equal(findAsyncArg.state, TransferState.EXECUTED)
-        test.deepEqual(found, transfers)
-        test.end()
-      })
+      let db = { getTransfersByStateAsync: getTransfersByStateAsync }
+      Db.connect.returns(P.resolve(db))
+
+      TransfersReadModel.getTransfersByState(TransferState.EXECUTED)
+        .then(found => {
+          let getTransfersByStateAsyncArg = getTransfersByStateAsync.firstCall.args[0]
+          test.equal(getTransfersByStateAsyncArg, TransferState.EXECUTED)
+          test.deepEqual(found, transfers)
+          test.end()
+        })
     })
-    getExecutedTest.end()
+    getByStateTest.end()
   })
 
   modelTest.test('findExpired should', findExpiredTest => {

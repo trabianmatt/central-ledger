@@ -19,21 +19,25 @@ Test('GET /positions', getTest => {
     .then(() => Base.createAccount(account2Name))
     .then(() => Base.createAccount(account3Name))
     .then(() => Base.prepareTransfer(transfer1Id, Fixtures.buildTransfer(transfer1Id, Fixtures.buildDebitOrCredit(account1Name, '25'), Fixtures.buildDebitOrCredit(account2Name, '25'))))
+    .delay(100)
     .then(() => Base.fulfillTransfer(transfer1Id, fulfillment))
     .then(() => Base.prepareTransfer(transfer2Id, Fixtures.buildTransfer(transfer2Id, Fixtures.buildDebitOrCredit(account1Name, '10'), Fixtures.buildDebitOrCredit(account3Name, '10'))))
+    .delay(100)
     .then(() => Base.fulfillTransfer(transfer2Id, fulfillment))
     .then(() => Base.prepareTransfer(transfer3Id, Fixtures.buildTransfer(transfer3Id, Fixtures.buildDebitOrCredit(account3Name, '15'), Fixtures.buildDebitOrCredit(account2Name, '15'))))
+    .delay(100)
     .then(() => Base.fulfillTransfer(transfer3Id, fulfillment))
+    .delay(100)
     .then(() => {
       Base.get('/positions')
-        .expect(200, function (err, res) {
-          if (err) test.end(err)
+        .expect(200)
+        .expect('Content-Type', /json/)
+        .then(res => {
           test.deepEqual(Fixtures.findAccountPositions(res.body.positions, account1Name), Fixtures.buildAccountPosition(account1Name, 35, 0))
           test.deepEqual(Fixtures.findAccountPositions(res.body.positions, account2Name), Fixtures.buildAccountPosition(account2Name, 0, 40))
           test.deepEqual(Fixtures.findAccountPositions(res.body.positions, account3Name), Fixtures.buildAccountPosition(account3Name, 15, 10))
           test.end()
         })
-        .expect('Content-Type', /json/)
     })
   })
 

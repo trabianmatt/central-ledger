@@ -1,7 +1,7 @@
 'use strict'
 
 let host = process.env.HOST_IP || 'localhost'
-const Request = require('supertest')('http://' + host + ':3000')
+const Request = require('supertest-as-promised')('http://' + host + ':3000')
 
 function get (path) {
   return Request.get(path)

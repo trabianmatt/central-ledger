@@ -22,14 +22,15 @@ Test('POST /webhooks/reject-expired-transfers', rejectTest => {
     Base.createAccount(account1Name)
       .then(() => Base.createAccount(account2Name))
       .then(() => Base.prepareTransfer(transferId, transfer))
+      .delay(100)
       .then(() => {
         Base.post('/webhooks/reject-expired-transfers', {})
-          .expect(200, (err, res) => {
-            if (err) test.end(err)
+          .expect(200)
+          .expect('Content-Type', /json/)
+          .then(res => {
             test.deepEqual(res.body, [transferId])
             test.end()
           })
-          .expect('Content-Type', /json/)
       })
   })
 
@@ -42,16 +43,18 @@ Test('POST /webhooks/reject-expired-transfers', rejectTest => {
     Base.createAccount(account1Name)
       .then(() => Base.createAccount(account2Name))
       .then(() => Base.prepareTransfer(transferId, transfer))
+      .delay(100)
       .then(() => Base.post('/webhooks/reject-expired-transfers', {}))
+      .delay(100)
       .then(() => {
         Base.getTransfer(transferId)
-          .expect(200, (err, res) => {
-            if (err) test.end(err)
+          .expect(200)
+          .expect('Content-Type', /json/)
+          .then(res => {
             test.equal(res.body.rejection_reason, RejectionType.EXPIRED)
             test.equal(res.body.state, State.REJECTED)
             test.end()
           })
-          .expect('Content-Type', /json/)
       })
   })
   rejectTest.end()

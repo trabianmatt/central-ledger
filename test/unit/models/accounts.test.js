@@ -1,9 +1,10 @@
 'use strict'
 
+const src = '../../../src'
 const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
-const Model = require('../../../src/models/accounts')
-const Db = require('../../../src/lib/db')
+const Model = require(`${src}/models/accounts`)
+const Db = require(`${src}/db`)
 
 Test('accounts model', function (modelTest) {
   let sandbox

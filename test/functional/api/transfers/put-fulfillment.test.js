@@ -16,14 +16,15 @@ Test('PUT /transfer/:id/fulfillment', putTest => {
     Base.createAccount(account1Name)
       .then(() => Base.createAccount(account2Name))
       .then(() => Base.prepareTransfer(transferId, transfer))
+      .delay(100)
       .then(() => {
         Base.fulfillTransfer(transferId, fulfillment)
-          .expect(200, function (err, res) {
-            if (err) return test.end(err)
+          .expect(200)
+          .expect('Content-Type', 'text/plain; charset=utf-8')
+          .then(res => {
             test.equal(res.text, fulfillment)
             test.end()
           })
-          .expect('Content-Type', 'text/plain; charset=utf-8')
       })
   })
 
@@ -32,8 +33,8 @@ Test('PUT /transfer/:id/fulfillment', putTest => {
     let transferId = Fixtures.generateTransferId()
 
     Base.put(`/transfers/${transferId}/fulfillment`, fulfillment, 'text/plain')
-      .expect(404, function (err, res) {
-        if (err) return test.end(err)
+      .expect(404)
+      .then(res => {
         test.equal(res.body.id, 'NotFoundError')
         test.equal(res.body.message, 'The requested resource could not be found.')
         test.pass()
@@ -51,15 +52,17 @@ Test('PUT /transfer/:id/fulfillment', putTest => {
     Base.createAccount(account1Name)
       .then(() => Base.createAccount(account2Name))
       .then(() => Base.prepareTransfer(transferId, transfer))
+      .delay(100)
       .then(() => Base.fulfillTransfer(transferId, fulfillment))
+      .delay(100)
       .then(() => {
         Base.fulfillTransfer(transferId, fulfillment)
-          .expect(200, function (err, res) {
-            if (err) return test.end(err)
+          .expect(200)
+          .expect('Content-Type', 'text/plain; charset=utf-8')
+          .then(res => {
             test.equal(res.text, fulfillment)
             test.end()
           })
-          .expect('Content-Type', 'text/plain; charset=utf-8')
       })
   })
 
@@ -74,16 +77,17 @@ Test('PUT /transfer/:id/fulfillment', putTest => {
     Base.createAccount(account1Name)
       .then(() => Base.createAccount(account2Name))
       .then(() => Base.prepareTransfer(transferId, transfer))
+      .delay(100)
       .then(() => {
         Base.fulfillTransfer(transferId, fulfillment)
-          .expect(422, function (err, res) {
-            if (err) return test.end(err)
+          .expect(422)
+          .expect('Content-Type', 'application/json; charset=utf-8')
+          .then(res => {
             test.equal(res.body.id, 'UnprocessableEntityError')
             test.equal(res.body.message, 'The provided entity is syntactically correct, but there is a generic semantic problem with it.')
             test.pass()
             test.end()
           })
-          .expect('Content-Type', 'application/json; charset=utf-8')
       })
   })
 

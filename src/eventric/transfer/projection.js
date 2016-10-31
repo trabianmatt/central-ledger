@@ -1,11 +1,11 @@
 'use strict'
 
 const Logger = require('../../lib/logger')
-const TransfersReadModel = require('../../models/transfers-read-model')
+const TransferService = require('../../services/transfer')
 
 module.exports = {
   initialize (params, done) {
-    return TransfersReadModel.truncateReadModel()
+    return TransferService.truncateReadModel()
       .then(() => done())
       .catch(err => {
         Logger.error('Error truncating read model', err)
@@ -13,7 +13,7 @@ module.exports = {
   },
 
   handleTransferPrepared (event) {
-    return TransfersReadModel.saveTransferPrepared(event)
+    return TransferService.saveTransferPrepared(event)
       .then(transfer => {
         Logger.info('Saved TransferPrepared event for transfer ' + transfer.transferUuid)
       })
@@ -23,7 +23,7 @@ module.exports = {
   },
 
   handleTransferExecuted (event) {
-    return TransfersReadModel.saveTransferExecuted(event)
+    return TransferService.saveTransferExecuted(event)
       .then(transfer => {
         Logger.info('Saved TransferExecuted event for transfer ' + transfer.transferUuid)
       })
@@ -33,7 +33,7 @@ module.exports = {
   },
 
   handleTransferRejected (event) {
-    return TransfersReadModel.saveTransferRejected(event)
+    return TransferService.saveTransferRejected(event)
       .then(transfer => {
         Logger.info('Saved TransferRejected event for transfer ' + transfer.transferUuid)
       })

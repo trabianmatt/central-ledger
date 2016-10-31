@@ -1,11 +1,12 @@
 'use strict'
 
+const src = '../../../src'
 const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const Massive = require('massive')
 const P = require('bluebird')
-const Config = require('../../../src/lib/config')
-const Db = require('../../../src/lib/db')
+const Config = require(`${src}/lib/config`)
+const Db = require(`${src}/db`)
 
 Test('db', dbTest => {
   let sandbox
@@ -26,6 +27,7 @@ Test('db', dbTest => {
   dbTest.test('connect should', connectTest => {
     connectTest.test('connect using config values', t => {
       let fakeDb = {}
+      let scriptsDir = `${process.cwd()}/src/db`
       let databaseUri = 'some-data-uri'
       let connectStub = Massive.connect
       connectStub.yields(null, fakeDb)
@@ -36,6 +38,7 @@ Test('db', dbTest => {
           t.equal(db, fakeDb)
           t.equal(connectStub.callCount, 1)
           t.equal(connectStub.firstCall.args[0].connectionString, databaseUri)
+          t.equal(connectStub.firstCall.args[0].scripts, scriptsDir)
           t.end()
         })
     })

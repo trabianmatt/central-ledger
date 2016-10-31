@@ -18,14 +18,15 @@ Test('PUT /transfers/:id/reject', putTest => {
     Base.createAccount(account1Name)
       .then(() => Base.createAccount(account2Name))
       .then(() => Base.prepareTransfer(transferId, transfer))
+      .delay(100)
       .then(() => {
         Base.rejectTransfer(transferId, reason)
-        .expect(200, (err, res) => {
-          if (err) test.end(err)
+        .expect(200)
+        .expect('Content-Type', 'text/plain; charset=utf-8')
+        .then(res => {
           test.equal(res.text, reason)
           test.end()
         })
-        .expect('Content-Type', 'text/plain; charset=utf-8')
       })
   })
 
@@ -36,14 +37,17 @@ Test('PUT /transfers/:id/reject', putTest => {
     let account2Name = Fixtures.generateAccountName()
     let transferId = Fixtures.generateTransferId()
     let transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(account1Name, '25'), Fixtures.buildDebitOrCredit(account2Name, '25'))
+
     Base.createAccount(account1Name)
       .then(() => Base.createAccount(account2Name))
       .then(() => Base.prepareTransfer(transferId, transfer))
+      .delay(100)
       .then(() => Base.rejectTransfer(transferId, reason))
+      .delay(100)
       .then(() => {
         Base.getTransfer(transferId)
-          .expect(200, (err, res) => {
-            if (err) test.end(err)
+          .expect(200)
+          .then(res => {
             test.equal(res.body.rejection_reason, RejectionType.CANCELED)
             test.equal(res.body.state, State.REJECTED)
             test.end()
@@ -62,15 +66,17 @@ Test('PUT /transfers/:id/reject', putTest => {
     Base.createAccount(account1Name)
       .then(() => Base.createAccount(account2Name))
       .then(() => Base.prepareTransfer(transferId, transfer))
+      .delay(100)
       .then(() => Base.rejectTransfer(transferId, reason))
+      .delay(100)
       .then(() => {
         Base.rejectTransfer(transferId, reason)
-        .expect(200, (err, res) => {
-          if (err) test.end(err)
-          test.equal(res.text, reason)
-          test.end()
-        })
-        .expect('Content-Type', 'text/plain; charset=utf-8')
+          .expect(200)
+          .expect('Content-Type', 'text/plain; charset=utf-8')
+          .then(res => {
+            test.equal(res.text, reason)
+            test.end()
+          })
       })
   })
 
@@ -86,16 +92,18 @@ Test('PUT /transfers/:id/reject', putTest => {
     Base.createAccount(account1Name)
       .then(() => Base.createAccount(account2Name))
       .then(() => Base.prepareTransfer(transferId, transfer))
+      .delay(100)
       .then(() => Base.fulfillTransfer(transferId, fulfillment))
+      .delay(100)
       .then(() => {
         Base.rejectTransfer(transferId, reason)
-        .expect(422, (err, res) => {
-          if (err) return test.end(err)
-          test.equal(res.body.id, 'UnprocessableEntityError')
-          test.equal(res.body.message, 'The provided entity is syntactically correct, but there is a generic semantic problem with it.')
-          test.end()
-        })
-        .expect('Content-Type', /json/)
+          .expect(422)
+          .expect('Content-Type', /json/)
+          .then(res => {
+            test.equal(res.body.id, 'UnprocessableEntityError')
+            test.equal(res.body.message, 'The provided entity is syntactically correct, but there is a generic semantic problem with it.')
+            test.end()
+          })
       })
   })
 

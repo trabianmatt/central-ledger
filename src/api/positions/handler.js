@@ -1,8 +1,9 @@
 'use strict'
 const Decimal = require('decimal.js')
 
-const TransfersReadModel = require('../../models/transfers-read-model')
+const TransferService = require('../../services/transfer')
 const Handle = require('../../lib/handler')
+const UrlParser = require('../../lib/urlparser')
 const PositionCalculator = require('./position-calculator')
 
 function buildResponse (positionFor) {
@@ -36,7 +37,10 @@ function createPositionsHelper (executedTransfers, positionFor) {
       }
     }
 
-    addToExistingPositionFor(head.debitAccount)(
+    let debitAccount = UrlParser.toAccountUri(head.debitAccountName)
+    let creditAccount = UrlParser.toAccountUri(head.creditAccountName)
+
+    addToExistingPositionFor(debitAccount)(
       {
         payments: new Decimal(head.debitAmount),
         receipts: new Decimal('0'),
@@ -44,7 +48,7 @@ function createPositionsHelper (executedTransfers, positionFor) {
       }
     )
 
-    addToExistingPositionFor(head.creditAccount)(
+    addToExistingPositionFor(creditAccount)(
       {
         payments: new Decimal('0'),
         receipts: new Decimal(head.creditAmount),
@@ -61,7 +65,7 @@ function createPositions (executedTransfers) {
 }
 
 exports.perform = (request, reply) => {
-  TransfersReadModel.getExecuted()
+  TransferService.getExecuted()
     .then(createPositions)
     .then(Handle.getResponse(reply, buildResponse))
 }

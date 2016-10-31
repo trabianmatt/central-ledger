@@ -15,10 +15,12 @@ Test('GET /transfers/:id', getTest => {
     Base.createAccount(account1Name)
     .then(() => Base.createAccount(account2Name))
     .then(() => Base.prepareTransfer(transferId, transfer))
+    .delay(100)
     .then(() => {
       Base.getTransfer(transferId)
-        .expect(200, function (err, res) {
-          if (err) return assert.end(err)
+        .expect(200)
+        .expect('Content-Type', /json/)
+        .then(res => {
           assert.equal(res.body.id, transfer.id)
           assert.equal(res.body.ledger, transfer.ledger)
           assert.equal(res.body.debits[0].account, transfer.debits[0].account)
@@ -32,7 +34,6 @@ Test('GET /transfers/:id', getTest => {
           assert.notOk(res.body.timeline.executed_at)
           assert.end()
         })
-        .expect('Content-Type', /json/)
     })
   })
 

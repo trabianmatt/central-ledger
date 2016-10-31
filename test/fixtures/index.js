@@ -3,7 +3,6 @@
 const Uuid = require('uuid4')
 const RejectionType = require('../../src/domain/transfer/rejection-type')
 
-let accountCounter = 0
 let hostname = 'central-ledger'
 
 function generateTransferId () {
@@ -11,7 +10,7 @@ function generateTransferId () {
 }
 
 function generateAccountName () {
-  return `dfsp${++accountCounter}`
+  return `dfsp${Uuid().replace(/-/g, '')}`
 }
 
 function buildDebitOrCredit (accountName, amount, memo, invoice) {
@@ -103,6 +102,29 @@ function buildTransferRejectedEvent (transferId, rejectionReason, rejectionType 
   }
 }
 
+function buildReadModelTransfer (transferId, debit, credit, state, expiresAt, preparedDate, rejectionReason) {
+  state = state || 'prepared'
+  expiresAt = (expiresAt || futureDate()).toISOString()
+  preparedDate = (preparedDate || new Date()).toISOString()
+  return {
+    transferUuid: transferId,
+    state: state,
+    ledger: `${hostname}`,
+    debitAccountId: debit.accountId,
+    debitAmount: debit.amount,
+    debitMemo: debit.memo,
+    debitInvoice: debit.invoice,
+    creditAccountId: credit.accountId,
+    creditAmount: credit.amount,
+    creditMemo: credit.memo,
+    creditInvoice: credit.invoice,
+    executionCondition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
+    rejectionReason: rejectionReason,
+    expiresAt: expiresAt,
+    preparedDate: preparedDate
+  }
+}
+
 function findAccountPositions (positions, accountName) {
   return positions.find(function (p) {
     return p.account === buildAccountUrl(accountName)
@@ -130,6 +152,7 @@ module.exports = {
   buildTransferPreparedEvent,
   buildTransferExecutedEvent,
   buildTransferRejectedEvent,
+  buildReadModelTransfer,
   findAccountPositions,
   generateAccountName,
   generateTransferId

@@ -9,8 +9,8 @@ const Validator = require(`${src}/api/transfers/validator`)
 const Config = require(`${src}/lib/config`)
 const Handler = require(`${src}/api/transfers/handler`)
 const Model = require(`${src}/api/transfers/model`)
-const Service = require('../../../../src/services/transfer')
-const TransferState = require('../../../../src/domain/transfer/state')
+const Service = require(`${src}/services/transfer`)
+const TransferState = require(`${src}/domain/transfer/state`)
 const TransfersReadModel = require(`${src}/models/transfers-read-model`)
 const AlreadyExistsError = require(`${src}/errors/already-exists-error`)
 const NotFoundError = require(`${src}/errors/not-found-error`)
@@ -287,9 +287,11 @@ Test('transfer handler', function (handlerTest) {
       let readModelTransfer = {
         transferUuid: id,
         ledger: hostname,
-        debitAccount: 'dfsp1',
+        debitAccountId: 1,
+        debitAccountName: 'dfsp1',
         debitAmount: '25',
-        creditAccount: 'dfsp2',
+        creditAccountId: 2,
+        creditAccountName: 'dfsp2',
         creditAmount: '15',
         creditRejected: 0,
         executionCondition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
@@ -303,10 +305,10 @@ Test('transfer handler', function (handlerTest) {
         assert.equal(response.id, `${hostname}/transfers/${readModelTransfer.transferUuid}`)
         assert.equal(response.ledger, readModelTransfer.ledger)
         assert.equal(response.debits.length, 1)
-        assert.equal(response.debits[0].account, readModelTransfer.debitAccount)
+        assert.equal(response.debits[0].account, `${hostname}/accounts/${readModelTransfer.debitAccountName}`)
         assert.equal(response.debits[0].amount, readModelTransfer.debitAmount)
         assert.equal(response.credits.length, 1)
-        assert.equal(response.credits[0].account, readModelTransfer.creditAccount)
+        assert.equal(response.credits[0].account, `${hostname}/accounts/${readModelTransfer.creditAccountName}`)
         assert.equal(response.credits[0].amount, readModelTransfer.creditAmount)
         assert.notOk(response.credits[0].rejected)
         assert.notOk(response.credits[0].rejection_message)

@@ -28,11 +28,11 @@ let buildGetTransferResponse = (record) => {
     id: UrlParser.toTransferUri(record.transferUuid),
     ledger: record.ledger,
     debits: [{
-      account: record.debitAccount,
+      account: UrlParser.toAccountUri(record.debitAccountName),
       amount: record.debitAmount
     }],
     credits: [{
-      account: record.creditAccount,
+      account: UrlParser.toAccountUri(record.creditAccountName),
       amount: record.creditAmount,
       rejected: Boolean(record.creditRejected),
       rejection_message: record.creditRejectionMessage

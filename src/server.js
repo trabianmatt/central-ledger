@@ -2,7 +2,7 @@
 
 const Glue = require('glue')
 const Manifest = require('./manifest')
-const Db = require('./lib/db')
+const Db = require('./db')
 const Eventric = require('./eventric')
 const Logger = require('./lib/logger')
 const Migrator = require('./lib/migrator')

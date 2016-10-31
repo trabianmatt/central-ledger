@@ -1,12 +1,13 @@
 'use strict'
 
+const src = '../../../src'
 const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const P = require('bluebird')
 const Uuid = require('uuid4')
-const PostgresStore = require('../../../src/eventric/postgres-store').default
-const Db = require('../../../src/lib/db')
-const AlreadyExistsError = require('../../../src/errors/already-exists-error')
+const PostgresStore = require(`${src}/eventric/postgres-store`).default
+const Db = require(`${src}/db`)
+const AlreadyExistsError = require(`${src}/errors/already-exists-error`)
 
 Test('postgres store test', storeTest => {
   let sandbox

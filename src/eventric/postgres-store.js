@@ -1,6 +1,6 @@
 'use strict'
 
-const Db = require('../lib/db')
+const Db = require('../db')
 const Uuid = require('uuid4')
 const AlreadyExistsError = require('../errors/already-exists-error')
 

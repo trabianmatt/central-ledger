@@ -6,8 +6,9 @@ const Fixtures = require('../../../fixtures')
 
 Test('return metadata', function (assert) {
   Base.get('/')
-    .expect(200, function (err, res) {
-      if (err) return assert.end(err)
+    .expect(200)
+    .expect('Content-Type', /json/)
+    .then(res => {
       assert.equal(res.body.currency_code, null)
       assert.equal(res.body.currency_symbol, null)
       assert.equal(res.body.precision, 10)
@@ -23,24 +24,23 @@ Test('return metadata', function (assert) {
       assert.equal(res.body.urls.positions, `http://${Fixtures.hostname}/positions`)
       assert.end()
     })
-    .expect('Content-Type', /json/)
 })
 
 Test('return api documentation', function (assert) {
   Base.get('/documentation')
-    .expect(200, function (err, res) {
-      if (err) return assert.end(err)
+    .expect(200)
+    .expect('Content-Type', /html/)
+    .then(res => {
       assert.end()
     })
-    .expect('Content-Type', /html/)
 })
 
 Test('return health', function (assert) {
   Base.get('/health')
-    .expect(200, function (err, res) {
-      if (err) return assert.end(err)
+    .expect(200)
+    .expect('Content-Type', /json/)
+    .then(res => {
       assert.equal(res.body.status, 'OK')
       assert.end()
     })
-    .expect('Content-Type', /json/)
 })

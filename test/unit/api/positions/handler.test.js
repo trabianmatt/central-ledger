@@ -4,25 +4,31 @@ const src = '../../../../src'
 const Sinon = require('sinon')
 const Test = require('tapes')(require('tape'))
 const P = require('bluebird')
-const TransfersReadModel = require(`${src}/models/transfers-read-model`)
+const Config = require(`${src}/lib/config`)
+const TransferService = require(`${src}/services/transfer`)
 const Handler = require(`${src}/api/positions/handler`)
 
 Test('positions handler', (handlerTest) => {
   let sandbox
+  let originalHostName
+  let hostname = 'http://some-host'
 
   handlerTest.beforeEach(t => {
     sandbox = Sinon.sandbox.create()
+    originalHostName = Config.HOSTNAME
+    Config.HOSTNAME = hostname
     t.end()
   })
 
   handlerTest.afterEach(t => {
+    Config.HOSTNAME = originalHostName
     sandbox.restore()
     t.end()
   })
 
   handlerTest.test('prepare should', (prepareTest) => {
     prepareTest.test('return no positions if no executed transfers exist', (assert) => {
-      sandbox.stub(TransfersReadModel, 'getExecuted').returns(P.resolve([]))
+      sandbox.stub(TransferService, 'getExecuted').returns(P.resolve([]))
 
       let expectedResponse = { positions: [] }
       let reply = function (response) {
@@ -40,35 +46,35 @@ Test('positions handler', (handlerTest) => {
     prepareTest.test('return expected positions if executed transfers exist', (assert) => {
       let transfers = [
         {
-          debitAccount: 'account1',
+          debitAccountName: 'account1',
           debitAmount: '3',
-          creditAccount: 'account2',
+          creditAccountName: 'account2',
           creditAmount: '3'
         },
         {
-          debitAccount: 'account1',
+          debitAccountName: 'account1',
           debitAmount: '2',
-          creditAccount: 'account3',
+          creditAccountName: 'account3',
           creditAmount: '2'
         }
       ]
-      sandbox.stub(TransfersReadModel, 'getExecuted').returns(P.resolve(transfers))
+      sandbox.stub(TransferService, 'getExecuted').returns(P.resolve(transfers))
 
       let expectedResponse = { positions: [
         {
-          account: 'account1',
+          account: `${hostname}/accounts/account1`,
           payments: '5',
           receipts: '0',
           net: '-5'
         },
         {
-          account: 'account2',
+          account: `${hostname}/accounts/account2`,
           payments: '0',
           receipts: '3',
           net: '3'
         },
         {
-          account: 'account3',
+          account: `${hostname}/accounts/account3`,
           payments: '0',
           receipts: '2',
           net: '2'

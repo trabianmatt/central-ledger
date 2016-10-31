@@ -72,6 +72,7 @@
     "sinon": "1.17.5",
     "standard": "7.1.2",
     "supertest": "2.0.0",
+    "supertest-as-promised": "^4.0.1",
     "tap-xunit": "1.4.0",
     "tape": "4.6.0",
     "tapes": "4.1.0"

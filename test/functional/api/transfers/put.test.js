@@ -16,8 +16,9 @@ Test('PUT /transfers', putTest => {
       .then(() => Base.createAccount(account2Name))
       .then(() => {
         Base.prepareTransfer(transferId, transfer)
-          .expect(201, function (err, res) {
-            if (err) return test.end(err)
+          .expect(201)
+          .expect('Content-Type', /json/)
+          .then(res => {
             test.equal(res.body.id, transfer.id)
             test.equal(res.body.ledger, transfer.ledger)
             test.equal(res.body.debits[0].account, transfer.debits[0].account)
@@ -29,7 +30,6 @@ Test('PUT /transfers', putTest => {
             test.equal(res.body.state, TransferState.PREPARED)
             test.end()
           })
-          .expect('Content-Type', /json/)
       })
   })
 
@@ -42,10 +42,12 @@ Test('PUT /transfers', putTest => {
     Base.createAccount(account1Name)
       .then(() => Base.createAccount(account2Name))
       .then(() => Base.prepareTransfer(transferId, transfer))
+      .delay(100)
       .then(() => {
         Base.prepareTransfer(transferId, transfer)
-          .expect(200, function (err, res) {
-            if (err) return test.end(err)
+          .expect(200)
+          .expect('Content-Type', /json/)
+          .then(res => {
             test.equal(res.body.id, transfer.id)
             test.equal(res.body.ledger, transfer.ledger)
             test.equal(res.body.debits[0].account, transfer.debits[0].account)
@@ -57,7 +59,6 @@ Test('PUT /transfers', putTest => {
             test.equal(res.body.state, TransferState.PREPARED)
             test.end()
           })
-          .expect('Content-Type', /json/)
       })
   })
 
@@ -70,17 +71,18 @@ Test('PUT /transfers', putTest => {
     Base.createAccount(account1Name)
       .then(() => Base.createAccount(account2Name))
       .then(() => Base.prepareTransfer(transferId, transfer))
+      .delay(100)
       .then(() => {
         transfer.credits.push(Fixtures.buildDebitOrCredit(account1Name, '50'))
 
         Base.prepareTransfer(transferId, transfer)
-          .expect(422, (err, res) => {
-            if (err) return test.end(err)
+          .expect(422)
+          .expect('Content-Type', /json/)
+          .then(res => {
             test.equal(res.body.id, 'UnprocessableEntityError')
             test.equal(res.body.message, 'The specified entity already exists and may not be modified.')
             test.end()
           })
-          .expect('Content-Type', /json/)
       })
   })
 
@@ -93,16 +95,18 @@ Test('PUT /transfers', putTest => {
     Base.createAccount(account1Name)
       .then(() => Base.createAccount(account2Name))
       .then(() => Base.prepareTransfer(transferId, transfer))
+      .delay(100)
       .then(() => Base.fulfillTransfer(transferId, 'cf:0:_v8'))
+      .delay(100)
       .then(() => {
         Base.prepareTransfer(transferId, transfer)
-        .expect(422, (err, res) => {
-          if (err) return test.end(err)
-          test.equal(res.body.id, 'UnprocessableEntityError')
-          test.equal(res.body.message, 'The specified entity already exists and may not be modified.')
-          test.end()
-        })
-        .expect('Content-Type', /json/)
+          .expect(422)
+          .expect('Content-Type', /json/)
+          .then(res => {
+            test.equal(res.body.id, 'UnprocessableEntityError')
+            test.equal(res.body.message, 'The specified entity already exists and may not be modified.')
+            test.end()
+          })
       })
   })
 
