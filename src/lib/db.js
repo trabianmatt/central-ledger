@@ -1,5 +1,5 @@
 const Massive = require('massive')
-const Config = require('../lib/config')
+const Config = require('./config')
 const P = require('bluebird')
 
 let connection

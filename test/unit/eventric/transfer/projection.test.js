@@ -1,10 +1,12 @@
 'use strict'
 
+const src = '../../../../src'
 const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const P = require('bluebird')
-const Projection = require('../../../../src/eventric/transfer/projection')
-const TransfersReadModel = require('../../../../src/models/transfers-read-model')
+const Logger = require(`${src}/lib/logger`)
+const Projection = require(`${src}/eventric/transfer/projection`)
+const TransfersReadModel = require(`${src}/models/transfers-read-model`)
 
 Test('Projection', projectionTest => {
   let sandbox
@@ -15,8 +17,8 @@ Test('Projection', projectionTest => {
     sandbox.stub(TransfersReadModel, 'saveTransferPrepared')
     sandbox.stub(TransfersReadModel, 'saveTransferExecuted')
     sandbox.stub(TransfersReadModel, 'saveTransferRejected')
-    sandbox.stub(console, 'error')
-    sandbox.stub(console, 'info')
+    sandbox.stub(Logger, 'error')
+    sandbox.stub(Logger, 'info')
     t.end()
   })
 
@@ -47,7 +49,7 @@ Test('Projection', projectionTest => {
       Projection.initialize({}, done)
       .then(result => {
         t.notOk(done.called)
-        t.ok(console.error.calledWith('Error truncating read model', error))
+        t.ok(Logger.error.calledWith('Error truncating read model', error))
         t.end()
       })
     })
@@ -65,7 +67,7 @@ Test('Projection', projectionTest => {
       Projection.handleTransferPrepared(event)
       .then(result => {
         t.ok(TransfersReadModel.saveTransferPrepared.calledOnce)
-        t.ok(console.info.calledWith('Saved TransferPrepared event for transfer ' + transfer.transferUuid))
+        t.ok(Logger.info.calledWith('Saved TransferPrepared event for transfer ' + transfer.transferUuid))
         t.end()
       })
     })
@@ -77,7 +79,7 @@ Test('Projection', projectionTest => {
 
       Projection.handleTransferPrepared(event)
       .then(() => {
-        t.ok(console.error.calledWith('Error saving TransferPrepared event', error))
+        t.ok(Logger.error.calledWith('Error saving TransferPrepared event', error))
         t.end()
       })
     })
@@ -95,7 +97,7 @@ Test('Projection', projectionTest => {
       Projection.handleTransferExecuted(event)
       .then(result => {
         t.ok(TransfersReadModel.saveTransferExecuted.calledOnce)
-        t.ok(console.info.calledWith('Saved TransferExecuted event for transfer ' + transfer.transferUuid))
+        t.ok(Logger.info.calledWith('Saved TransferExecuted event for transfer ' + transfer.transferUuid))
         t.end()
       })
     })
@@ -107,7 +109,7 @@ Test('Projection', projectionTest => {
 
       Projection.handleTransferExecuted(event)
       .then(() => {
-        t.ok(console.error.calledWith('Error saving TransferExecuted event', error))
+        t.ok(Logger.error.calledWith('Error saving TransferExecuted event', error))
         t.end()
       })
     })
@@ -125,7 +127,7 @@ Test('Projection', projectionTest => {
       Projection.handleTransferRejected(event)
       .then(result => {
         t.ok(TransfersReadModel.saveTransferRejected.calledWith(event))
-        t.ok(console.info.calledWith('Saved TransferRejected event for transfer ' + transfer.transferUuid))
+        t.ok(Logger.info.calledWith('Saved TransferRejected event for transfer ' + transfer.transferUuid))
         t.end()
       })
     })
@@ -137,7 +139,7 @@ Test('Projection', projectionTest => {
 
       Projection.handleTransferRejected(event)
       .then(() => {
-        t.ok(console.error.calledWith('Error saving TransferRejected event', error))
+        t.ok(Logger.error.calledWith('Error saving TransferRejected event', error))
         t.end()
       })
     })

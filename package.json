@@ -61,6 +61,7 @@
     "urlsafe-base64": "1.0.0",
     "uuid4": "1.0.0",
     "vision": "4.1.0",
+    "winston": "^2.2.0",
     "ws": "1.1.1"
   },
   "optionalDependencies": {},

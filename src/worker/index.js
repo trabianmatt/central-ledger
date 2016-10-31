@@ -2,15 +2,16 @@
 
 const Service = require('../services/transfer')
 const Config = require('../lib/config')
+const Logger = require('../lib/logger')
 
 let rejectExpired = () => {
   return Service.rejectExpired()
   .then(x => {
-    console.info(`Rejected transfers: ${x}`)
+    Logger.info(`Rejected transfers: ${x}`)
     return x
   })
   .catch(e => {
-    console.error('Error rejecting transfers', e)
+    Logger.error('Error rejecting transfers', e)
   })
 }
 

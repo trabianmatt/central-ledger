@@ -1,11 +1,13 @@
 'use strict'
 
+const src = '../../../src'
 const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const P = require('bluebird')
-const Config = require('../../../src/lib/config')
-const Service = require('../../../src/services/transfer')
-const Worker = require('../../../src/worker')
+const Config = require(`${src}/lib/config`)
+const Logger = require(`${src}/lib/logger`)
+const Service = require(`${src}/services/transfer`)
+const Worker = require(`${src}/worker`)
 
 Test('Worker test', workerTest => {
   let sandbox
@@ -13,8 +15,8 @@ Test('Worker test', workerTest => {
   workerTest.beforeEach(t => {
     sandbox = Sinon.sandbox.create()
     sandbox.stub(Service, 'rejectExpired')
-    sandbox.stub(console, 'error')
-    sandbox.stub(console, 'info')
+    sandbox.stub(Logger, 'error')
+    sandbox.stub(Logger, 'info')
     t.end()
   })
 
@@ -91,8 +93,8 @@ Test('Worker test', workerTest => {
 
       Worker.rejectExpired().then(result => {
         test.equal(result, expiredTransfers)
-        test.ok(console.info.calledWith(`Rejected transfers: ${result}`))
-        test.ok(console.error.notCalled)
+        test.ok(Logger.info.calledWith(`Rejected transfers: ${result}`))
+        test.ok(Logger.error.notCalled)
         test.end()
       })
     })
@@ -103,8 +105,8 @@ Test('Worker test', workerTest => {
 
       Worker.rejectExpired().then(result => {
         test.notOk(result)
-        test.ok(console.error.calledWith('Error rejecting transfers', error))
-        test.ok(console.info.notCalled)
+        test.ok(Logger.error.calledWith('Error rejecting transfers', error))
+        test.ok(Logger.info.notCalled)
         test.end()
       })
     })
