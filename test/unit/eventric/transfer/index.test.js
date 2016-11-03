@@ -6,7 +6,8 @@ const Transfer = require('../../../../src/eventric/transfer')
 const TransferEvents = require('../../../../src/eventric/transfer/events')
 const Aggregate = require('../../../../src/eventric/transfer/transfer')
 const Commands = require('../../../../src/eventric/transfer/commands')
-const Projection = require('../../../../src/eventric/transfer/projection')
+const TransfersProjection = require('../../../../src/eventric/transfer/transfers-projection')
+const SettleableTransfersProjection = require('../../../../src/eventric/transfer/settleable-transfers-projection')
 
 Test('Index should', initializeTest => {
   initializeTest.test('setupContext should', setupTest => {
@@ -21,7 +22,8 @@ Test('Index should', initializeTest => {
       t.ok(context.defineDomainEvents.calledWith(TransferEvents))
       t.ok(context.addAggregate.calledWith('Transfer', Aggregate))
       t.ok(context.addCommandHandlers.calledWith(Commands))
-      t.ok(context.addProjection.calledWith(Projection))
+      t.ok(context.addProjection.calledWith(TransfersProjection))
+      t.ok(context.addProjection.calledWith(SettleableTransfersProjection))
 
       t.end()
     })

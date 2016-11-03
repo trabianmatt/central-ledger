@@ -6,34 +6,33 @@ const Sinon = require('sinon')
 const P = require('bluebird')
 const Logger = require(`${src}/lib/logger`)
 const TransferService = require(`${src}/services/transfer`)
-const Projection = require(`${src}/eventric/transfer/projection`)
+const TransfersProjection = require(`${src}/eventric/transfer/transfers-projection`)
 
-Test('Projection', projectionTest => {
+Test('Transfers-Projection', transfersProjectionTest => {
   let sandbox
 
-  projectionTest.beforeEach(t => {
+  transfersProjectionTest.beforeEach(t => {
     sandbox = Sinon.sandbox.create()
     sandbox.stub(TransferService, 'truncateReadModel')
     sandbox.stub(TransferService, 'saveTransferPrepared')
     sandbox.stub(TransferService, 'saveTransferExecuted')
     sandbox.stub(TransferService, 'saveTransferRejected')
     sandbox.stub(Logger, 'error')
-    sandbox.stub(Logger, 'info')
     t.end()
   })
 
-  projectionTest.afterEach(t => {
+  transfersProjectionTest.afterEach(t => {
     sandbox.restore()
     t.end()
   })
 
-  projectionTest.test('Initialize should', initTest => {
+  transfersProjectionTest.test('Initialize should', initTest => {
     initTest.test('truncate read model and call done', t => {
       TransferService.truncateReadModel.returns(P.resolve())
 
       let done = sandbox.stub()
 
-      Projection.initialize({}, done)
+      TransfersProjection.initialize({}, done)
       .then(result => {
         t.ok(done.calledOnce)
         t.end()
@@ -46,7 +45,7 @@ Test('Projection', projectionTest => {
 
       let done = sandbox.stub()
 
-      Projection.initialize({}, done)
+      TransfersProjection.initialize({}, done)
       .then(result => {
         t.notOk(done.called)
         t.ok(Logger.error.calledWith('Error truncating read model', error))
@@ -57,17 +56,16 @@ Test('Projection', projectionTest => {
     initTest.end()
   })
 
-  projectionTest.test('handleTransferPrepared should', preparedTest => {
-    preparedTest.test('saveTransferPrepared and log to info', t => {
+  transfersProjectionTest.test('handleTransferPrepared should', preparedTest => {
+    preparedTest.test('saveTransferPrepared', t => {
       let event = {}
       let transfer = { transferUuid: 'uuid' }
 
       TransferService.saveTransferPrepared.withArgs(event).returns(P.resolve(transfer))
 
-      Projection.handleTransferPrepared(event)
+      TransfersProjection.handleTransferPrepared(event)
       .then(result => {
         t.ok(TransferService.saveTransferPrepared.calledOnce)
-        t.ok(Logger.info.calledWith('Saved TransferPrepared event for transfer ' + transfer.transferUuid))
         t.end()
       })
     })
@@ -77,9 +75,9 @@ Test('Projection', projectionTest => {
       let event = {}
       TransferService.saveTransferPrepared.withArgs(event).returns(P.reject(error))
 
-      Projection.handleTransferPrepared(event)
+      TransfersProjection.handleTransferPrepared(event)
       .then(() => {
-        t.ok(Logger.error.calledWith('Error saving TransferPrepared event', error))
+        t.ok(Logger.error.calledWith('Error handling TransferPrepared event', error))
         t.end()
       })
     })
@@ -87,17 +85,16 @@ Test('Projection', projectionTest => {
     preparedTest.end()
   })
 
-  projectionTest.test('handleTransferExecuted should', executedTest => {
-    executedTest.test('saveTransferExecuted and log to info', t => {
-      let event = {}
+  transfersProjectionTest.test('handleTransferExecuted should', executedTest => {
+    executedTest.test('saveTransferExecuted', t => {
+      let event = { aggregate: { id: 'uuid' } }
       let transfer = { transferUuid: 'uuid' }
 
       TransferService.saveTransferExecuted.withArgs(event).returns(P.resolve(transfer))
 
-      Projection.handleTransferExecuted(event)
+      TransfersProjection.handleTransferExecuted(event)
       .then(result => {
         t.ok(TransferService.saveTransferExecuted.calledOnce)
-        t.ok(Logger.info.calledWith('Saved TransferExecuted event for transfer ' + transfer.transferUuid))
         t.end()
       })
     })
@@ -107,9 +104,9 @@ Test('Projection', projectionTest => {
       let event = {}
       TransferService.saveTransferExecuted.withArgs(event).returns(P.reject(error))
 
-      Projection.handleTransferExecuted(event)
+      TransfersProjection.handleTransferExecuted(event)
       .then(() => {
-        t.ok(Logger.error.calledWith('Error saving TransferExecuted event', error))
+        t.ok(Logger.error.calledWith('Error handling TransferExecuted event', error))
         t.end()
       })
     })
@@ -117,17 +114,16 @@ Test('Projection', projectionTest => {
     executedTest.end()
   })
 
-  projectionTest.test('handleTransferRejected should', rejectedTest => {
-    rejectedTest.test('saveTransferRejected and log to info', t => {
+  transfersProjectionTest.test('handleTransferRejected should', rejectedTest => {
+    rejectedTest.test('saveTransferRejected', t => {
       let event = {}
       let transfer = { transferUuid: 'uuid' }
 
       TransferService.saveTransferRejected.withArgs(event).returns(P.resolve(transfer))
 
-      Projection.handleTransferRejected(event)
+      TransfersProjection.handleTransferRejected(event)
       .then(result => {
         t.ok(TransferService.saveTransferRejected.calledWith(event))
-        t.ok(Logger.info.calledWith('Saved TransferRejected event for transfer ' + transfer.transferUuid))
         t.end()
       })
     })
@@ -137,9 +133,9 @@ Test('Projection', projectionTest => {
       let event = {}
       TransferService.saveTransferRejected.withArgs(event).returns(P.reject(error))
 
-      Projection.handleTransferRejected(event)
+      TransfersProjection.handleTransferRejected(event)
       .then(() => {
-        t.ok(Logger.error.calledWith('Error saving TransferRejected event', error))
+        t.ok(Logger.error.calledWith('Error handling TransferRejected event', error))
         t.end()
       })
     })
@@ -147,5 +143,5 @@ Test('Projection', projectionTest => {
     rejectedTest.end()
   })
 
-  projectionTest.end()
+  transfersProjectionTest.end()
 })

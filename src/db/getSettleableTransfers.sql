@@ -1,0 +1,1 @@
+SELECT DISTINCT ET."transferId" AS "transferId" FROM ("executedTransfers" AS ET LEFT OUTER JOIN "settledTransfers" AS ST ON ET."transferId"=ST."transferId") WHERE ST."transferId" IS NULL;

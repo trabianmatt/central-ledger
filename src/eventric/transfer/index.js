@@ -3,7 +3,8 @@
 const Events = require('./events')
 const Aggregate = require('./transfer')
 const Commands = require('./commands')
-const Projection = require('./projection')
+const TransfersProjection = require('./transfers-projection')
+const SettleableTransfersProjection = require('./settleable-transfers-projection')
 
 let setupTransferId = context => {
   // Monkeypatch a private function exposed on the Transfer aggregate respository. This is a temporary
@@ -31,7 +32,8 @@ exports.setupContext = (context) => {
   context.defineDomainEvents(Events)
   context.addAggregate('Transfer', Aggregate)
   context.addCommandHandlers(Commands)
-  context.addProjection(Projection)
+  context.addProjection(TransfersProjection)
+  context.addProjection(SettleableTransfersProjection)
 }
 
 exports.onContextInitialized = (context) => {

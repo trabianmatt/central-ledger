@@ -14,31 +14,22 @@ module.exports = {
 
   handleTransferPrepared (event) {
     return TransferService.saveTransferPrepared(event)
-      .then(transfer => {
-        Logger.info('Saved TransferPrepared event for transfer ' + transfer.transferUuid)
-      })
       .catch(err => {
-        Logger.error('Error saving TransferPrepared event', err)
+        Logger.error('Error handling TransferPrepared event', err)
       })
   },
 
   handleTransferExecuted (event) {
     return TransferService.saveTransferExecuted(event)
-      .then(transfer => {
-        Logger.info('Saved TransferExecuted event for transfer ' + transfer.transferUuid)
-      })
       .catch(err => {
-        Logger.error('Error saving TransferExecuted event', err)
+        Logger.error('Error handling TransferExecuted event', err)
       })
   },
 
   handleTransferRejected (event) {
     return TransferService.saveTransferRejected(event)
-      .then(transfer => {
-        Logger.info('Saved TransferRejected event for transfer ' + transfer.transferUuid)
-      })
       .catch(err => {
-        Logger.error('Error saving TransferRejected event', err)
+        Logger.error('Error handling TransferRejected event', err)
       })
   }
 }
