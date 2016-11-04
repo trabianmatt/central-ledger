@@ -1,7 +1,7 @@
 'use strict'
 const Decimal = require('decimal.js')
 
-const TransferService = require('../../services/transfer')
+const SettleableTransfersReadmodel = require('../../models/settleable-transfers-read-model')
 const Handle = require('../../lib/handler')
 const UrlParser = require('../../lib/urlparser')
 const PositionCalculator = require('./position-calculator')
@@ -65,7 +65,7 @@ function createPositions (executedTransfers) {
 }
 
 exports.perform = (request, reply) => {
-  TransferService.getExecuted()
+  SettleableTransfersReadmodel.getSettleableTransfers()
     .then(createPositions)
     .then(Handle.getResponse(reply, buildResponse))
 }

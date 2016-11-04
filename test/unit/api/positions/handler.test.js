@@ -5,7 +5,7 @@ const Sinon = require('sinon')
 const Test = require('tapes')(require('tape'))
 const P = require('bluebird')
 const Config = require(`${src}/lib/config`)
-const TransferService = require(`${src}/services/transfer`)
+const SettleableTransfersReadmodel = require(`${src}/models/settleable-transfers-read-model`)
 const Handler = require(`${src}/api/positions/handler`)
 
 Test('positions handler', (handlerTest) => {
@@ -26,9 +26,9 @@ Test('positions handler', (handlerTest) => {
     t.end()
   })
 
-  handlerTest.test('prepare should', (prepareTest) => {
-    prepareTest.test('return no positions if no executed transfers exist', (assert) => {
-      sandbox.stub(TransferService, 'getExecuted').returns(P.resolve([]))
+  handlerTest.test('perform should', (performTest) => {
+    performTest.test('return no positions if there are no settleable transfers', (assert) => {
+      sandbox.stub(SettleableTransfersReadmodel, 'getSettleableTransfers').returns(P.resolve([]))
 
       let expectedResponse = { positions: [] }
       let reply = function (response) {
@@ -43,7 +43,7 @@ Test('positions handler', (handlerTest) => {
       Handler.perform('', reply)
     })
 
-    prepareTest.test('return expected positions if executed transfers exist', (assert) => {
+    performTest.test('return expected positions if settleable transfers exist', (assert) => {
       let transfers = [
         {
           debitAccountName: 'account1',
@@ -58,7 +58,7 @@ Test('positions handler', (handlerTest) => {
           creditAmount: '2'
         }
       ]
-      sandbox.stub(TransferService, 'getExecuted').returns(P.resolve(transfers))
+      sandbox.stub(SettleableTransfersReadmodel, 'getSettleableTransfers').returns(P.resolve(transfers))
 
       let expectedResponse = { positions: [
         {
@@ -91,7 +91,7 @@ Test('positions handler', (handlerTest) => {
       }
       Handler.perform('', reply)
     })
-    prepareTest.end()
+    performTest.end()
   })
 
   handlerTest.end()
