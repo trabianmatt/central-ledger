@@ -3,6 +3,7 @@
   "version": "1.32.0",
   "description": "Central ledger hosted by a scheme to record and settle transfers.",
   "license": "SEE LICENSE IN LICENSE",
+  "private": true,
   "repository": {
     "type": "git",
     "url": "git@github.com:LevelOneProject/central-ledger.git"
@@ -61,7 +62,7 @@
     "urlsafe-base64": "1.0.0",
     "uuid4": "1.0.0",
     "vision": "4.1.0",
-    "winston": "^2.2.0",
+    "winston": "2.3.0",
     "ws": "1.1.1"
   },
   "optionalDependencies": {},
