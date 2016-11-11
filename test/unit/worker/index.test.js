@@ -34,7 +34,7 @@ Test('Worker test', workerTest => {
 
     setupTest.test('should not set timeout when EXPIRES_TIMEOUT config value undefined', test => {
       let next = () => {
-        test.equal(global.setInterval.callCount, 0)
+        test.notOk(global.setInterval.called)
         test.end()
       }
       Worker.register({}, {}, next)
@@ -73,11 +73,11 @@ Test('Worker test', workerTest => {
       Worker.rejectExpired.returns(P.resolve([]))
       Config.EXPIRES_TIMEOUT = expiresTimeout
       let next = () => {
-        test.equal(Worker.rejectExpired.callCount, 0)
+        test.notOk(Worker.rejectExpired.called)
         clock.tick(expiresTimeout)
-        test.equal(Worker.rejectExpired.callCount, 1)
+        test.ok(Worker.rejectExpired.calledOnce)
         clock.tick(expiresTimeout)
-        test.equal(Worker.rejectExpired.callCount, 2)
+        test.ok(Worker.rejectExpired.calledTwice)
         test.end()
       }
       Worker.register({}, {}, next)

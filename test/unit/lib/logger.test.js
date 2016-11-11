@@ -7,10 +7,16 @@ const Logger = require('../../../src/lib/logger')
 
 Test('logger', function (loggerTest) {
   let sandbox
+  let addMethod
+  let logMethod
 
   loggerTest.beforeEach(t => {
     sandbox = Sinon.sandbox.create()
     sandbox.stub(Winston, 'Logger')
+    addMethod = Sinon.stub()
+    logMethod = Sinon.stub()
+    addMethod.returns({ log: logMethod })
+    Winston.Logger.returns({ add: addMethod })
     t.end()
   })
 
@@ -19,37 +25,45 @@ Test('logger', function (loggerTest) {
     t.end()
   })
 
-  loggerTest.test('logging should', function (loggingTest) {
-    loggingTest.test('configure Winston and log properly', function (assert) {
-      // Tests are all in one method due to the way Winston is configured in Logger.
-      let addMethod = Sinon.stub()
-      let logMethod = Sinon.stub()
+  loggerTest.test('configure Winston', function (assert) {
+    let logger = new Logger.Logger()
+    assert.ok(logger)
+    assert.ok(Winston.Logger.calledWithNew)
+    assert.ok(addMethod.calledWith(Winston.transports.Console, Sinon.match({ timestamp: true, colorize: true })))
+    assert.end()
+  })
 
-      addMethod.returns({ log: logMethod })
-      Winston.Logger.returns({ add: addMethod })
+  loggerTest.test('log debug level', function (assert) {
+    let logger = new Logger.Logger()
+    logger.debug('test %s', 'me')
+    assert.ok(logMethod.calledWith('debug', 'test %s', 'me'))
+    assert.end()
+  })
 
-      Logger.debug('test %s', 'me')
-      assert.ok(Winston.Logger.calledWithNew)
-      assert.ok(addMethod.calledWith(Winston.transports.Console, Sinon.match({ timestamp: true, colorize: true })))
-      assert.ok(logMethod.calledWith('debug', 'test %s', 'me'))
+  loggerTest.test('log info level', function (assert) {
+    let logger = new Logger.Logger()
+    let infoMessage = 'things are happening'
+    logger.info(infoMessage)
+    assert.ok(logMethod.calledWith('info', infoMessage))
+    assert.end()
+  })
 
-      let infoMessage = 'things are happening'
-      Logger.info(infoMessage)
-      assert.ok(logMethod.calledWith('info', infoMessage))
+  loggerTest.test('log warn level', function (assert) {
+    let logger = new Logger.Logger()
+    let warnMessage = 'something bad is happening'
+    logger.warn(warnMessage)
+    assert.ok(logMethod.calledWith('warn', warnMessage))
+    assert.end()
+  })
 
-      let warnMessage = 'something bad is happening'
-      Logger.warn(warnMessage)
-      assert.ok(logMethod.calledWith('warn', warnMessage))
+  loggerTest.test('log error level', function (assert) {
+    let logger = new Logger.Logger()
+    let errorMessage = 'there was an exception'
+    let ex = new Error()
+    logger.error(errorMessage, ex)
+    assert.ok(logMethod.calledWith('error', errorMessage, ex))
 
-      let errorMessage = 'there was an exception'
-      let ex = new Error()
-      Logger.error(errorMessage, ex)
-      assert.ok(logMethod.calledWith('error', errorMessage, ex))
-
-      assert.end()
-    })
-
-    loggingTest.end()
+    assert.end()
   })
 
   loggerTest.end()

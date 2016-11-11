@@ -1,9 +1,10 @@
 'use strict'
 
+const src = '../../../src'
 const Test = require('tape')
-const Model = require('../../../src/models/executed-transfers')
 const Fixtures = require('../../fixtures')
-const Db = require('../../../src/db')
+const Db = require(`${src}/db`)
+const Model = require(`${src}/models/executed-transfers`)
 
 Test('executed-transfers model', function (modelTest) {
   modelTest.test('create should', function (createTest) {

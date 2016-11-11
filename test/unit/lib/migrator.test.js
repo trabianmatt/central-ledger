@@ -37,7 +37,7 @@ Test('migrator', function (migratorTest) {
             'sql-file': true,
             local: Config.DATABASE_URI
           })
-          assert.equal(upStub.callCount, 1)
+          assert.ok(upStub.calledOnce)
           assert.end()
         })
     })

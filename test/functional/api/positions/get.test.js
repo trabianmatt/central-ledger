@@ -10,6 +10,7 @@ Test('GET /positions', getTest => {
     let account1Name = Fixtures.generateAccountName()
     let account2Name = Fixtures.generateAccountName()
     let account3Name = Fixtures.generateAccountName()
+    let account4Name = Fixtures.generateAccountName()
 
     let transfer1Id = Fixtures.generateTransferId()
     let transfer2Id = Fixtures.generateTransferId()
@@ -18,6 +19,7 @@ Test('GET /positions', getTest => {
     Base.createAccount(account1Name)
     .then(() => Base.createAccount(account2Name))
     .then(() => Base.createAccount(account3Name))
+    .then(() => Base.createAccount(account4Name))
     .then(() => Base.prepareTransfer(transfer1Id, Fixtures.buildTransfer(transfer1Id, Fixtures.buildDebitOrCredit(account1Name, '25'), Fixtures.buildDebitOrCredit(account2Name, '25'))))
     .delay(100)
     .then(() => Base.fulfillTransfer(transfer1Id, fulfillment))
@@ -36,6 +38,7 @@ Test('GET /positions', getTest => {
           test.deepEqual(Fixtures.findAccountPositions(res.body.positions, account1Name), Fixtures.buildAccountPosition(account1Name, 35, 0))
           test.deepEqual(Fixtures.findAccountPositions(res.body.positions, account2Name), Fixtures.buildAccountPosition(account2Name, 0, 40))
           test.deepEqual(Fixtures.findAccountPositions(res.body.positions, account3Name), Fixtures.buildAccountPosition(account3Name, 15, 10))
+          test.deepEqual(Fixtures.findAccountPositions(res.body.positions, account4Name), Fixtures.buildAccountPosition(account4Name, 0, 0))
           test.end()
         })
     })

@@ -36,7 +36,7 @@ Test('db', dbTest => {
       Db.connect()
         .then(db => {
           t.equal(db, fakeDb)
-          t.equal(connectStub.callCount, 1)
+          t.ok(connectStub.calledOnce)
           t.equal(connectStub.firstCall.args[0].connectionString, databaseUri)
           t.equal(connectStub.firstCall.args[0].scripts, scriptsDir)
           t.end()

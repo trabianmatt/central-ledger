@@ -2,8 +2,16 @@
 
 const Db = require('../db')
 
-exports.getByName = name => {
+exports.getById = (id) => {
+  return Db.connect().then(db => db.accounts.findOneAsync({ accountId: id }))
+}
+
+exports.getByName = (name) => {
   return Db.connect().then(db => db.accounts.findOneAsync({ name: name }))
+}
+
+exports.getAll = () => {
+  return Db.connect().then(db => db.accounts.findAsync({}, { order: 'name' }))
 }
 
 exports.create = (account) => {

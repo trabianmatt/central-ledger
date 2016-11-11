@@ -41,12 +41,12 @@ Test('server', function (serverTest) {
 
       require('../../src/server')
         .then(() => {
-          assert.equal(Migrator.migrate.callCount, 1)
-          assert.equal(Db.connect.callCount, 1)
-          assert.equal(Eventric.getContext.callCount, 1)
-          assert.equal(Glue.compose.callCount, 1)
-          assert.equal(startStub.callCount, 1)
-          assert.equal(Logger.info.callCount, 1)
+          assert.ok(Migrator.migrate.calledOnce)
+          assert.ok(Db.connect.calledOnce)
+          assert.ok(Eventric.getContext.calledOnce)
+          assert.ok(Glue.compose.calledOnce)
+          assert.ok(startStub.calledOnce)
+          assert.ok(Logger.info.calledOnce)
           assert.ok(Logger.info.calledWith('Server running at: %s', serverUri))
           assert.end()
         })
