@@ -4,8 +4,8 @@ const src = '../../../src'
 const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const P = require('bluebird')
+const Logger = require('@leveloneproject/central-services-shared').Logger
 const Config = require(`${src}/lib/config`)
-const Logger = require(`${src}/lib/logger`)
 const Service = require(`${src}/services/transfer`)
 const Worker = require(`${src}/worker`)
 

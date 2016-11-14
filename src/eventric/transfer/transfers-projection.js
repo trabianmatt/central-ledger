@@ -1,6 +1,6 @@
 'use strict'
 
-const Logger = require('../../lib/logger')
+const Logger = require('@leveloneproject/central-services-shared').Logger
 const TransferService = require('../../services/transfer')
 
 module.exports = {

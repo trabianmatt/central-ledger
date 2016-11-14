@@ -4,7 +4,7 @@ const src = '../../../../src'
 const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const P = require('bluebird')
-const Logger = require(`${src}/lib/logger`)
+const Logger = require('@leveloneproject/central-services-shared').Logger
 const TransferService = require(`${src}/services/transfer`)
 const TransfersProjection = require(`${src}/eventric/transfer/transfers-projection`)
 

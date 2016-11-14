@@ -1,9 +1,13 @@
 'use strict'
 
-function ValidationError (message) {
-  this.message = message
+const Shared = require('@leveloneproject/central-services-shared')
+const BaseError = Shared.BaseError
+const ErrorCategory = Shared.ErrorCategory
+
+class ValidationError extends BaseError {
+  constructor (message) {
+    super(ErrorCategory.UNPROCESSABLE, message)
+  }
 }
-ValidationError.prototype = Object.create(Error.prototype)
-ValidationError.prototype.name = 'ValidationError'
 
 module.exports = ValidationError

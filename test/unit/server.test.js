@@ -3,10 +3,10 @@
 const src = '../../src'
 const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
-const Db = require(`${src}/db`)
 const Glue = require('glue')
+const Logger = require('@leveloneproject/central-services-shared').Logger
 const Eventric = require(`${src}/eventric`)
-const Logger = require(`${src}/lib/logger`)
+const Db = require(`${src}/db`)
 const Migrator = require(`${src}/lib/migrator`)
 
 Test('server', function (serverTest) {

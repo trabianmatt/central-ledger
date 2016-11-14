@@ -1,19 +1,18 @@
 'use strict'
 
 const Model = require('../../models/accounts')
-const Handle = require('../../lib/handler')
 const Config = require('../../lib/config')
 const UrlParser = require('../../lib/urlparser')
 const PositionService = require('../../services/position')
-const NotFoundError = require('../../errors/not-found-error')
+const NotFoundError = require('@leveloneproject/central-services-shared').NotFoundError
 const RecordExistsError = require('../../errors/record-exists-error')
 
-function buildResponse (account, position) {
+function buildResponse (account, { net = '0' } = {}) {
   return {
     id: UrlParser.toAccountUri(account.name),
     name: account.name,
     created: account.createdDate,
-    balance: position.net,
+    balance: net,
     is_disabled: false,
     ledger: Config.HOSTNAME
   }
@@ -35,25 +34,26 @@ function createAccount (payload) {
   }
 }
 
+function getPosition (account) {
+  if (!account) throw new NotFoundError('The requested resource could not be found.')
+  return PositionService.calculateForAccount(account)
+    .then(position => {
+      if (!position) throw new NotFoundError('The requested resource could not be found.')
+      return buildResponse(account, position)
+    })
+}
+
 exports.create = (request, reply) => {
   Model.getByName(request.payload.name)
     .then(handleExistingRecord())
     .then(createAccount(request.payload))
-    .then(Handle.createResponse(reply, account => buildResponse(account, { net: '0' })))
-    .catch(RecordExistsError, Handle.unprocessableEntity(reply, 'The account has already been registered'))
-    .catch(Handle.error(request, reply))
+    .then(account => reply(buildResponse(account)).code(201))
+    .catch(e => reply(e))
 }
 
 exports.getByName = (request, reply) => {
   Model.getByName(request.params.name)
-    .then(account => {
-      if (!account) {
-        throw new NotFoundError()
-      }
-
-      return PositionService.calculateForAccount(account)
-        .then(Handle.getResponse(reply, position => buildResponse(account, position)))
-    })
-    .catch(NotFoundError, Handle.notFound(reply))
-    .catch(Handle.error(request, reply))
+    .then(getPosition)
+    .then(result => reply(result))
+    .catch(e => reply(e))
 }

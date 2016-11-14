@@ -35,7 +35,7 @@ Test('PUT /transfer/:id/fulfillment', putTest => {
     Base.put(`/transfers/${transferId}/fulfillment`, fulfillment, 'text/plain')
       .expect(404)
       .then(res => {
-        test.equal(res.body.id, 'NotFoundError')
+        test.equal(res.body.error_id, 'NotFoundError')
         test.equal(res.body.message, 'The requested resource could not be found.')
         test.pass()
         test.end()
@@ -83,7 +83,7 @@ Test('PUT /transfer/:id/fulfillment', putTest => {
           .expect(422)
           .expect('Content-Type', 'application/json; charset=utf-8')
           .then(res => {
-            test.equal(res.body.id, 'UnprocessableEntityError')
+            test.equal(res.body.error_id, 'UnpreparedTransferError')
             test.equal(res.body.message, 'The provided entity is syntactically correct, but there is a generic semantic problem with it.')
             test.pass()
             test.end()

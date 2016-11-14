@@ -1,9 +1,14 @@
 'use strict'
 
-function AlreadyExistsError () {}
+const Shared = require('@leveloneproject/central-services-shared')
+const BaseError = Shared.BaseError
+const ErrorCategory = Shared.ErrorCategory
 
-AlreadyExistsError.prototype = Object.create(Error.prototype)
-AlreadyExistsError.prototype.name = 'AlreadyExistsError'
-AlreadyExistsError.prototype.message = 'The specified entity already exists and may not be modified.'
+class AlreadyExistsError extends BaseError {
+  constructor () {
+    super(ErrorCategory.UNPROCESSABLE, 'The specified entity already exists and may not be modified.')
+  }
+}
+
 module.exports = AlreadyExistsError
 

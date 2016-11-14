@@ -1,9 +1,13 @@
 'use strict'
 
-function UnsupportedCryptoTypeError (message) {
-  this.message = message
+const Shared = require('@leveloneproject/central-services-shared')
+const BaseError = Shared.BaseError
+const ErrorCategory = Shared.ErrorCategory
+
+class UnsupportedCryptoTypeError extends BaseError {
+  constructor (message) {
+    super(ErrorCategory.UNPROCESSABLE, message)
+  }
 }
-UnsupportedCryptoTypeError.prototype = Object.create(Error.prototype)
-UnsupportedCryptoTypeError.prototype.name = 'UnsupportedCryptoTypeError'
 
 module.exports = UnsupportedCryptoTypeError

@@ -8,7 +8,12 @@ function stripEmpty (list) {
 }
 
 module.exports = {
-  connections: [{ port: Config.PORT }],
+  connections: [{
+    port: Config.PORT,
+    routes: {
+      validate: require('@leveloneproject/central-services-error-handling').validateRoutes()
+    }
+  }],
   registrations: stripEmpty([
     { plugin: 'inert' },
     { plugin: 'vision' },
@@ -24,6 +29,7 @@ module.exports = {
       }
     },
     { plugin: 'blipp' },
+    { plugin: '@leveloneproject/central-services-error-handling' },
     { plugin: './api' },
     { plugin: './webhooks' },
     (Config.EXPIRES_TIMEOUT) ? { plugin: './worker' } : null,

@@ -1,6 +1,5 @@
 const Handler = require('./handler')
 const Joi = require('joi')
-const BaseHandler = require('../../lib/handler')
 
 const tags = ['api', 'accounts']
 const nameValidator = Joi.string().token().max(256).required().description('Name of the account')
@@ -17,8 +16,7 @@ module.exports = [
       validate: {
         payload: {
           name: nameValidator
-        },
-        failAction: BaseHandler.failAction
+        }
       }
     }
   },
@@ -33,8 +31,7 @@ module.exports = [
       validate: {
         params: {
           name: nameValidator
-        },
-        failAction: BaseHandler.failAction
+        }
       }
     }
   }

@@ -1,10 +1,10 @@
 'use strict'
 
 const Glue = require('glue')
+const Logger = require('@leveloneproject/central-services-shared').Logger
 const Manifest = require('./manifest')
 const Db = require('./db')
 const Eventric = require('./eventric')
-const Logger = require('./lib/logger')
 const Migrator = require('./lib/migrator')
 
 const composeOptions = { relativeTo: __dirname }

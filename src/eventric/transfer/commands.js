@@ -3,7 +3,7 @@
 const P = require('bluebird')
 const Validator = require('./validator')
 const AggregateNotFoundError = require('../../errors/aggregate-not-found-error')
-const NotFoundError = require('../../errors/not-found-error')
+const NotFoundError = require('@leveloneproject/central-services-shared').NotFoundError
 
 module.exports = {
   PrepareTransfer (proposed) {
@@ -37,7 +37,7 @@ module.exports = {
         })
       })
       .catch(AggregateNotFoundError, () => {
-        throw new NotFoundError()
+        throw new NotFoundError('The requested resource could not be found.')
       })
   },
 
@@ -52,7 +52,7 @@ module.exports = {
         })
       })
       .catch(AggregateNotFoundError, () => {
-        throw new NotFoundError()
+        throw new NotFoundError('The requested resource could not be found.')
       })
   }
 }

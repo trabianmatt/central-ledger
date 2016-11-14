@@ -40,12 +40,7 @@ Test('Handler Test', handlerTest => {
 
       let reply = response => {
         test.equal(response, transferIds)
-        return {
-          code: statusCode => {
-            test.equal(statusCode, 200)
-            test.end()
-          }
-        }
+        test.end()
       }
 
       Handler.rejectExpired({}, reply)
@@ -55,18 +50,9 @@ Test('Handler Test', handlerTest => {
       let error = new Error()
       Service.rejectExpired.returns(P.reject(error))
 
-      let expectedResponse = {
-        'id': 'InternalServerError',
-        'message': 'The server encountered an unexpected condition which prevented it from fulfilling the request.'
-      }
       let reply = response => {
-        test.deepEqual(response, expectedResponse)
-        return {
-          code: statusCode => {
-            test.equal(statusCode, 500)
-            test.end()
-          }
-        }
+        test.equal(response, error)
+        test.end()
       }
 
       Handler.rejectExpired(createRequest(), reply)

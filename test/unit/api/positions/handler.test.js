@@ -23,24 +23,19 @@ Test('positions handler', (handlerTest) => {
   })
 
   handlerTest.test('perform should', (performTest) => {
-    performTest.test('return no positions if there are no settleable transfers', (assert) => {
+    performTest.test('return no positions if there are no settleable transfers', test => {
       PositionService.calculateForAllAccounts.returns(P.resolve([]))
 
       let expectedResponse = { positions: [] }
       let reply = function (response) {
-        assert.ok(PositionService.calculateForAllAccounts.calledOnce)
-        assert.deepEqual(response, expectedResponse)
-        return {
-          code: function (statusCode) {
-            assert.equal(statusCode, 200)
-            assert.end()
-          }
-        }
+        test.ok(PositionService.calculateForAllAccounts.calledOnce)
+        test.deepEqual(response, expectedResponse)
+        test.end()
       }
       Handler.perform('', reply)
     })
 
-    performTest.test('return expected positions if settleable transfers exist', (assert) => {
+    performTest.test('return expected positions if settleable transfers exist', test => {
       let positions = [
         {
           account: `${hostname}/accounts/account1`,
@@ -67,14 +62,9 @@ Test('positions handler', (handlerTest) => {
       let expectedResponse = { positions: positions }
 
       let reply = function (response) {
-        assert.ok(PositionService.calculateForAllAccounts.calledOnce)
-        assert.deepEqual(response, expectedResponse)
-        return {
-          code: function (statusCode) {
-            assert.equal(statusCode, 200)
-            assert.end()
-          }
-        }
+        test.ok(PositionService.calculateForAllAccounts.calledOnce)
+        test.deepEqual(response, expectedResponse)
+        test.end()
       }
       Handler.perform('', reply)
     })

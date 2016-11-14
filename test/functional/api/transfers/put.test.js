@@ -79,7 +79,7 @@ Test('PUT /transfers', putTest => {
           .expect(422)
           .expect('Content-Type', /json/)
           .then(res => {
-            test.equal(res.body.id, 'UnprocessableEntityError')
+            test.equal(res.body.error_id, 'AlreadyExistsError')
             test.equal(res.body.message, 'The specified entity already exists and may not be modified.')
             test.end()
           })
@@ -103,7 +103,7 @@ Test('PUT /transfers', putTest => {
           .expect(422)
           .expect('Content-Type', /json/)
           .then(res => {
-            test.equal(res.body.id, 'UnprocessableEntityError')
+            test.equal(res.body.error_id, 'AlreadyExistsError')
             test.equal(res.body.message, 'The specified entity already exists and may not be modified.')
             test.end()
           })

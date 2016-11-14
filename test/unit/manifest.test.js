@@ -73,6 +73,11 @@ Test('manifest', function (manifestTest) {
       assert.end()
     })
 
+    registrationsTest.test('register error-handling plugin', function (assert) {
+      assert.ok(findPluginByPath(Manifest.registrations, '@leveloneproject/central-services-error-handling'))
+      assert.end()
+    })
+
     registrationsTest.test('register api plugin', function (assert) {
       assert.ok(findPluginByPath(Manifest.registrations, './api'))
       assert.end()

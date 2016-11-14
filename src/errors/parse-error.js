@@ -1,9 +1,13 @@
 'use strict'
 
-function ParseError (message) {
-  this.message = message
+const Shared = require('@leveloneproject/central-services-shared')
+const BaseError = Shared.BaseError
+const ErrorCategory = Shared.ErrorCategory
+
+class ParseError extends BaseError {
+  constructor (message) {
+    super(ErrorCategory.UNPROCESSABLE, message)
+  }
 }
-ParseError.prototype = Object.create(Error.prototype)
-ParseError.prototype.name = 'ParseError'
 
 module.exports = ParseError

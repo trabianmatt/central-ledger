@@ -10,6 +10,7 @@ const TransferState = require(`${src}/domain/transfer/state`)
 const UnpreparedTransferError = require(`${src}/errors/unprepared-transfer-error`)
 const CryptoFulfillments = require(`${src}/crypto-conditions/fulfillments`)
 const AlreadyExistsError = require(`${src}/errors/already-exists-error`)
+const ExpiredTransferError = require(`${src}/errors/expired-transfer-error`)
 
 Test('validator tests', validatorTest => {
   let sandbox
@@ -112,8 +113,12 @@ Test('validator tests', validatorTest => {
         t.fail('Expected exception')
         t.end()
       })
+      .catch(ExpiredTransferError, e => {
+        t.pass()
+        t.end()
+      })
       .catch(e => {
-        t.equal(e.name, 'ExpiredTransferError')
+        t.fail('Expected ExpiredTransferError')
         t.end()
       })
     })

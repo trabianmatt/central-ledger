@@ -1,15 +1,12 @@
 'use strict'
 
+const NotFoundError = require('@leveloneproject/central-services-shared').NotFoundError
+
 const Model = require('./model')
 const TransfersReadModel = require('../../models/transfers-read-model')
 const Validator = require('./validator')
-const Handle = require('../../lib/handler')
 const UrlParser = require('../../lib/urlparser')
 const TransferState = require('../../domain/transfer/state')
-const ValidationError = require('../../errors/validation-error')
-const NotFoundError = require('../../errors/not-found-error')
-const AlreadyExistsError = require('../../errors/already-exists-error')
-const UnpreparedTransferError = require('../../errors/unprepared-transfer-error')
 
 let buildPrepareTransferResponse = (record) => {
   return {
@@ -24,6 +21,7 @@ let buildPrepareTransferResponse = (record) => {
 }
 
 let buildGetTransferResponse = (record) => {
+  if (!record) throw new NotFoundError('The requested resource could not be found.')
   return {
     id: UrlParser.toTransferUri(record.transferUuid),
     ledger: record.ledger,
@@ -49,16 +47,11 @@ let buildGetTransferResponse = (record) => {
   }
 }
 
-let buildGetTransferFulfillmentResponse = (record) => {
-  return record.fulfillment
-}
-
 exports.prepareTransfer = function (request, reply) {
   return Validator.validate(request.payload, request.params.id)
     .then(Model.prepare)
-    .then(Handle.putResponse(reply, buildPrepareTransferResponse))
-    .catch(ValidationError, AlreadyExistsError, Handle.unprocessableEntity(reply))
-    .catch(Handle.error(request, reply))
+    .then(transfer => reply(buildPrepareTransferResponse(transfer)).code((transfer.existing === true) ? 200 : 201))
+    .catch(e => reply(e))
 }
 
 exports.fulfillTransfer = function (request, reply) {
@@ -68,10 +61,8 @@ exports.fulfillTransfer = function (request, reply) {
   }
 
   return Model.fulfill(fulfillment)
-    .then(Handle.getResponse(reply, x => x, { contentType: 'text/plain' }))
-    .catch(UnpreparedTransferError, Handle.unprocessableEntity(reply))
-    .catch(NotFoundError, Handle.notFound(reply))
-    .catch(Handle.error(request, reply))
+    .then(result => reply(result).type('text/plain'))
+    .catch(e => reply(e))
 }
 
 exports.rejectTransfer = function (request, reply) {
@@ -81,28 +72,25 @@ exports.rejectTransfer = function (request, reply) {
   }
 
   return Model.reject(rejection)
-  .then(Handle.getResponse(reply, x => x, { contentType: 'text/plain' }))
-  .catch(UnpreparedTransferError, Handle.unprocessableEntity(reply))
-  .catch(NotFoundError, Handle.notFound(reply))
-  .catch(Handle.error(request, reply))
+  .then(reason => reply(reason).type('text/plain'))
+  .catch(e => reply(e))
 }
 
 exports.getTransferById = function (request, reply) {
   return TransfersReadModel.getById(request.params.id)
-    .then(Handle.getResponse(reply, buildGetTransferResponse))
-    .catch(NotFoundError, Handle.notFound(reply))
-    .catch(Handle.error(request, reply))
+    .then(buildGetTransferResponse)
+    .then(result => reply(result))
+    .catch(e => reply(e))
 }
 
 exports.getTransferFulfillment = function (request, reply) {
   return TransfersReadModel.getById(request.params.id)
     .then((transfer) => {
-      if (transfer && transfer.state !== TransferState.EXECUTED) {
-        throw new NotFoundError()
+      if (!transfer || transfer.state !== TransferState.EXECUTED) {
+        throw new NotFoundError('The requested resource could not be found.')
       }
-      return transfer
+      return transfer.fulfillment
     })
-    .then(Handle.getResponse(reply, buildGetTransferFulfillmentResponse, { contentType: 'text/plain' }))
-    .catch(NotFoundError, Handle.notFound(reply))
-    .catch(Handle.error(request, reply))
+    .then(result => reply(result).type('text/plain'))
+    .catch(e => reply(e))
 }

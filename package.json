@@ -38,6 +38,8 @@
     "docker:clean": "docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.functional.yml down --rmi local"
   },
   "dependencies": {
+    "@leveloneproject/central-services-error-handling": "0.2.2",
+    "@leveloneproject/central-services-shared": "0.2.0",
     "blipp": "2.3.0",
     "bluebird": "3.4.3",
     "boom": "3.2.2",

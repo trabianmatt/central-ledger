@@ -1,6 +1,6 @@
 'use strict'
 
-const Logger = require('../../lib/logger')
+const Logger = require('@leveloneproject/central-services-shared').Logger
 const ExecutedTransfers = require('../../models/executed-transfers')
 const SettledTransfers = require('../../models/settled-transfers')
 
