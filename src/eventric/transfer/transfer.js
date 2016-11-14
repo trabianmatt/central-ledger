@@ -31,6 +31,10 @@ class Transfer {
     return this.$emitDomainEvent('TransferRejected', payload)
   }
 
+  settle (payload) {
+    return this.$emitDomainEvent('TransferSettled', payload)
+  }
+
   handleTransferPrepared (event) {
     this.id = event.aggregate.id
     this.ledger = event.payload.ledger
@@ -59,6 +63,13 @@ class Transfer {
     this.rejection_reason = rejection_type // eslint-disable-line
     this.timeline = this.timeline || {}
     this.timeline.rejected_at = new Date(event.timestamp).toISOString()
+    return this
+  }
+
+  handleTransferSettled (event) {
+    this.state = TransferState.SETTLED
+    this.settlement_id = event.payload.settlement_id
+
     return this
   }
 }

@@ -95,5 +95,22 @@ Test('Eventric Transfer index test', indexTest => {
     rejectTest.end()
   })
 
+  indexTest.test('settle should', settleTest => {
+    settleTest.test('execute settle command on context', t => {
+      let command = sandbox.stub()
+      let expected = {}
+      command.returns(expected)
+      Eventric.getContext.returns(P.resolve({ command: command }))
+      let payload = {id: Uuid(), settlement_id: Uuid()}
+      Transfer.settle(payload)
+      .then(result => {
+        t.ok(command.calledWith('SettleTransfer', Sinon.match(payload)))
+        t.equal(result, expected)
+        t.end()
+      })
+    })
+    settleTest.end()
+  })
+
   indexTest.end()
 })

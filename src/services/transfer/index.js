@@ -6,6 +6,8 @@ const Moment = require('moment')
 const TransferState = require('../../domain/transfer/state')
 const RejectionType = require('../../domain/transfer/rejection-type')
 const ReadModel = require('../../models/transfers-read-model')
+const SettleableTransfersReadModel = require('../../models/settleable-transfers-read-model')
+const SettlementsModel = require('../../models/settlements')
 const AccountsModel = require('../../models/accounts')
 const Commands = require('../../commands/transfer')
 const UrlParser = require('../../lib/urlparser')
@@ -14,6 +16,21 @@ exports.rejectExpired = () => {
   let rejections = ReadModel.findExpired().then(expired => expired.map(x => Commands.expire(x.transferUuid)))
   return P.all(rejections).then(rejections => {
     return rejections.map(r => r.transfer.id)
+  })
+}
+
+exports.settle = () => {
+  let settlementId = SettlementsModel.generateId()
+  let settledTransfers = SettlementsModel.create(settlementId).then(() => {
+    return SettleableTransfersReadModel.getSettleableTransfers().then(
+      transfers => transfers.map(x => Commands.settle({id: x.transferId, settlement_id: settlementId}))) })
+
+  return P.all(settledTransfers).then(settledTransfers => {
+    if (settledTransfers.length > 0) {
+      return settledTransfers.map(t => t.id)
+    } else {
+      return P.resolve([])
+    }
   })
 }
 

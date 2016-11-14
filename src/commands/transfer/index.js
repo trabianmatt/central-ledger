@@ -20,3 +20,7 @@ exports.expire = (id) => {
   let payload = { id: id, rejection_reason: RejectionType.EXPIRED, rejection_type: RejectionType.EXPIRED }
   return Eventric.getContext().then(ctx => ctx.command('RejectTransfer', payload))
 }
+
+exports.settle = ({id, settlement_id}) => {
+  return Eventric.getContext().then(ctx => ctx.command('SettleTransfer', {id, settlement_id}))
+}

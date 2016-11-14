@@ -6,12 +6,13 @@ const Moment = require('moment')
 const TransferState = require('../../domain/transfer/state')
 const CryptoFulfillments = require('../../crypto-conditions/fulfillments')
 const UnpreparedTransferError = require('../../errors/unprepared-transfer-error')
+const UnexecutedTransferError = require('../../errors/unexecuted-transfer-error')
 const AlreadyExistsError = require('../../errors/already-exists-error')
 const ExpiredTransferError = require('../../errors/expired-transfer-error')
 
 exports.validateFulfillment = ({state, fulfillment, execution_condition, expires_at}, fulfillmentCondition) => {
   return P.resolve().then(() => {
-    if (state === TransferState.EXECUTED && fulfillment === fulfillmentCondition) {
+    if ((state === TransferState.EXECUTED || state === TransferState.SETTLED) && fulfillment === fulfillmentCondition) {
       return {
         previouslyFulfilled: true
       }
@@ -53,5 +54,14 @@ exports.validateReject = ({state, credits = []}, rejectionReason) => {
     }
 
     return { alreadyRejected: false }
+  })
+}
+
+exports.validateSettle = ({id, state}) => {
+  return P.resolve().then(() => {
+    if (state !== TransferState.EXECUTED) {
+      throw new UnexecutedTransferError()
+    }
+    return
   })
 }

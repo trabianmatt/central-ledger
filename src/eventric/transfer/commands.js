@@ -54,5 +54,19 @@ module.exports = {
       .catch(AggregateNotFoundError, () => {
         throw new NotFoundError('The requested resource could not be found.')
       })
+  },
+
+  SettleTransfer ({id, settlement_id}) {
+    return P.resolve(this.$aggregate.load('Transfer', id))
+    .then(transfer => {
+      return Validator.validateSettle(transfer)
+      .then(() => {
+        transfer.settle({settlement_id})
+        return transfer.$save().then(() => transfer)
+      })
+    })
+    .catch(AggregateNotFoundError, () => {
+      throw new NotFoundError()
+    })
   }
 }

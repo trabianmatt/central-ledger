@@ -1,9 +1,14 @@
 'use strict'
 
 const Test = require('tape')
-const Moment = require('moment')
 const Base = require('../../base')
 const Fixtures = require('../../../fixtures')
+
+let pastDate = () => {
+  let d = new Date()
+  d.setTime(d.getTime() - 86400000)
+  return d
+}
 
 Test('PUT /transfer/:id/fulfillment', putTest => {
   putTest.test('should fulfill a transfer', test => {
@@ -71,8 +76,7 @@ Test('PUT /transfer/:id/fulfillment', putTest => {
     let account1Name = Fixtures.generateAccountName()
     let account2Name = Fixtures.generateAccountName()
     let transferId = Fixtures.generateTransferId()
-    let transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(account1Name, '25'), Fixtures.buildDebitOrCredit(account2Name, '25'))
-    transfer.expires_at = Moment.utc().subtract(1, 'hour').toISOString()
+    let transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(account1Name, '25'), Fixtures.buildDebitOrCredit(account2Name, '25'), pastDate())
 
     Base.createAccount(account1Name)
       .then(() => Base.createAccount(account2Name))

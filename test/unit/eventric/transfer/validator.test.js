@@ -8,6 +8,7 @@ const _ = require('lodash')
 const Validator = require(`${src}/eventric/transfer/validator`)
 const TransferState = require(`${src}/domain/transfer/state`)
 const UnpreparedTransferError = require(`${src}/errors/unprepared-transfer-error`)
+const UnexecutedTransferError = require(`${src}/errors/unexecuted-transfer-error`)
 const CryptoFulfillments = require(`${src}/crypto-conditions/fulfillments`)
 const AlreadyExistsError = require(`${src}/errors/already-exists-error`)
 const ExpiredTransferError = require(`${src}/errors/expired-transfer-error`)
@@ -36,6 +37,21 @@ Test('validator tests', validatorTest => {
       let fulfillment = 'test-fulfillment'
       let transfer = {
         state: TransferState.EXECUTED,
+        fulfillment,
+        expires_at: now.clone().add(1, 'hour').unix()
+      }
+
+      Validator.validateFulfillment(transfer, fulfillment)
+      .then(result => {
+        t.equal(result.previouslyFulfilled, true)
+        t.end()
+      })
+    })
+
+    fulfillmentTest.test('return previouslyFulfilled if transfer is Settled and fulfillment is the same', t => {
+      let fulfillment = 'test-fulfillment'
+      let transfer = {
+        state: TransferState.SETTLED,
         fulfillment,
         expires_at: now.clone().add(1, 'hour').unix()
       }
@@ -329,6 +345,46 @@ Test('validator tests', validatorTest => {
       })
     })
     rejectTest.end()
+  })
+
+  validatorTest.test('validateSettle should', settleTest => {
+    settleTest.test('throw error when not executed', t => {
+      let transfer = {
+        state: TransferState.PREPARED
+      }
+
+      Validator.validateSettle(transfer)
+      .then(() => {
+        t.fail('Expected exception')
+        t.end()
+      })
+      .catch(UnexecutedTransferError, e => {
+        t.equal(e.message, 'The provided entity is syntactically correct, but there is a generic semantic problem with it.')
+        t.end()
+      })
+      .catch(() => {
+        t.fail('Expected UnexecutedTransferError')
+        t.end()
+      })
+    })
+
+    settleTest.test('return transfer if executed', t => {
+      let transfer = {
+        state: TransferState.EXECUTED
+      }
+
+      Validator.validateSettle(transfer)
+      .then(() => {
+        t.pass()
+        t.end()
+      })
+      .catch(() => {
+        t.fail('Expected no exception to be thrown')
+        t.end()
+      })
+    })
+
+    settleTest.end()
   })
 
   validatorTest.end()

@@ -12,5 +12,14 @@ module.exports = [
       tags: tags,
       description: 'Reject expired transfers'
     }
+  },
+  {
+    method: 'POST',
+    path: '/webhooks/settle-transfers',
+    handler: Handler.settle,
+    config: {
+      tags: tags,
+      description: 'Settle fulfilled transfers'
+    }
   }
 ]

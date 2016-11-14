@@ -7,3 +7,9 @@ exports.rejectExpired = function (request, reply) {
   .then(response => reply(response))
   .catch(e => reply(e))
 }
+
+exports.settle = function (request, reply) {
+  return Service.settle()
+  .then(response => reply(response))
+  .catch(e => reply(e))
+}

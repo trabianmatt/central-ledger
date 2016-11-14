@@ -89,9 +89,9 @@ Test('Transfers-Projection', transfersProjectionTest => {
 
   transfersProjectionTest.test('handleTransferSettled should', settledTest => {
     settledTest.test('createSettledTransfer', t => {
-      let event = { aggregate: { id: 'uuid' }, payload: { settlementId: 'uuid' } }
+      let event = { aggregate: { id: 'uuid' }, payload: { settlement_id: 'uuid' } }
 
-      SettledTransfers.create.withArgs({ id: event.aggregate.id, settlementId: event.payload.settlementId }).returns(P.resolve())
+      SettledTransfers.create.withArgs({ id: event.aggregate.id, settlementId: event.payload.settlement_id }).returns(P.resolve())
 
       SettleableTransfersProjection.handleTransferSettled(event)
       .then(result => {
@@ -102,8 +102,8 @@ Test('Transfers-Projection', transfersProjectionTest => {
 
     settledTest.test('log error', t => {
       let error = new Error()
-      let event = { aggregate: { id: 'uuid' }, payload: { settlementId: 'uuid' } }
-      SettledTransfers.create.withArgs({ id: event.aggregate.id, settlementId: event.payload.settlementId }).returns(P.reject(error))
+      let event = { aggregate: { id: 'uuid' }, payload: { settlement_id: 'uuid' } }
+      SettledTransfers.create.withArgs({ id: event.aggregate.id, settlementId: event.payload.settlement_id }).returns(P.reject(error))
 
       SettleableTransfersProjection.handleTransferSettled(event)
       .then(() => {

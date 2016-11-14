@@ -36,6 +36,7 @@ Test('Commands Test', commandsTest => {
     sandbox.stub(Validator, 'validateExistingOnPrepare')
     sandbox.stub(Validator, 'validateReject')
     sandbox.stub(Validator, 'validateFulfillment')
+    sandbox.stub(Validator, 'validateSettle')
     Commands.$aggregate = sandbox.stub()
     Commands.$aggregate.load = sandbox.stub()
     Commands.$aggregate.create = sandbox.stub()
@@ -201,5 +202,62 @@ Test('Commands Test', commandsTest => {
 
     rejectTest.end()
   })
+
+  commandsTest.test('Settle should', settleTest => {
+    settleTest.test('return NotFoundError if aggregate not found', t => {
+      let id = Uuid()
+      let settlementId = Uuid()
+
+      Commands.$aggregate.load.withArgs('Transfer', id).returns(noAggregateFound(id))
+      assertNotFound(t, Commands.SettleTransfer({ id: id, settlement_id: settlementId }))
+    })
+
+    settleTest.test('return error if Validator rejects', t => {
+      let id = Uuid()
+      let settlementId = Uuid()
+      let transfer = {}
+      let error = new Error()
+
+      Commands.$aggregate.load.withArgs('Transfer', id).returns(P.resolve(transfer))
+      Validator.validateSettle.returns(P.reject(error))
+
+      Commands.SettleTransfer({ id: id, settlement_id: settlementId })
+      .then(() => {
+        t.fail('Expected error to be thrown')
+        t.end()
+      })
+      .catch(e => {
+        t.equal(e, error)
+        t.end()
+      })
+    })
+
+    settleTest.test('settle and save transfer if not already settled', t => {
+      let id = Uuid()
+      let settlementId = Uuid()
+      let transfer = {}
+      let settleStub = sandbox.stub()
+      let saveStub = sandbox.stub()
+      saveStub.returns(P.resolve())
+
+      transfer.$save = saveStub
+      transfer.settle = settleStub
+
+      Validator.validateSettle.withArgs(transfer).returns(P.resolve())
+
+      Commands.$aggregate.load.withArgs('Transfer', id).returns(P.resolve(transfer))
+
+      Commands.SettleTransfer({ id: id, settlement_id: settlementId })
+      .then(result => {
+        t.equal(result, transfer)
+        t.ok(settleStub.calledWith(Sinon.match({ settlement_id: settlementId })))
+        t.ok(saveStub.calledOnce)
+        t.end()
+      })
+    })
+
+    settleTest.end()
+  })
+
   commandsTest.end()
 })

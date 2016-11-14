@@ -22,7 +22,7 @@ module.exports = {
   },
 
   handleTransferSettled (event) {
-    return SettledTransfers.create({ id: event.aggregate.id, settlementId: event.payload.settlementId })
+    return SettledTransfers.create({ id: event.aggregate.id, settlementId: event.payload.settlement_id })
     .catch(err => {
       Logger.error('Error handling TransferSettled event', err)
     })

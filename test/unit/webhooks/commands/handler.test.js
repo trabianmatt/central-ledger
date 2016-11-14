@@ -25,6 +25,7 @@ Test('Handler Test', handlerTest => {
   handlerTest.beforeEach(t => {
     sandbox = Sinon.sandbox.create()
     sandbox.stub(Service, 'rejectExpired')
+    sandbox.stub(Service, 'settle')
     t.end()
   })
 
@@ -59,6 +60,34 @@ Test('Handler Test', handlerTest => {
     })
 
     rejectExpiredTest.end()
+  })
+
+  handlerTest.test('settle should', settleTest => {
+    settleTest.test('return settled transfer ids', test => {
+      let transferIds = [Uuid(), Uuid(), Uuid()]
+      Service.settle.returns(P.resolve(transferIds))
+
+      let reply = response => {
+        test.equal(response, transferIds)
+        test.end()
+      }
+
+      Handler.settle({}, reply)
+    })
+
+    settleTest.test('return error if settlement failed', test => {
+      let error = new Error()
+      Service.settle.returns(P.reject(error))
+
+      let reply = response => {
+        test.equal(response, error)
+        test.end()
+      }
+
+      Handler.settle(createRequest(), reply)
+    })
+
+    settleTest.end()
   })
 
   handlerTest.end()

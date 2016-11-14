@@ -128,6 +128,22 @@ Test('transfer', transferTest => {
     rejectTest.end()
   })
 
+  transferTest.test('settle should', rejectTest => {
+    rejectTest.test('Emit TransferSettled event', t => {
+      let transfer = new Transfer()
+      let emitDomainEvent = Sinon.stub()
+      transfer.$emitDomainEvent = emitDomainEvent
+
+      let settlementId = Uuid()
+
+      transfer.settle({ settlement_id: settlementId })
+
+      t.ok(emitDomainEvent.calledWith('TransferSettled', Sinon.match({ settlement_id: settlementId })))
+      t.end()
+    })
+    rejectTest.end()
+  })
+
   transferTest.test('handleTransferPrepared should', handleTransferPreparedTest => {
     handleTransferPreparedTest.test('set transfer properties', t => {
       let transfer = new Transfer()
@@ -247,6 +263,24 @@ Test('transfer', transferTest => {
       })
 
       t.equal(result.timeline.rejected_at, new Date(time).toISOString())
+      t.end()
+    })
+    handleTest.end()
+  })
+
+  transferTest.test('handleTransferSettled should', handleTest => {
+    handleTest.test('set state to settled and return transfer', t => {
+      let transfer = new Transfer()
+      let settlementId = Uuid()
+
+      let result = transfer.handleTransferSettled({
+        timestamp: new Date().getTime(),
+        payload: { settlement_id: settlementId }
+      })
+
+      t.deepEqual(result, transfer)
+      t.equal(transfer.state, TransferState.SETTLED)
+      t.equal(transfer.settlement_id, settlementId)
       t.end()
     })
     handleTest.end()

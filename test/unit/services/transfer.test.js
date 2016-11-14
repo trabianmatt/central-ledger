@@ -8,7 +8,9 @@ const Uuid = require('uuid4')
 const Moment = require('moment')
 const UrlParser = require(`${src}/lib/urlparser`)
 const ReadModel = require(`${src}/models/transfers-read-model`)
+const SettleableTransfersReadModel = require(`${src}/models/settleable-transfers-read-model`)
 const AccountsModel = require(`${src}/models/accounts`)
+const SettlementsModel = require(`${src}/models/settlements`)
 const Commands = require(`${src}/commands/transfer`)
 const Service = require(`${src}/services/transfer`)
 const TransferState = require(`${src}/domain/transfer/state`)
@@ -25,8 +27,12 @@ Test('Transfer Service tests', serviceTest => {
     sandbox.stub(ReadModel, 'updateTransfer')
     sandbox.stub(ReadModel, 'truncateTransfers')
     sandbox.stub(ReadModel, 'getTransfersByState')
+    sandbox.stub(SettleableTransfersReadModel, 'getSettleableTransfers')
     sandbox.stub(AccountsModel, 'getByName')
+    sandbox.stub(SettlementsModel, 'generateId')
+    sandbox.stub(SettlementsModel, 'create')
     sandbox.stub(Commands, 'expire')
+    sandbox.stub(Commands, 'settle')
     sandbox.stub(UrlParser, 'nameFromAccountUri')
     t.end()
   })
@@ -53,6 +59,46 @@ Test('Transfer Service tests', serviceTest => {
       })
     })
     rejectTest.end()
+  })
+
+  serviceTest.test('settle should', settleTest => {
+    settleTest.test('find settalble transfers and settle them', test => {
+      let settlementId = Uuid()
+      SettlementsModel.generateId.returns(settlementId)
+      SettlementsModel.create.withArgs(settlementId).returns(P.resolve({ settlementId: settlementId, settledAt: 0 }))
+
+      let transfers = [{ transferId: 1 }, { transferId: 2 }]
+      SettleableTransfersReadModel.getSettleableTransfers.returns(P.resolve(transfers))
+
+      transfers.forEach((x, i) => {
+        Commands.settle.onCall(i).returns(P.resolve({ id: x.id }))
+      })
+
+      Service.settle()
+      .then(x => {
+        transfers.forEach(t => {
+          test.ok(Commands.settle.calledWith({id: t.transferId, settlement_id: settlementId}))
+        })
+        test.deepEqual(x, transfers.map(t => t.id))
+        test.end()
+      })
+    })
+
+    settleTest.test('return empty array if no settleable transfers exist', test => {
+      let settlementId = Uuid()
+      SettlementsModel.generateId.returns(settlementId)
+      SettlementsModel.create.withArgs(settlementId).returns(P.resolve({ settlementId: settlementId, settledAt: 0 }))
+
+      SettleableTransfersReadModel.getSettleableTransfers.returns(P.resolve([]))
+
+      Service.settle()
+      .then(x => {
+        test.deepEqual(x, [])
+        test.end()
+      })
+    })
+
+    settleTest.end()
   })
 
   serviceTest.test('getExecuted should', getExecutedTest => {
