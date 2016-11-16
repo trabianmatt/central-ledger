@@ -1,7 +1,8 @@
 'use strict'
 
-const Config = require('./lib/config')
 const Pack = require('../package')
+const Config = require('./lib/config')
+const Logger = require('@leveloneproject/central-services-shared').Logger
 
 function stripEmpty (list) {
   return list.filter(n => n)
@@ -42,28 +43,19 @@ module.exports = {
             interval: 1000
           },
           reporters: {
-            console: [
-              {
-                module: 'good-squeeze',
-                name: 'Squeeze',
-                args: [
-                  {
-                    response: '*',
-                    log: '*',
-                    error: '*'
-                  }
-                ]
-              },
-              {
-                module: 'good-console',
-                args: [
-                  {
-                    format: 'YYYY-MM-DD HH:mm:ss.SSS'
-                  }
-                ]
-              },
-              'stdout'
-            ]
+            winston: [{
+              module: 'good-winston',
+              args: [
+                Logger._logger,
+                {
+                  error_level: 'error',
+                  ops_level: 'debug',
+                  request_level: 'debug',
+                  response_level: 'info',
+                  other_level: 'info'
+                }
+              ]
+            }]
           }
         }
       }

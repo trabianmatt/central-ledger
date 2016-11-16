@@ -50,8 +50,7 @@
     "glob": "7.0.6",
     "glue": "3.4.0",
     "good": "7.0.1",
-    "good-console": "6.1.2",
-    "good-squeeze": "4.0.0",
+    "good-winston": "3.0.0",
     "hapi": "14.1.0",
     "hapi-swagger": "6.2.2",
     "inert": "4.0.1",
@@ -76,7 +75,7 @@
     "sinon": "1.17.5",
     "standard": "7.1.2",
     "supertest": "2.0.0",
-    "supertest-as-promised": "^4.0.1",
+    "supertest-as-promised": "4.0.1",
     "tap-xunit": "1.4.0",
     "tape": "4.6.0",
     "tapes": "4.1.0"

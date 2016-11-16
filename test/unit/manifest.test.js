@@ -97,10 +97,8 @@ Test('manifest', function (manifestTest) {
       let found = findPluginByRegisterName(Manifest.registrations, 'good')
 
       assert.ok(found)
-      assert.equal(found.plugin.options.reporters.console.length, 3)
-      assert.equal(found.plugin.options.reporters.console[0].module, 'good-squeeze')
-      assert.equal(found.plugin.options.reporters.console[1].module, 'good-console')
-      assert.equal(found.plugin.options.reporters.console[2], 'stdout')
+      assert.equal(found.plugin.options.reporters.winston.length, 1)
+      assert.equal(found.plugin.options.reporters.winston[0].module, 'good-winston')
       assert.end()
     })
 
