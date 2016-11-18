@@ -1,4 +1,8 @@
 {
   "PORT": 3000,
-  "HOSTNAME": "http://central-ledger"
+  "HOSTNAME": "http://central-ledger",
+  "AMOUNT": {
+    "PRECISION": 10,
+    "SCALE": 2
+  }
 }

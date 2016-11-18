@@ -24,7 +24,7 @@ exports.metadata = (request, reply) => {
     currency_symbol: null,
     ledger: Config.HOSTNAME,
     urls: extractUrls(request),
-    precision: 10,
-    scale: 2
+    precision: Config.AMOUNT.PRECISION,
+    scale: Config.AMOUNT.SCALE
   }).code(200)
 }

@@ -18,15 +18,23 @@ function createRequest (routes) {
 }
 
 Test('metadata handler', (handlerTest) => {
+  let originalScale
+  let originalPrecision
   let originalHostName
 
   handlerTest.beforeEach(t => {
+    originalScale = Config.AMOUNT.SCALE
+    originalPrecision = Config.AMOUNT.PRECISION
     originalHostName = Config.HOSTNAME
+    Config.AMOUNT.SCALE = 0
+    Config.AMOUNT.PRECISION = 0
     Config.HOSTNAME = ''
     t.end()
   })
 
   handlerTest.afterEach(t => {
+    Config.AMOUNT.SCALE = originalScale
+    Config.AMOUNT.PRECISION = originalPrecision
     Config.HOSTNAME = originalHostName
     t.end()
   })
@@ -66,12 +74,18 @@ Test('metadata handler', (handlerTest) => {
       let host = 'example-hostname'
       let hostName = `http://${host}`
       Config.HOSTNAME = hostName
+
+      let scale = 3
+      let precision = 7
+      Config.AMOUNT.SCALE = scale
+      Config.AMOUNT.PRECISION = precision
+
       let reply = response => {
         t.equal(response.currency_code, null)
         t.equal(response.currency_symbol, null)
         t.equal(response.ledger, hostName)
-        t.equal(response.precision, 10)
-        t.equal(response.scale, 2)
+        t.equal(response.precision, precision)
+        t.equal(response.scale, scale)
         t.equal(response.urls['account_transfers'], `ws://${host}/accounts/:name/transfers`)
         return { code: statusCode => { t.end() } }
       }
