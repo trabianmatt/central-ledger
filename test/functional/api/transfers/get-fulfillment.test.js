@@ -43,7 +43,7 @@ Test('GET /transfers/:id/fulfillment', getTest => {
         Base.getFulfillment(transferId)
           .expect(404)
           .then(res => {
-            test.equal(res.body.error_id, 'NotFoundError')
+            test.equal(res.body.id, 'NotFoundError')
             test.equal(res.body.message, 'The requested resource could not be found.')
             test.pass()
             test.end()

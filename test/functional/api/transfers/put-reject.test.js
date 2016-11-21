@@ -100,7 +100,7 @@ Test('PUT /transfers/:id/reject', putTest => {
           .expect(422)
           .expect('Content-Type', /json/)
           .then(res => {
-            test.equal(res.body.error_id, 'UnpreparedTransferError')
+            test.equal(res.body.id, 'UnpreparedTransferError')
             test.equal(res.body.message, 'The provided entity is syntactically correct, but there is a generic semantic problem with it.')
             test.end()
           })

@@ -2,8 +2,8 @@
 
 const Config = require('./config')
 
-const accountRegex = new RegExp(`${Config.HOSTNAME}\/accounts\/([A-Za-z0-9_]*)\/?`, 'i')
-const transfersRegex = new RegExp(`${Config.HOSTNAME}\/transfers\/([a-f\\d]{8}(-[a-f\\d]{4}){3}-[a-f\\d]{12})`, 'i')
+const accountRegex = new RegExp(`${Config.HOSTNAME}/accounts/([A-Za-z0-9_]*)/?`, 'i')
+const transfersRegex = new RegExp(`${Config.HOSTNAME}/transfers/([a-f\\d]{8}(-[a-f\\d]{4}){3}-[a-f\\d]{12})`, 'i')
 const accountsTransfersRouteRegex = new RegExp(/\/accounts\/([A-Za-z0-9_]*)\/transfers/, 'i')
 
 exports.nameFromAccountUri = (uri, callback) => {

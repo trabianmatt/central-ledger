@@ -72,7 +72,7 @@ Test('ensure an account name can only be registered once', function (assert) {
         .expect(422)
         .expect('Content-Type', /json/)
         .then(res => {
-          assert.equal(res.body.error_id, 'RecordExistsError')
+          assert.equal(res.body.id, 'RecordExistsError')
           assert.equal(res.body.message, 'The account has already been registered')
           assert.end()
         })
