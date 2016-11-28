@@ -1,4 +1,5 @@
 const Events = require('events')
+const TransferTranslator = require('../adapters/transfer-translator')
 const ledgerEmitter = new Events()
 
 function publish (path, message) {
@@ -20,12 +21,12 @@ module.exports = {
   },
   emitTransferPrepared: function (transfer) {
     publish('transferPrepared', {
-      resource: transfer
+      resource: TransferTranslator.toTransfer(transfer)
     })
   },
   emitTransferExecuted: function (resource, relatedResources) {
     publish('transferExecuted', {
-      resource: resource,
+      resource: TransferTranslator.toTransfer(resource),
       related_resources: relatedResources
     })
   },

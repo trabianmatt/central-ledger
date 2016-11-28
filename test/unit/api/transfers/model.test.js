@@ -9,6 +9,7 @@ const Eventric = require(`${src}/eventric`)
 const Transfer = require(`${src}/commands/transfer`)
 const Events = require(`${src}/lib/events`)
 const UrlParser = require(`${src}/lib/urlparser`)
+const TransferState = require(`${src}/domain/transfer/state`)
 const ExpiredTransferError = require(`${src}/errors/expired-transfer-error`)
 
 let createTransfer = (transferId = '3a2a1d9e-8640-4d2d-b06c-84f2cd613204') => {
@@ -52,6 +53,7 @@ Test('transfer model', function (modelTest) {
       UrlParser.toTransferUri.withArgs(transferId).returns(payload.id)
       let expected = {
         existing: false,
+        state: TransferState.PREPARED,
         transfer: {
           id: transferId,
           ledger: payload.ledger,
@@ -69,6 +71,7 @@ Test('transfer model', function (modelTest) {
           assert.equal(args[0].id, transferId)
           assert.equal(result.id, payload.id)
           assert.equal(result.existing, expected.existing)
+          assert.equal(result.state, expected.state)
           assert.equal(result.ledger, expected.transfer.ledger)
           assert.equal(result.credits, expected.transfer.credits)
           assert.equal(result.debits, expected.transfer.debits)
@@ -85,6 +88,7 @@ Test('transfer model', function (modelTest) {
       UrlParser.toTransferUri.withArgs(transferId).returns(payload.id)
       let expected = {
         existing: false,
+        state: TransferState.PREPARED,
         transfer: {
           id: transferId,
           ledger: payload.ledger,

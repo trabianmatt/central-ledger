@@ -5,52 +5,18 @@ const NotFoundError = require('@leveloneproject/central-services-shared').NotFou
 const Model = require('./model')
 const TransfersReadModel = require('../../models/transfers-read-model')
 const Validator = require('./validator')
-const UrlParser = require('../../lib/urlparser')
 const TransferState = require('../../domain/transfer/state')
-
-let buildPrepareTransferResponse = (record) => {
-  return {
-    id: record.id,
-    ledger: record.ledger,
-    debits: record.debits,
-    credits: record.credits,
-    execution_condition: record.execution_condition,
-    expires_at: record.expires_at,
-    state: TransferState.PREPARED
-  }
-}
+const TransferTranslator = require('../../adapters/transfer-translator')
 
 let buildGetTransferResponse = (record) => {
   if (!record) throw new NotFoundError('The requested resource could not be found.')
-  return {
-    id: UrlParser.toTransferUri(record.transferUuid),
-    ledger: record.ledger,
-    debits: [{
-      account: UrlParser.toAccountUri(record.debitAccountName),
-      amount: record.debitAmount
-    }],
-    credits: [{
-      account: UrlParser.toAccountUri(record.creditAccountName),
-      amount: record.creditAmount,
-      rejected: Boolean(record.creditRejected),
-      rejection_message: record.creditRejectionMessage
-    }],
-    execution_condition: record.executionCondition,
-    expires_at: record.expiresAt,
-    state: record.state,
-    rejection_reason: record.rejectionReason,
-    timeline: {
-      prepared_at: record.preparedDate,
-      executed_at: record.executedDate,
-      rejected_at: record.rejectedDate
-    }
-  }
+  return TransferTranslator.toTransfer(record)
 }
 
 exports.prepareTransfer = function (request, reply) {
   return Validator.validate(request.payload, request.params.id)
     .then(Model.prepare)
-    .then(transfer => reply(buildPrepareTransferResponse(transfer)).code((transfer.existing === true) ? 200 : 201))
+    .then(transfer => reply(TransferTranslator.toTransfer(transfer)).code((transfer.existing === true) ? 200 : 201))
     .catch(e => reply(e))
 }
 

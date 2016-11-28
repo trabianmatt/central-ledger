@@ -53,56 +53,6 @@ Test('transfer handler', handlerTest => {
   })
 
   handlerTest.test('prepareTransfer should', prepareTransferTest => {
-    prepareTransferTest.test('return prepared transfer', test => {
-      let payload = {
-        id: 'https://central-ledger/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204',
-        ledger: 'http://usd-ledger.example/USD',
-        debits: [
-          {
-            account: 'http://usd-ledger.example/USD/accounts/alice',
-            amount: '50'
-          }
-        ],
-        credits: [
-          {
-            account: 'http://usd-ledger.example/USD/accounts/bob',
-            amount: '50'
-          }
-        ],
-        execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
-        expires_at: '2015-06-16T00:00:01.000Z'
-      }
-
-      let transfer = {
-        id: payload.id,
-        ledger: payload.ledger,
-        debits: payload.debits,
-        credits: payload.credits,
-        execution_condition: payload.execution_condition,
-        expires_at: payload.expires_at
-      }
-
-      Model.prepare.returns(P.resolve(transfer))
-
-      let reply = response => {
-        test.equal(response.id, transfer.id)
-        test.equal(response.ledger, transfer.ledger)
-        test.deepEqual(response.debits, transfer.debits)
-        test.deepEqual(response.credits, transfer.credits)
-        test.equal(response.execution_condition, transfer.execution_condition)
-        test.equal(response.expires_at, transfer.expires_at)
-        test.equal(response.state, TransferState.PREPARED)
-        return {
-          code: statusCode => {
-            test.equal(statusCode, 201)
-            test.end()
-          }
-        }
-      }
-
-      Handler.prepareTransfer(createRequest(Uuid(), payload), reply)
-    })
-
     prepareTransferTest.test('reply with status code 200 if transfer exists', test => {
       let payload = {
         id: 'https://central-ledger/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204',
@@ -137,10 +87,54 @@ Test('transfer handler', handlerTest => {
 
       let reply = response => {
         test.equal(response.id, transfer.id)
-        test.equal(response.state, TransferState.PREPARED)
         return {
           code: statusCode => {
             test.equal(statusCode, 200)
+            test.end()
+          }
+        }
+      }
+
+      Handler.prepareTransfer(createRequest(Uuid(), payload), reply)
+    })
+
+    prepareTransferTest.test('reply with status code 201 if transfer does not exist', test => {
+      let payload = {
+        id: 'https://central-ledger/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204',
+        ledger: 'http://usd-ledger.example/USD',
+        debits: [
+          {
+            account: 'http://usd-ledger.example/USD/accounts/alice',
+            amount: '50'
+          }
+        ],
+        credits: [
+          {
+            account: 'http://usd-ledger.example/USD/accounts/bob',
+            amount: '50'
+          }
+        ],
+        execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
+        expires_at: '2015-06-16T00:00:01.000Z'
+      }
+
+      let transfer = {
+        id: payload.id,
+        ledger: payload.ledger,
+        debits: payload.debits,
+        credits: payload.credits,
+        execution_condition: payload.execution_condition,
+        expires_at: payload.expires_at,
+        existing: false
+      }
+
+      Model.prepare.returns(P.resolve(transfer))
+
+      let reply = response => {
+        test.equal(response.id, transfer.id)
+        return {
+          code: statusCode => {
+            test.equal(statusCode, 201)
             test.end()
           }
         }
