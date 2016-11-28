@@ -1,38 +1,43 @@
+'use strict'
+
 const Events = require('events')
 const TransferTranslator = require('../adapters/transfer-translator')
 const ledgerEmitter = new Events()
 
-function publish (path, message) {
+const publish = (path, message) => {
   ledgerEmitter.emit(path, message)
 }
 
-function listen (path, callback) {
+const listen = (path, callback) => {
   ledgerEmitter.on(path, (message) => {
     callback(message)
   })
 }
 
 module.exports = {
-  onTransferPrepared: function (callback) {
+  onTransferPrepared: (callback) => {
     listen('transferPrepared', callback)
   },
-  onTransferExecuted: function (callback) {
+  onTransferExecuted: (callback) => {
     listen('transferExecuted', callback)
   },
-  emitTransferPrepared: function (transfer) {
+  onTransferRejected: (callback) => {
+    listen('transferRejected', callback)
+  },
+  emitTransferPrepared: (transfer) => {
     publish('transferPrepared', {
       resource: TransferTranslator.toTransfer(transfer)
     })
   },
-  emitTransferExecuted: function (resource, relatedResources) {
+  emitTransferExecuted: (resource, relatedResources) => {
     publish('transferExecuted', {
       resource: TransferTranslator.toTransfer(resource),
       related_resources: relatedResources
     })
   },
-  emitTransferRejected: function (resource, relatedResources) {
+  emitTransferRejected: (resource, relatedResources) => {
     publish('transferRejected', {
-      resource: resource,
+      resource: TransferTranslator.toTransfer(resource),
       related_resources: relatedResources
     })
   }

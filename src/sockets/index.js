@@ -1,47 +1,53 @@
 'use strict'
 
 const WS = require('ws')
-const Boom = require('boom')
 const Events = require('../lib/events')
-const UrlParser = require('../lib/urlparser')
-const AccountListeners = require('./accountlistener')
+const SocketManager = require('./socket-manager')
+const WebSocket = require('./websocket')
+const AccountTransfers = require('./account-transfers')
 
-function getAccounts (transfer) {
+let manager
+
+const createWebSocketServer = (listener) => {
+  return new WS.Server({
+    server: listener
+  })
+}
+
+const getAccounts = (transfer) => {
   let credits = transfer.credits || []
   let debits = transfer.debits || []
   return [...credits, ...debits].map(c => c.account)
 }
 
-let listeners = new AccountListeners()
-
-let transferHandler = (msg) => {
-  getAccounts(msg.resource).forEach(a => UrlParser.nameFromAccountUri(a, (err, accountName) => {
-    if (!err) {
-      listeners.send(accountName, msg)
+const wireConnection = (webSocketServer) => {
+  webSocketServer.on('connection', (ws) => {
+    const url = ws.upgradeReq.url
+    if (url === '/websocket') {
+      WebSocket.initialize(ws, manager)
+    } else {
+      AccountTransfers.initialize(ws, url, manager)
     }
-  }))
+  })
+}
+
+const transferHandler = (msg) => {
+  getAccounts(msg.resource).forEach(account => manager.send(account, msg))
+}
+
+const wireEvents = () => {
+  Events.onTransferPrepared(transferHandler)
+  Events.onTransferExecuted(transferHandler)
+  Events.onTransferRejected(transferHandler)
 }
 
 exports.register = (server, options, next) => {
-  let wss = new WS.Server({
-    server: server.listener
-  })
+  manager = SocketManager.create()
+  const wss = createWebSocketServer(server.listener)
 
-  wss.on('connection', (ws) => {
-    let url = ws.upgradeReq.url
-    UrlParser.accountNameFromTransfersRoute(url, (err, accountName) => {
-      if (err) {
-        ws.send(JSON.stringify(Boom.notFound()))
-        ws.close()
-      } else {
-        listeners.add(accountName, ws)
-      }
-    })
-  })
+  wireConnection(wss)
 
-  Events.onTransferPrepared(transferHandler)
-
-  Events.onTransferExecuted(transferHandler)
+  wireEvents()
 
   next()
 }

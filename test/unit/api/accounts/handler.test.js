@@ -143,7 +143,6 @@ Test('accounts handler', handlerTest => {
       Model.create.withArgs(payload).returns(P.resolve(account))
 
       let reply = response => {
-        console.log(response)
         assert.equal(response.id, `${hostname}/accounts/${account.name}`)
         assert.equal(response.name, account.name)
         assert.equal(response.created, account.createdDate)

@@ -37,6 +37,7 @@ Test('transfer model', function (modelTest) {
     sandbox.stub(Transfer, 'expire')
     sandbox.stub(Events, 'emitTransferPrepared')
     sandbox.stub(Events, 'emitTransferExecuted')
+    sandbox.stub(Events, 'emitTransferRejected')
     t.end()
   })
 

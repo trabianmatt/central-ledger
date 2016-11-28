@@ -51,33 +51,20 @@ Test('nameFromAccountUri', nameFromAccountUriTest => {
 
 Test('accountNameFromTransfersRoute', accountNameFromTransfersRouteTest => {
   accountNameFromTransfersRouteTest.test('return null if not url', t => {
-    UrlParser.accountNameFromTransfersRoute('fjdklsjfld', (err, name) => {
-      t.equal(err, 'no match')
-      t.equal(name, null)
+    UrlParser.accountNameFromTransfersRoute('fjdklsjfld')
+    .catch(e => {
+      t.equal(e, 'no match')
       t.end()
     })
   })
 
   accountNameFromTransfersRouteTest.test('return name if url matches pattern', t => {
     let accountName = 'account1'
-    UrlParser.accountNameFromTransfersRoute(`/accounts/${accountName}/transfers`, (err, name) => {
-      t.notOk(err)
+    UrlParser.accountNameFromTransfersRoute(`/accounts/${accountName}/transfers`)
+    .then(name => {
       t.equal(name, accountName)
       t.end()
     })
-  })
-
-  accountNameFromTransfersRouteTest.test('return value if no callback provided', t => {
-    let accountName = 'account1'
-    let result = UrlParser.accountNameFromTransfersRoute(`/accounts/${accountName}/transfers`)
-    t.equal(result, accountName)
-    t.end()
-  })
-
-  accountNameFromTransfersRouteTest.test('return null if no callback provided', t => {
-    let result = UrlParser.accountNameFromTransfersRoute('no match')
-    t.equal(result, null)
-    t.end()
   })
 
   accountNameFromTransfersRouteTest.end()

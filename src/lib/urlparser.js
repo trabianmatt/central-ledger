@@ -1,5 +1,6 @@
 'use strict'
 
+const P = require('bluebird')
 const Config = require('./config')
 
 const accountRegex = new RegExp(`${Config.HOSTNAME}/accounts/([A-Za-z0-9_]*)/?`, 'i')
@@ -16,14 +17,15 @@ exports.nameFromAccountUri = (uri, callback) => {
   }
 }
 
-exports.accountNameFromTransfersRoute = (url, callback) => {
-  let matches = url.match(accountsTransfersRouteRegex)
-  let hasCallback = (typeof callback === 'function')
-  if (matches) {
-    return hasCallback ? callback(null, matches[1]) : matches[1]
-  } else {
-    return hasCallback ? callback('no match', null) : null
-  }
+exports.accountNameFromTransfersRoute = (url) => {
+  return new P((resolve, reject) => {
+    let matches = url.match(accountsTransfersRouteRegex)
+    if (matches) {
+      resolve(matches[1])
+    } else {
+      reject('no match')
+    }
+  })
 }
 
 exports.idFromTransferUri = (uri, callback) => {
