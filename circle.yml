@@ -44,3 +44,4 @@ deployment:
     tag: /v[0-9]+(\.[0-9]+)*/
     commands:
       - ./.deploy/run.sh
+      - aws s3 cp $CIRCLE_ARTIFACTS/coverage/lcov.info s3://elasticbeanstalk-us-west-2-886403637725/sonar/central-ledger/lcov.info
