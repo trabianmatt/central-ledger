@@ -203,6 +203,29 @@ Test('Socket Module', moduleTest => {
       })
     })
 
+    eventsTest.test('onMessageSent should send message to socket manager for to account', test => {
+      const toAccount = 'http://to-account'
+      const fromAccount = 'http://from-account'
+      const data = { something: 'test' }
+      const message = {
+        to: toAccount,
+        from: fromAccount,
+        data
+      }
+      Events.onMessageSent.yields(message)
+      Index.register({}, {}, () => {
+        const args = socketManager.send.firstCall.args
+        test.equal(args[0], toAccount)
+        test.equal(args[1].jsonrpc, '2.0')
+        test.equal(args[1].id, null)
+        test.equal(args[1].method, 'notify')
+        test.equal(args[1].params.event, 'message.send')
+        test.ok(args[1].params.id)
+        test.equal(args[1].params.resource, message)
+        test.end()
+      })
+    })
+
     eventsTest.end()
   })
 

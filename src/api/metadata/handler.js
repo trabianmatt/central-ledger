@@ -10,7 +10,7 @@ let extractUrls = (request) => {
     urls[route.settings.id] = `${Config.HOSTNAME}${route.path.replace(/\{/g, ':').replace(/\}/g, '')}`
   })
   let host = Config.HOSTNAME.replace(/^https?:\/\//, '')
-  urls['account_transfers'] = `ws://${host}/accounts/:name/transfers`
+  urls['notifications'] = `ws://${host}/websocket`
   return urls
 }
 

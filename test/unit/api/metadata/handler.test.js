@@ -86,7 +86,7 @@ Test('metadata handler', (handlerTest) => {
         t.equal(response.ledger, hostName)
         t.equal(response.precision, precision)
         t.equal(response.scale, scale)
-        t.equal(response.urls['account_transfers'], `ws://${host}/accounts/:name/transfers`)
+        t.equal(response.urls['notifications'], `ws://${host}/websocket`)
         return { code: statusCode => { t.end() } }
       }
 

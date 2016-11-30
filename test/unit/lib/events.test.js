@@ -7,22 +7,24 @@ const EventsPath = '../../../src/lib/events'
 
 Test('events', eventTest => {
   let sandbox
+  let Events
 
   eventTest.beforeEach(t => {
+    Events = require(EventsPath)
     sandbox = Sinon.sandbox.create()
     sandbox.stub(TransferTranslator, 'toTransfer')
     t.end()
   })
 
   eventTest.afterEach(t => {
+    delete require.cache[require.resolve(EventsPath)]
     sandbox.restore()
     t.end()
   })
 
-  eventTest.test('emitTransferPrepared should', function (emitTest) {
-    emitTest.test('publish transfer prepared event', function (t) {
+  eventTest.test('emitTransferPrepared should', (emitTest) => {
+    emitTest.test('publish transfer prepared event', (t) => {
       let spy = Sinon.spy()
-      let Events = require(EventsPath)
       Events.onTransferPrepared(spy)
       let transfer = { id: 12 }
       TransferTranslator.toTransfer.returns(transfer)
@@ -31,9 +33,8 @@ Test('events', eventTest => {
       t.end()
     })
 
-    emitTest.test('not push transfer executed event', function (t) {
+    emitTest.test('not push transfer executed event', (t) => {
       let spy = Sinon.spy()
-      let Events = require(EventsPath)
       Events.onTransferExecuted(spy)
       let transfer = { id: 12 }
       TransferTranslator.toTransfer.returns(transfer)
@@ -42,9 +43,8 @@ Test('events', eventTest => {
       t.end()
     })
 
-    emitTest.test('not push transfer rejected event', function (t) {
+    emitTest.test('not push transfer rejected event', (t) => {
       let spy = Sinon.spy()
-      let Events = require(EventsPath)
       Events.onTransferRejected(spy)
       let transfer = { id: 12 }
       TransferTranslator.toTransfer.returns(transfer)
@@ -56,10 +56,9 @@ Test('events', eventTest => {
     emitTest.end()
   })
 
-  eventTest.test('emitTransferExecuted should', function (emitTest) {
-    emitTest.test('publish transfer executed event', function (t) {
+  eventTest.test('emitTransferExecuted should', (emitTest) => {
+    emitTest.test('publish transfer executed event', (t) => {
       let spy = Sinon.spy()
-      let Events = require(EventsPath)
       Events.onTransferExecuted(spy)
       let transfer = { id: 12 }
       TransferTranslator.toTransfer.returns(transfer)
@@ -69,9 +68,8 @@ Test('events', eventTest => {
       t.end()
     })
 
-    emitTest.test('not push transfer prepared event', function (t) {
+    emitTest.test('not push transfer prepared event', (t) => {
       let spy = Sinon.spy()
-      let Events = require(EventsPath)
       Events.onTransferPrepared(spy)
       let transfer = { id: 12 }
       TransferTranslator.toTransfer.returns(transfer)
@@ -80,9 +78,8 @@ Test('events', eventTest => {
       t.end()
     })
 
-    emitTest.test('not push transfer rejected event', function (t) {
+    emitTest.test('not push transfer rejected event', (t) => {
       let spy = Sinon.spy()
-      let Events = require(EventsPath)
       Events.onTransferRejected(spy)
       let transfer = { id: 12 }
       TransferTranslator.toTransfer.returns(transfer)
@@ -94,10 +91,9 @@ Test('events', eventTest => {
     emitTest.end()
   })
 
-  eventTest.test('emitTransferRejected should', function (emitTest) {
-    emitTest.test('publish transfer rejected event', function (t) {
+  eventTest.test('emitTransferRejected should', (emitTest) => {
+    emitTest.test('publish transfer rejected event', (t) => {
       let spy = Sinon.spy()
-      let Events = require(EventsPath)
       Events.onTransferRejected(spy)
       let transfer = { id: 12 }
       TransferTranslator.toTransfer.returns(transfer)
@@ -108,18 +104,16 @@ Test('events', eventTest => {
       t.end()
     })
 
-    emitTest.test('not push transfer prepared event', function (t) {
+    emitTest.test('not push transfer prepared event', (t) => {
       let spy = Sinon.spy()
-      let Events = require(EventsPath)
       Events.onTransferPrepared(spy)
       Events.emitTransferRejected({})
       t.notOk(spy.called)
       t.end()
     })
 
-    emitTest.test('not push transfer executed event', function (t) {
+    emitTest.test('not push transfer executed event', (t) => {
       let spy = Sinon.spy()
-      let Events = require(EventsPath)
       Events.onTransferExecuted(spy)
       Events.emitTransferRejected({})
       t.notOk(spy.called)
@@ -127,6 +121,18 @@ Test('events', eventTest => {
     })
 
     emitTest.end()
+  })
+
+  eventTest.test('sendMessage should', sendTest => {
+    sendTest.test('publish message.send event', test => {
+      const spy = Sinon.spy()
+      Events.onMessageSent(spy)
+      const message = {}
+      Events.sendMessage(message)
+      test.ok(spy.calledWith(message))
+      test.end()
+    })
+    sendTest.end()
   })
   eventTest.end()
 })
