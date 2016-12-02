@@ -54,14 +54,15 @@ Test('transfer model', function (modelTest) {
       UrlParser.toTransferUri.withArgs(transferId).returns(payload.id)
       let expected = {
         existing: false,
-        state: TransferState.PREPARED,
         transfer: {
           id: transferId,
           ledger: payload.ledger,
           credits: payload.credits,
           debits: payload.debits,
           execution_condition: payload.execution_condition,
-          expires_at: payload.expires_at
+          expires_at: payload.expires_at,
+          state: TransferState.PREPARED,
+          timeline: { prepared_at: '2016-12-16T00:00:01.000Z' }
         }
       }
       Transfer.prepare.returns(P.resolve(expected))
@@ -72,12 +73,13 @@ Test('transfer model', function (modelTest) {
           assert.equal(args[0].id, transferId)
           assert.equal(result.id, payload.id)
           assert.equal(result.existing, expected.existing)
-          assert.equal(result.state, expected.state)
           assert.equal(result.ledger, expected.transfer.ledger)
           assert.equal(result.credits, expected.transfer.credits)
           assert.equal(result.debits, expected.transfer.debits)
           assert.equal(result.execution_condition, expected.transfer.execution_condition)
           assert.equal(result.expires_at, expected.transfer.expires_at)
+          assert.equal(result.state, expected.transfer.state)
+          assert.deepEquals(result.timeline, expected.transfer.timeline)
           assert.end()
         })
     })
@@ -89,7 +91,6 @@ Test('transfer model', function (modelTest) {
       UrlParser.toTransferUri.withArgs(transferId).returns(payload.id)
       let expected = {
         existing: false,
-        state: TransferState.PREPARED,
         transfer: {
           id: transferId,
           ledger: payload.ledger,
@@ -109,6 +110,7 @@ Test('transfer model', function (modelTest) {
         t.equal(emitArgs.debits, payload.debits)
         t.equal(emitArgs.execution_condition, payload.execution_condition)
         t.equal(emitArgs.expires_at, payload.expires_at)
+        t.equal(emitArgs.state, payload.state)
         t.equal(emitArgs.timeline, payload.timeline)
         t.end()
       })

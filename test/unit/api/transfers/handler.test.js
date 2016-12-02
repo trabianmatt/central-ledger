@@ -80,7 +80,8 @@ Test('transfer handler', handlerTest => {
         credits: payload.credits,
         execution_condition: payload.execution_condition,
         expires_at: payload.expires_at,
-        existing: true
+        existing: true,
+        timeline: {}
       }
 
       Model.prepare.returns(P.resolve(transfer))
@@ -125,7 +126,8 @@ Test('transfer handler', handlerTest => {
         credits: payload.credits,
         execution_condition: payload.execution_condition,
         expires_at: payload.expires_at,
-        existing: false
+        existing: false,
+        timeline: {}
       }
 
       Model.prepare.returns(P.resolve(transfer))

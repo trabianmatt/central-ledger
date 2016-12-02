@@ -16,7 +16,7 @@ let fromTransferAggregate = (t) => ({
   execution_condition: t.execution_condition,
   expires_at: t.expires_at,
   state: t.state,
-  timeline: {}
+  timeline: removeNullOrUndefinedTimelineProperties(t.timeline)
 })
 
 let fromTransferReadModel = (t) => ({
@@ -39,10 +39,19 @@ let fromTransferReadModel = (t) => ({
   execution_condition: t.executionCondition,
   expires_at: t.expiresAt,
   state: t.state,
-  timeline: {
+  timeline: removeNullOrUndefinedTimelineProperties({
     prepared_at: t.preparedDate,
     executed_at: t.executedDate,
     rejected_at: t.rejectedDate
-  },
+  }),
   rejection_reason: t.rejectionReason
 })
+
+const removeNullOrUndefinedTimelineProperties = (timeline) => {
+  var newTimeline = {}
+  if (timeline.prepared_at) newTimeline.prepared_at = timeline.prepared_at
+  if (timeline.executed_at) newTimeline.executed_at = timeline.executed_at
+  if (timeline.rejected_at) newTimeline.rejected_at = timeline.rejected_at
+
+  return newTimeline
+}

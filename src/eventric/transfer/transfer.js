@@ -1,5 +1,6 @@
 'use strict'
 
+const Moment = require('moment')
 const CryptoConditions = require('../../crypto-conditions/conditions')
 const TransferState = require('../../domain/transfer/state')
 const RejectionType = require('../../domain/transfer/rejection-type')
@@ -43,6 +44,7 @@ class Transfer {
     this.execution_condition = event.payload.execution_condition
     this.expires_at = event.payload.expires_at
     this.state = TransferState.PREPARED
+    this.timeline = { prepared_at: Moment(event.timestamp).toISOString() }
     return this
   }
 

@@ -1,12 +1,20 @@
 'use strict'
 
 const Test = require('tape')
+const Moment = require('moment')
 const Base = require('../../base')
 const Fixtures = require('../../../fixtures')
+const RejectionType = require('../../../../src/domain/transfer/rejection-type')
 const TransferState = require('../../../../src/domain/transfer/state')
 
+let pastDate = () => {
+  let d = new Date()
+  d.setTime(d.getTime() - 86400000)
+  return d
+}
+
 Test('GET /transfers/:id', getTest => {
-  getTest.test('should return transfer details', function (assert) {
+  getTest.test('should return prepared transfer details', function (assert) {
     let account1Name = Fixtures.generateAccountName()
     let account2Name = Fixtures.generateAccountName()
     let transferId = Fixtures.generateTransferId()
@@ -31,7 +39,115 @@ Test('GET /transfers/:id', getTest => {
           assert.equal(res.body.expires_at, transfer.expires_at)
           assert.equal(res.body.state, TransferState.PREPARED)
           assert.ok(res.body.timeline.prepared_at)
-          assert.notOk(res.body.timeline.executed_at)
+          assert.equal(res.body.timeline.hasOwnProperty('executed_at'), false)
+          assert.equal(res.body.timeline.hasOwnProperty('rejected_at'), false)
+          assert.end()
+        })
+    })
+  })
+
+  getTest.test('should return executed transfer details', function (assert) {
+    let account1Name = Fixtures.generateAccountName()
+    let account2Name = Fixtures.generateAccountName()
+    let transferId = Fixtures.generateTransferId()
+    let transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(account1Name, '50'), Fixtures.buildDebitOrCredit(account2Name, '50'))
+
+    Base.createAccount(account1Name)
+    .then(() => Base.createAccount(account2Name))
+    .then(() => Base.prepareTransfer(transferId, transfer))
+    .delay(100)
+    .then(() => Base.fulfillTransfer(transferId, 'cf:0:_v8'))
+    .delay(100)
+    .then(() => {
+      Base.getTransfer(transferId)
+        .expect(200)
+        .expect('Content-Type', /json/)
+        .then(res => {
+          assert.equal(res.body.id, transfer.id)
+          assert.equal(res.body.ledger, transfer.ledger)
+          assert.equal(res.body.debits[0].account, transfer.debits[0].account)
+          assert.equal(res.body.debits[0].amount, parseInt(transfer.debits[0].amount).toFixed(2).toString())
+          assert.equal(res.body.credits[0].account, transfer.credits[0].account)
+          assert.equal(res.body.credits[0].amount, parseInt(transfer.credits[0].amount).toFixed(2).toString())
+          assert.equal(res.body.execution_condition, transfer.execution_condition)
+          assert.equal(res.body.expires_at, transfer.expires_at)
+          assert.equal(res.body.state, TransferState.EXECUTED)
+          assert.ok(res.body.timeline.prepared_at)
+          assert.ok(res.body.timeline.executed_at)
+          assert.equal(res.body.timeline.hasOwnProperty('rejected_at'), false)
+          assert.ok(Moment(res.body.timeline.prepared_at).isSameOrBefore(res.body.timeline.executed_at))
+          assert.end()
+        })
+    })
+  })
+
+  getTest.test('should return manually rejected transfer details', function (assert) {
+    let account1Name = Fixtures.generateAccountName()
+    let account2Name = Fixtures.generateAccountName()
+    let transferId = Fixtures.generateTransferId()
+    let transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(account1Name, '50'), Fixtures.buildDebitOrCredit(account2Name, '50'))
+    let reason = 'rejection reason'
+
+    Base.createAccount(account1Name)
+    .then(() => Base.createAccount(account2Name))
+    .then(() => Base.prepareTransfer(transferId, transfer))
+    .delay(100)
+    .then(() => Base.rejectTransfer(transferId, reason))
+    .then(() => {
+      Base.getTransfer(transferId)
+        .expect(200)
+        .expect('Content-Type', /json/)
+        .then(res => {
+          assert.equal(res.body.id, transfer.id)
+          assert.equal(res.body.ledger, transfer.ledger)
+          assert.equal(res.body.debits[0].account, transfer.debits[0].account)
+          assert.equal(res.body.debits[0].amount, parseInt(transfer.debits[0].amount).toFixed(2).toString())
+          assert.equal(res.body.credits[0].account, transfer.credits[0].account)
+          assert.equal(res.body.credits[0].amount, parseInt(transfer.credits[0].amount).toFixed(2).toString())
+          assert.equal(res.body.execution_condition, transfer.execution_condition)
+          assert.equal(res.body.expires_at, transfer.expires_at)
+          assert.equal(res.body.state, TransferState.REJECTED)
+          assert.equal(res.body.rejection_reason, RejectionType.CANCELED)
+          assert.ok(res.body.timeline.prepared_at)
+          assert.equal(res.body.timeline.hasOwnProperty('executed_at'), false)
+          assert.ok(res.body.timeline.rejected_at)
+          assert.ok(Moment(res.body.timeline.prepared_at).isSameOrBefore(res.body.timeline.rejected_at))
+          assert.end()
+        })
+    })
+  })
+
+  getTest.test('should return expired transfer details', function (assert) {
+    let account1Name = Fixtures.generateAccountName()
+    let account2Name = Fixtures.generateAccountName()
+    let transferId = Fixtures.generateTransferId()
+    let transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(account1Name, '50'), Fixtures.buildDebitOrCredit(account2Name, '50'), pastDate())
+
+    Base.createAccount(account1Name)
+    .then(() => Base.createAccount(account2Name))
+    .then(() => Base.prepareTransfer(transferId, transfer))
+    .delay(100)
+    .then(() => Base.post('/webhooks/reject-expired-transfers', {}))
+    .delay(100)
+    .then(() => {
+      Base.getTransfer(transferId)
+        .expect(200)
+        .expect('Content-Type', /json/)
+        .then(res => {
+          assert.equal(res.body.id, transfer.id)
+          assert.equal(res.body.ledger, transfer.ledger)
+          assert.equal(res.body.debits[0].account, transfer.debits[0].account)
+          assert.equal(res.body.debits[0].amount, parseInt(transfer.debits[0].amount).toFixed(2).toString())
+          assert.equal(res.body.credits[0].account, transfer.credits[0].account)
+          assert.equal(res.body.credits[0].amount, parseInt(transfer.credits[0].amount).toFixed(2).toString())
+          assert.equal(res.body.execution_condition, transfer.execution_condition)
+          assert.equal(res.body.expires_at, transfer.expires_at)
+          assert.equal(res.body.state, TransferState.REJECTED)
+          assert.equal(res.body.rejection_reason, RejectionType.EXPIRED)
+          assert.ok(res.body.timeline.prepared_at)
+          assert.equal(res.body.timeline.hasOwnProperty('executed_at'), false)
+          assert.ok(res.body.timeline.rejected_at)
+          assert.ok(Moment(res.body.timeline.prepared_at).isSameOrBefore(res.body.timeline.rejected_at))
           assert.end()
         })
     })

@@ -3,7 +3,6 @@
 const Events = require('../../lib/events')
 const UrlParser = require('../../lib/urlparser')
 const Commands = require('../../commands/transfer')
-const TransferState = require('../../domain/transfer/state')
 const ExpiredTransferError = require('../../errors/expired-transfer-error')
 const UnpreparedTransferError = require('../../errors/unprepared-transfer-error')
 
@@ -15,6 +14,7 @@ let cleanTransfer = (transfer) => {
     debits: transfer.debits,
     execution_condition: transfer.execution_condition,
     expires_at: transfer.expires_at,
+    state: transfer.state,
     timeline: transfer.timeline
   }
 }
@@ -31,7 +31,6 @@ exports.prepare = (transfer) => {
   return Commands.prepare(payload)
     .then(result => {
       let t = cleanTransfer(result.transfer)
-      t.state = TransferState.PREPARED
       Events.emitTransferPrepared(t)
       t.existing = result.existing
       return t

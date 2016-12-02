@@ -23,7 +23,12 @@ Test('TransferTranslator', transferTranslatorTest => {
         ],
         'execution_condition': 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
         'expires_at': '2016-12-16T00:00:01.000Z',
-        'state': 'prepared'
+        'state': 'prepared',
+        timeline: {
+          prepared_at: '2016-12-16T00:00:01.000Z',
+          executed_at: null,
+          rejected_at: '2016-12-18T00:00:01.000Z'
+        }
       }
 
       let expected = {
@@ -43,7 +48,10 @@ Test('TransferTranslator', transferTranslatorTest => {
         execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
         expires_at: '2016-12-16T00:00:01.000Z',
         state: 'prepared',
-        timeline: {}
+        timeline: {
+          prepared_at: '2016-12-16T00:00:01.000Z',
+          rejected_at: '2016-12-18T00:00:01.000Z'
+        }
       }
 
       let actual = TransferTranslator.toTransfer(from)
@@ -68,7 +76,7 @@ Test('TransferTranslator', transferTranslatorTest => {
         'expiresAt': '2016-12-16T00: 00: 01.000Z',
         'additionalInfo': null,
         'preparedDate': '2016-11-16T20: 02: 19.363Z',
-        'executedDate': null,
+        'executedDate': '2016-11-17T20: 02: 19.363Z',
         'fulfillment': null,
         'creditRejected': 0,
         'creditRejectionMessage': null,
@@ -102,9 +110,8 @@ Test('TransferTranslator', transferTranslatorTest => {
         rejection_reason: null,
         state: 'prepared',
         timeline: {
-          executed_at: null,
           prepared_at: '2016-11-16T20: 02: 19.363Z',
-          rejected_at: null
+          executed_at: '2016-11-17T20: 02: 19.363Z'
         }
       }
       let actual = TransferTranslator.toTransfer(from)

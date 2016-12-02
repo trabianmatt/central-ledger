@@ -158,7 +158,8 @@ Test('transfer', transferTest => {
           credits: 'credits',
           execution_condition: 'execution_condition',
           expires_at: 'expires_at'
-        }
+        },
+        timestamp: 1480460976239
       }
       transfer.handleTransferPrepared(event)
       t.equal(transfer.id, transferId)
@@ -168,6 +169,7 @@ Test('transfer', transferTest => {
       t.equal(transfer.execution_condition, 'execution_condition')
       t.equal(transfer.expires_at, 'expires_at')
       t.equal(transfer.state, TransferState.PREPARED)
+      t.deepEquals(transfer.timeline, { prepared_at: '2016-11-29T23:09:36.239Z' })
       t.end()
     })
 
