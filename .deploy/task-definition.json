@@ -1,0 +1,28 @@
+[
+  {
+    "name": "<APP_NAME>",
+    "image": "<DOCKER_IMAGE>",
+    "essential": true,
+    "memoryReservation": 200,
+    "portMappings": [
+      {
+        "containerPort": 3000,
+        "hostPort": 3000
+      }
+    ],
+    "environment": [
+        {
+          "name": "CLEDG_DATABASE_URI",
+          "value": "<DATABASE_URI>"
+        },
+        {
+          "name": "CLEDG_HOSTNAME",
+          "value": "<HOSTNAME>"
+        },
+        {
+          "name": "CLEDG_EXPIRES_TIMEOUT",
+          "value": 1800000
+        }
+      ]
+  }
+]

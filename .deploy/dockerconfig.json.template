@@ -1,6 +1,0 @@
-{
-  "<DOCKER_REPO>": {
-    "auth": "<DOCKER_AUTH>",
-    "email": "<DOCKER_EMAIL>"
-  }
-}
