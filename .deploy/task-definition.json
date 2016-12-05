@@ -6,8 +6,7 @@
     "memoryReservation": 200,
     "portMappings": [
       {
-        "containerPort": 3000,
-        "hostPort": 3000
+        "containerPort": 3000
       }
     ],
     "environment": [
