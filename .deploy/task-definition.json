@@ -21,7 +21,7 @@
         },
         {
           "name": "CLEDG_EXPIRES_TIMEOUT",
-          "value": 1800000
+          "value": "1800000"
         }
       ]
   }
