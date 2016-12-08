@@ -1,0 +1,1 @@
+ALTER TABLE transfers ALTER COLUMN "rejectionReason" TYPE CHARACTER VARYING(512)

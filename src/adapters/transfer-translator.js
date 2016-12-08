@@ -32,9 +32,7 @@ let fromTransferReadModel = (t) => ({
     account: UrlParser.toAccountUri(t.creditAccountName),
     amount: t.creditAmount,
     invoice: t.creditInvoice,
-    memo: t.creditMemo,
-    rejected: Boolean(t.creditRejected),
-    rejection_message: t.creditRejectionMessage
+    memo: t.creditMemo
   }],
   execution_condition: t.executionCondition,
   expires_at: t.expiresAt,

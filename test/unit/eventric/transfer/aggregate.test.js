@@ -9,11 +9,11 @@ const Moment = require('moment')
 const Transfer = require(`${src}/eventric/transfer`)
 const TransfersProjection = require(`${src}/eventric/transfer/transfers-projection`)
 const SettleableTransfersProjection = require(`${src}/eventric/transfer/settleable-transfers-projection`)
-const RejectionType = require(`${src}/domain/transfer/rejection-type`)
 const PostgresStore = require(`${src}/eventric/postgres-store`)
 const CryptoConditions = require(`${src}/crypto-conditions/conditions`)
 const AlreadyExistsError = require(`${src}/errors/already-exists-error`)
 const UnpreparedTransferError = require(`${src}/errors/unprepared-transfer-error`)
+const RejectionType = require(`${src}/domain/transfer/rejection-type`)
 
 let now = Moment('2016-06-16T00:00:01.000Z')
 
@@ -189,7 +189,7 @@ Test('Transfer aggregate', aggregateTest => {
       .then(({transfer, rejection_reason}) => {
         compareTransfers(t, transfer, originalTransfer)
         t.equal(rejection_reason, rejectionReason)
-        t.equal(transfer.rejection_reason, RejectionType.CANCELED)
+        t.equal(transfer.rejection_reason, rejectionReason)
         t.end()
       })
       .catch(e => {
@@ -200,13 +200,12 @@ Test('Transfer aggregate', aggregateTest => {
 
     rejectTest.test('load and expire transfer', t => {
       let originalTransfer = createTransfer()
-      let rejectionReason = 'I do not want it'
 
       P.resolve(context.command('PrepareTransfer', originalTransfer))
-      .then(prepared => context.command('RejectTransfer', { id: originalTransfer.id, rejection_reason: rejectionReason, rejection_type: RejectionType.EXPIRED }))
+      .then(prepared => context.command('RejectTransfer', { id: originalTransfer.id, rejection_reason: RejectionType.EXPIRED }))
       .then(({transfer, rejection_reason}) => {
         compareTransfers(t, transfer, originalTransfer)
-        t.equal(rejection_reason, rejectionReason)
+        t.equal(rejection_reason, RejectionType.EXPIRED)
         t.equal(transfer.rejection_reason, RejectionType.EXPIRED)
         t.end()
       })
@@ -226,7 +225,7 @@ Test('Transfer aggregate', aggregateTest => {
       .then(({ transfer, rejection_reason }) => {
         compareTransfers(t, transfer, originalTransfer)
         t.equal(rejection_reason, rejectionReason)
-        t.equal(transfer.rejection_reason, RejectionType.CANCELED)
+        t.equal(transfer.rejection_reason, rejectionReason)
         t.end()
       })
       .catch(e => {

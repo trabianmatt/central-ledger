@@ -107,7 +107,7 @@ Test('GET /transfers/:id', getTest => {
           assert.equal(res.body.execution_condition, transfer.execution_condition)
           assert.equal(res.body.expires_at, transfer.expires_at)
           assert.equal(res.body.state, TransferState.REJECTED)
-          assert.equal(res.body.rejection_reason, RejectionType.CANCELED)
+          assert.equal(res.body.rejection_reason, reason)
           assert.ok(res.body.timeline.prepared_at)
           assert.equal(res.body.timeline.hasOwnProperty('executed_at'), false)
           assert.ok(res.body.timeline.rejected_at)

@@ -7,7 +7,6 @@ const Uuid = require('uuid4')
 const P = require('bluebird')
 const Commands = require(`${src}/eventric/transfer/commands`)
 const Validator = require(`${src}/eventric/transfer/validator`)
-const RejectionType = require(`${src}/domain/transfer/rejection-type`)
 const NotFoundError = require('@leveloneproject/central-services-shared').NotFoundError
 
 let noAggregateFound = (id) => P.reject(new Error(`No domainEvents for aggregate of type Transfer with ${id} available`))
@@ -178,7 +177,6 @@ Test('Commands Test', commandsTest => {
       let id = Uuid()
       let transfer = {}
       let rejectionReason = 'here we go again'
-      let rejectionType = RejectionType.EXPIRED
       let rejectStub = sandbox.stub()
       let saveStub = sandbox.stub()
       saveStub.returns(P.resolve())
@@ -190,11 +188,11 @@ Test('Commands Test', commandsTest => {
 
       Commands.$aggregate.load.withArgs('Transfer', id).returns(P.resolve(transfer))
 
-      Commands.RejectTransfer({ id: id, rejection_reason: rejectionReason, rejection_type: rejectionType })
+      Commands.RejectTransfer({ id: id, rejection_reason: rejectionReason })
       .then(result => {
         t.equal(result.rejection_reason, rejectionReason)
         t.equal(result.transfer, transfer)
-        t.ok(rejectStub.calledWith(Sinon.match({ rejection_reason: rejectionReason, rejection_type: rejectionType })))
+        t.ok(rejectStub.calledWith(Sinon.match({ rejection_reason: rejectionReason })))
         t.ok(saveStub.calledOnce)
         t.end()
       })

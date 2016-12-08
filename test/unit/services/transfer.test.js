@@ -19,7 +19,6 @@ const RejectionType = require(`${src}/domain/transfer/rejection-type`)
 Test('Transfer Service tests', serviceTest => {
   let sandbox
   let hostname = 'http://some-host'
-
   serviceTest.beforeEach(t => {
     sandbox = Sinon.sandbox.create()
     sandbox.stub(ReadModel, 'findExpired')
@@ -47,7 +46,7 @@ Test('Transfer Service tests', serviceTest => {
       let transfers = [{ transferUuid: 1 }, { transferUuid: 2 }]
       ReadModel.findExpired.returns(P.resolve(transfers))
       transfers.forEach((x, i) => {
-        Commands.expire.onCall(i).returns(P.resolve({ transfer: { id: x.transferUuid }, rejection_reason: 'expired' }))
+        Commands.expire.onCall(i).returns(P.resolve({ transfer: { id: x.transferUuid }, rejection_reason: RejectionType.EXPIRED }))
       })
       Service.rejectExpired()
       .then(x => {
@@ -242,7 +241,7 @@ Test('Transfer Service tests', serviceTest => {
         .then(() => {
           assert.ok(ReadModel.updateTransfer.calledWith(event.aggregate.id, Sinon.match({
             state: TransferState.REJECTED,
-            rejectionReason: RejectionType.CANCELED,
+            rejectionReason: event.payload.rejection_reason,
             creditRejected: 1,
             creditRejectionMessage: event.payload.rejection_reason,
             rejectedDate: Moment(event.timestamp)
@@ -254,13 +253,11 @@ Test('Transfer Service tests', serviceTest => {
     rejectedTest.test('update rejectionReason if event provides one', assert => {
       ReadModel.updateTransfer.returns(P.resolve({}))
 
-      event.payload.rejection_type = RejectionType.EXPIRED
-
       Service.saveTransferRejected(event)
         .then(() => {
           assert.ok(ReadModel.updateTransfer.calledWith(event.aggregate.id, Sinon.match({
             state: TransferState.REJECTED,
-            rejectionReason: RejectionType.EXPIRED,
+            rejectionReason: event.payload.rejection_reason,
             creditRejected: 1,
             creditRejectionMessage: event.payload.rejection_reason,
             rejectedDate: Moment(event.timestamp)

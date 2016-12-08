@@ -4,7 +4,6 @@ const _ = require('lodash')
 const P = require('bluebird')
 const Moment = require('moment')
 const TransferState = require('../../domain/transfer/state')
-const RejectionType = require('../../domain/transfer/rejection-type')
 const ReadModel = require('../../models/transfers-read-model')
 const SettleableTransfersReadModel = require('../../models/settleable-transfers-read-model')
 const SettlementsModel = require('../../models/settlements')
@@ -82,7 +81,7 @@ exports.saveTransferExecuted = ({aggregate, payload, timestamp}) => {
 exports.saveTransferRejected = ({aggregate, payload, timestamp}) => {
   let fields = {
     state: TransferState.REJECTED,
-    rejectionReason: payload.rejection_type || RejectionType.CANCELED,
+    rejectionReason: payload.rejection_reason,
     creditRejected: 1,
     creditRejectionMessage: payload.rejection_reason,
     rejectedDate: Moment(timestamp)

@@ -5,8 +5,8 @@ const Sinon = require('sinon')
 const P = require('bluebird')
 const Uuid = require('uuid4')
 const Eventric = require('../../../../src/eventric')
-const RejectionType = require('../../../../src/domain/transfer/rejection-type')
 const Transfer = require('../../../../src/commands/transfer')
+const RejectionType = require('../../../../src/domain/transfer/rejection-type')
 
 Test('Eventric Transfer index test', indexTest => {
   let sandbox
@@ -70,7 +70,7 @@ Test('Eventric Transfer index test', indexTest => {
       let rejection = { id: Uuid(), rejection_reason: 'another excuse' }
       Transfer.reject(rejection)
       .then(result => {
-        t.ok(command.calledWith('RejectTransfer', Sinon.match({ id: rejection.id, rejection_reason: rejection.rejection_reason, rejection_type: RejectionType.CANCELED })))
+        t.ok(command.calledWith('RejectTransfer', Sinon.match({ id: rejection.id, rejection_reason: rejection.rejection_reason })))
         t.equal(result, expected)
         t.end()
       })
@@ -87,7 +87,7 @@ Test('Eventric Transfer index test', indexTest => {
       let transferId = Uuid()
       Transfer.expire(transferId)
       .then(result => {
-        t.ok(command.calledWith('RejectTransfer', Sinon.match({ id: transferId, rejection_reason: 'expired', rejection_type: RejectionType.EXPIRED })))
+        t.ok(command.calledWith('RejectTransfer', Sinon.match({ id: transferId, rejection_reason: RejectionType.EXPIRED })))
         t.equal(result, expected)
         t.end()
       })

@@ -3,8 +3,8 @@
 const Test = require('tape')
 const Base = require('../base')
 const Fixtures = require('../../fixtures')
-const RejectionType = require('../../../src/domain/transfer/rejection-type')
 const State = require('../../../src/domain/transfer/state')
+const RejectionType = require('../../../src/domain/transfer/rejection-type')
 
 let pastDate = () => {
   let d = new Date()

@@ -10,6 +10,7 @@ const Transfer = require(`${src}/commands/transfer`)
 const Events = require(`${src}/lib/events`)
 const UrlParser = require(`${src}/lib/urlparser`)
 const TransferState = require(`${src}/domain/transfer/state`)
+const RejectionType = require(`${src}/domain/transfer/rejection-type`)
 const ExpiredTransferError = require(`${src}/errors/expired-transfer-error`)
 
 let createTransfer = (transferId = '3a2a1d9e-8640-4d2d-b06c-84f2cd613204') => {
@@ -159,7 +160,7 @@ Test('transfer model', function (modelTest) {
       let payload = { id: transfer.id, fulfillment }
 
       Transfer.fulfill.withArgs(payload).returns(P.reject(new ExpiredTransferError()))
-      Transfer.expire.withArgs(transfer.id).returns(P.resolve({ transfer, rejection_reason: 'expired' }))
+      Transfer.expire.withArgs(transfer.id).returns(P.resolve({ transfer, rejection_reason: RejectionType.EXPIRED }))
       Model.fulfill(payload)
       .then(() => {
         assert.fail('Expected exception')

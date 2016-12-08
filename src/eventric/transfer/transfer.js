@@ -3,7 +3,6 @@
 const Moment = require('moment')
 const CryptoConditions = require('../../crypto-conditions/conditions')
 const TransferState = require('../../domain/transfer/state')
-const RejectionType = require('../../domain/transfer/rejection-type')
 
 class Transfer {
   create ({
@@ -55,14 +54,14 @@ class Transfer {
   }
 
   handleTransferRejected (event) {
-    let { rejection_reason, rejection_type = RejectionType.CANCELED } = event.payload // eslint-disable-line
+    let rejection_reason = event.payload.rejection_reason // eslint-disable-line
     let credits = this.credits || []
     credits.forEach(c => {
       c.rejection_message = rejection_reason // eslint-disable-line
       c.rejected = true
     })
     this.state = TransferState.REJECTED
-    this.rejection_reason = rejection_type // eslint-disable-line
+    this.rejection_reason = rejection_reason // eslint-disable-line
     this.timeline = this.timeline || {}
     this.timeline.rejected_at = new Date(event.timestamp).toISOString()
     return this

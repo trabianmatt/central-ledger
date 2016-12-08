@@ -93,9 +93,7 @@ Test('TransferTranslator', transferTranslatorTest => {
           { account: 'http://central-ledger/accounts/bob',
             amount: '50.00',
             invoice: null,
-            memo: null,
-            rejected: false,
-            rejection_message: null
+            memo: null
           }
         ],
         debits: [

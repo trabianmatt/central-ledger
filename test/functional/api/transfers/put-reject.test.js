@@ -3,7 +3,6 @@
 const Test = require('tape')
 const Base = require('../../base')
 const Fixtures = require('../../../fixtures')
-const RejectionType = require('../../../../src/domain/transfer/rejection-type')
 const State = require('../../../../src/domain/transfer/state')
 
 Test('PUT /transfers/:id/reject', putTest => {
@@ -48,7 +47,7 @@ Test('PUT /transfers/:id/reject', putTest => {
         Base.getTransfer(transferId)
           .expect(200)
           .then(res => {
-            test.equal(res.body.rejection_reason, RejectionType.CANCELED)
+            test.equal(res.body.rejection_reason, reason)
             test.equal(res.body.state, State.REJECTED)
             test.end()
           })
