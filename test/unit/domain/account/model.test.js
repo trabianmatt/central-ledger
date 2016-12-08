@@ -1,9 +1,9 @@
 'use strict'
 
-const src = '../../../src'
+const src = '../../../../src'
 const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
-const Model = require(`${src}/models/accounts`)
+const Model = require(`${src}/domain/account/model`)
 const Db = require(`${src}/db`)
 
 Test('accounts model', function (modelTest) {
@@ -180,13 +180,15 @@ Test('accounts model', function (modelTest) {
     createTest.test('save payload as new object', function (assert) {
       let saveAsync = Sinon.stub()
       setupAccountsDb({ saveAsync: saveAsync })
-      let payload = { name: 'dfsp1' }
+      let payload = { name: 'dfsp1', key: 'key', secret: 'secret' }
 
       Model.create(payload)
         .then(() => {
           let saveAsyncArg = saveAsync.firstCall.args[0]
           assert.notEqual(saveAsyncArg, payload)
           assert.equal(saveAsyncArg.name, payload.name)
+          assert.equal(saveAsyncArg.key, payload.key)
+          assert.equal(saveAsyncArg.secret, payload.secret)
           assert.end()
         })
     })

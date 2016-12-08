@@ -4,7 +4,7 @@ const _ = require('lodash')
 const Decimal = require('decimal.js')
 const UrlParser = require('../../lib/urlparser')
 const PositionCalculator = require('./position-calculator')
-const AccountsModel = require('../../models/accounts')
+const Account = require('../../domain/account')
 const SettleableTransfersReadmodel = require('../../models/settleable-transfers-read-model')
 
 exports.calculateForAccount = (account) => {
@@ -18,7 +18,7 @@ exports.calculateForAccount = (account) => {
 }
 
 exports.calculateForAllAccounts = () => {
-  return AccountsModel.getAll()
+  return Account.getAll()
     .then(accounts => {
       if (!accounts || accounts.length === 0) return []
 

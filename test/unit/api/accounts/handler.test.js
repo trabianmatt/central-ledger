@@ -6,7 +6,7 @@ const Test = require('tapes')(require('tape'))
 const P = require('bluebird')
 const Config = require(`${src}/lib/config`)
 const Handler = require(`${src}/api/accounts/handler`)
-const Model = require(`${src}/models/accounts`)
+const Account = require(`${src}/domain/account`)
 const PositionService = require(`${src}/services/position`)
 const NotFoundError = require('@leveloneproject/central-services-shared').NotFoundError
 const RecordExistsError = require(`${src}/errors/record-exists-error`)
@@ -34,8 +34,8 @@ Test('accounts handler', handlerTest => {
     sandbox = Sinon.sandbox.create()
     originalHostName = Config.HOSTNAME
     Config.HOSTNAME = hostname
-    sandbox.stub(Model, 'create')
-    sandbox.stub(Model, 'getByName')
+    sandbox.stub(Account, 'create')
+    sandbox.stub(Account, 'getByName')
     sandbox.stub(PositionService, 'calculateForAccount')
     t.end()
   })
@@ -59,7 +59,7 @@ Test('accounts handler', handlerTest => {
     getByNameTest.test('get account by name and set balance to position', test => {
       let name = 'somename'
       let account = { accountId: 1, name: name, createdDate: new Date() }
-      Model.getByName.returns(P.resolve(account))
+      Account.getByName.returns(P.resolve(account))
       PositionService.calculateForAccount.withArgs(account).returns(P.resolve(buildPosition(account.name, '50', '0', '-50')))
 
       let reply = response => {
@@ -69,6 +69,9 @@ Test('accounts handler', handlerTest => {
         test.equal(response.balance, '-50')
         test.equal(response.is_disabled, false)
         test.equal(response.ledger, hostname)
+        test.notOk(response.hasOwnProperty['key'])
+        test.notOk(response.hasOwnProperty['secret'])
+        test.notOk(response.hasOwnProperty['credentials'])
         test.end()
       }
 
@@ -76,7 +79,7 @@ Test('accounts handler', handlerTest => {
     })
 
     getByNameTest.test('reply with NotFoundError if account null', test => {
-      Model.getByName.returns(P.resolve(null))
+      Account.getByName.returns(P.resolve(null))
 
       let reply = response => {
         test.ok(response instanceof NotFoundError)
@@ -87,9 +90,9 @@ Test('accounts handler', handlerTest => {
       Handler.getByName(createGet(), reply)
     })
 
-    getByNameTest.test('reply with error if model throws error', test => {
+    getByNameTest.test('reply with error if Account throws error', test => {
       let error = new Error()
-      Model.getByName.returns(P.reject(error))
+      Account.getByName.returns(P.reject(error))
 
       let reply = e => {
         test.equal(e, error)
@@ -102,7 +105,7 @@ Test('accounts handler', handlerTest => {
     getByNameTest.test('reply with NotFoundError if position null', test => {
       let name = 'somename'
       let account = { accountId: 1, name: name, createdDate: new Date() }
-      Model.getByName.returns(P.resolve(account))
+      Account.getByName.returns(P.resolve(account))
 
       PositionService.calculateForAccount.withArgs(account).returns(P.resolve(null))
 
@@ -118,7 +121,7 @@ Test('accounts handler', handlerTest => {
     getByNameTest.test('reply with error if PositionService throws error', test => {
       let name = 'somename'
       let account = { accountId: 1, name: name, createdDate: new Date() }
-      Model.getByName.returns(P.resolve(account))
+      Account.getByName.returns(P.resolve(account))
 
       let error = new Error()
       PositionService.calculateForAccount.withArgs(account).returns(P.reject(error))
@@ -137,10 +140,11 @@ Test('accounts handler', handlerTest => {
   handlerTest.test('create should', createTest => {
     createTest.test('return created account', assert => {
       let payload = { name: 'dfsp1' }
-      let account = { name: payload.name, createdDate: new Date() }
+      let credentials = { key: 'key', secret: 'secret' }
+      let account = { name: payload.name, createdDate: new Date(), credentials }
 
-      Model.getByName.withArgs(payload.name).returns(P.resolve(null))
-      Model.create.withArgs(payload).returns(P.resolve(account))
+      Account.getByName.withArgs(payload.name).returns(P.resolve(null))
+      Account.create.withArgs(payload).returns(P.resolve(account))
 
       let reply = response => {
         assert.equal(response.id, `${hostname}/accounts/${account.name}`)
@@ -149,6 +153,8 @@ Test('accounts handler', handlerTest => {
         assert.equal(response.balance, '0')
         assert.equal(response.is_disabled, false)
         assert.equal(response.ledger, hostname)
+        assert.equal(response.credentials.key, credentials.key)
+        assert.equal(response.credentials.secret, credentials.secret)
         return {
           code: (statusCode) => {
             assert.equal(statusCode, 201)
@@ -164,7 +170,7 @@ Test('accounts handler', handlerTest => {
       let payload = { name: 'dfsp1' }
       let account = { name: payload.name, createdDate: new Date() }
 
-      Model.getByName.withArgs(payload.name).returns(P.resolve(account))
+      Account.getByName.withArgs(payload.name).returns(P.resolve(account))
 
       let reply = response => {
         test.ok(response instanceof RecordExistsError)
@@ -175,11 +181,11 @@ Test('accounts handler', handlerTest => {
       Handler.create(createPost(payload), reply)
     })
 
-    createTest.test('return error if model throws error on checking for existing account', test => {
+    createTest.test('return error if Account throws error on checking for existing account', test => {
       let payload = { name: 'dfsp1' }
       let error = new Error()
 
-      Model.getByName.returns(P.reject(error))
+      Account.getByName.returns(P.reject(error))
 
       let reply = e => {
         test.equal(e, error)
@@ -189,12 +195,12 @@ Test('accounts handler', handlerTest => {
       Handler.create(createPost(payload), reply)
     })
 
-    createTest.test('return error if model throws error on register', test => {
+    createTest.test('return error if Account throws error on register', test => {
       let payload = { name: 'dfsp1' }
       let error = new Error()
 
-      Model.getByName.returns(P.resolve(null))
-      Model.create.returns(P.reject(error))
+      Account.getByName.returns(P.resolve(null))
+      Account.create.returns(P.reject(error))
 
       let reply = e => {
         test.equal(e, error)

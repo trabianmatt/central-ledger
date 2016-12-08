@@ -5,7 +5,7 @@ const Sinon = require('sinon')
 const Uuid = require('uuid4')
 const Config = require('../../../../src/lib/config')
 const UrlParser = require('../../../../src/lib/urlparser')
-const Accounts = require('../../../../src/models/accounts')
+const Account = require('../../../../src/domain/account')
 const Validator = require('../../../../src/api/transfers/validator')
 const ValidationError = require('../../../../src/errors/validation-error')
 const P = require('bluebird')
@@ -43,8 +43,8 @@ Test('transfer validator', (test) => {
 
     let account1Uri = `${hostname}/accounts/${account1Name}`
     let account2Uri = `${hostname}/accounts/${account2Name}`
-    Accounts.getByName.withArgs(account1Name).returns(P.resolve({}))
-    Accounts.getByName.withArgs(account2Name).returns(P.resolve({}))
+    Account.getByName.withArgs(account1Name).returns(P.resolve({}))
+    Account.getByName.withArgs(account2Name).returns(P.resolve({}))
 
     UrlParser.nameFromAccountUri.withArgs(badAccountUri).returns(null)
     UrlParser.nameFromAccountUri.withArgs(account1Uri).returns(account1Name)
@@ -73,7 +73,7 @@ Test('transfer validator', (test) => {
     sandbox = Sinon.sandbox.create()
     sandbox.stub(UrlParser, 'nameFromAccountUri')
     sandbox.stub(UrlParser, 'idFromTransferUri')
-    sandbox.stub(Accounts, 'getByName')
+    sandbox.stub(Account, 'getByName')
     originalHostName = Config.HOSTNAME
     originalPrecision = Config.AMOUNT.PRECISION
     originalHostName = Config.HOSTNAME
@@ -119,7 +119,7 @@ Test('transfer validator', (test) => {
     let transfer = goodTransfer()
     transfer.credits[0].account = accountUri
     UrlParser.nameFromAccountUri.withArgs(accountUri).returns(badAccountName)
-    Accounts.getByName.withArgs(badAccountName).returns(P.resolve(null))
+    Account.getByName.withArgs(badAccountName).returns(P.resolve(null))
     assertValidationError(Validator.validate(transfer, transferId), assert, `Account ${badAccountName} not found`)
   })
 
@@ -129,7 +129,7 @@ Test('transfer validator', (test) => {
     let transfer = goodTransfer()
     transfer.debits[0].account = accountUri
     UrlParser.nameFromAccountUri.withArgs(accountUri).returns(badAccountName)
-    Accounts.getByName.withArgs(badAccountName).returns(P.resolve(null))
+    Account.getByName.withArgs(badAccountName).returns(P.resolve(null))
     assertValidationError(Validator.validate(transfer, transferId), assert, `Account ${badAccountName} not found`)
   })
 
@@ -177,19 +177,19 @@ Test('transfer validator', (test) => {
     let transfer = goodTransfer()
     Validator.validate(transfer, transferId)
     .then(t => {
-      assert.ok(Accounts.getByName.calledTwice)
+      assert.ok(Account.getByName.calledTwice)
       assert.equal(t, transfer)
       assert.end()
     })
   })
 
-  test.test('call Accounts.getByName once if same account name', assert => {
+  test.test('call Account.getByName once if same account name', assert => {
     let transfer = goodTransfer()
     transfer.debits[0].account = transfer.credits[0].account
 
     Validator.validate(transfer, transferId)
     .then(t => {
-      assert.ok(Accounts.getByName.calledOnce)
+      assert.ok(Account.getByName.calledOnce)
       assert.equal(t, transfer)
       assert.end()
     })

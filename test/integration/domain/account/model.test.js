@@ -1,18 +1,24 @@
 'use strict'
 
-const src = '../../../src'
+const src = '../../../../src'
 const Test = require('tape')
-const Fixtures = require('../../fixtures')
-const Model = require(`${src}/models/accounts`)
+const Uuid = require('uuid4')
+const Fixtures = require('../../../fixtures')
+const Model = require(`${src}/domain/account/model`)
 
 Test('accounts model', function (modelTest) {
   modelTest.test('create should', function (createTest) {
     createTest.test('create a new account', function (assert) {
-      let accountName = Fixtures.generateAccountName()
-      createAccount(accountName)
+      const accountName = Fixtures.generateAccountName()
+      const key = 'some-key'
+      const secret = 'some-secret'
+      createAccount(accountName, key, secret)
         .then((account) => {
           assert.equal(account.name, accountName)
+          assert.equal(account.key, key)
+          assert.equal(account.secret, secret)
           assert.ok(account.createdDate)
+          assert.ok(account.accountId)
           assert.end()
         })
     })
@@ -22,7 +28,7 @@ Test('accounts model', function (modelTest) {
 
   modelTest.test('getByName should', function (getByNameTest) {
     getByNameTest.test('get account by name', function (assert) {
-      let accountName = Fixtures.generateAccountName()
+      const accountName = Fixtures.generateAccountName()
       createAccount(accountName)
         .then((account) => {
           Model.getByName(account.name)
@@ -40,7 +46,7 @@ Test('accounts model', function (modelTest) {
 
   modelTest.test('getById should', function (getByIdTest) {
     getByIdTest.test('get account by id', function (assert) {
-      let accountName = Fixtures.generateAccountName()
+      const accountName = Fixtures.generateAccountName()
       createAccount(accountName)
         .then((account) => {
           Model.getById(account.accountId)
@@ -58,8 +64,8 @@ Test('accounts model', function (modelTest) {
 
   modelTest.test('getAll should', function (getAllTest) {
     getAllTest.test('return all accounts', function (assert) {
-      let account1Name = Fixtures.generateAccountName()
-      let account2Name = Fixtures.generateAccountName()
+      const account1Name = Fixtures.generateAccountName()
+      const account2Name = Fixtures.generateAccountName()
       createAccount(account1Name)
         .then(() => createAccount(account2Name))
         .then(() => Model.getAll())
@@ -77,7 +83,7 @@ Test('accounts model', function (modelTest) {
   modelTest.end()
 })
 
-function createAccount (accountName) {
-  let payload = { name: accountName }
+function createAccount (name, key = Uuid().toString(), secret = 'secret') {
+  const payload = { name, key, secret }
   return Model.create(payload)
 }

@@ -14,6 +14,9 @@ Test('post and get an account', function (assert) {
       let expectedCreated = res.body.created
       assert.notEqual(expectedCreated, undefined)
       assert.equal(res.body.name, accountName)
+      assert.ok(res.body.credentials)
+      assert.ok(res.body.credentials.key.length >= 148)
+      assert.ok(res.body.credentials.secret.length >= 148)
 
       Base.getAccount(accountName)
         .expect(200)
@@ -24,6 +27,9 @@ Test('post and get an account', function (assert) {
           assert.equal('0', getRes.body.balance)
           assert.equal(false, getRes.body.is_disabled)
           assert.equal('http://central-ledger', getRes.body.ledger)
+          assert.notOk(getRes.body.hasOwnProperty['credentials'])
+          assert.notOk(getRes.body.hasOwnProperty['key'])
+          assert.notOk(getRes.body.hasOwnProperty['secret'])
           assert.end()
         })
     })

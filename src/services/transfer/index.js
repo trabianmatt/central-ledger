@@ -8,7 +8,7 @@ const RejectionType = require('../../domain/transfer/rejection-type')
 const ReadModel = require('../../models/transfers-read-model')
 const SettleableTransfersReadModel = require('../../models/settleable-transfers-read-model')
 const SettlementsModel = require('../../models/settlements')
-const AccountsModel = require('../../models/accounts')
+const Account = require('../../domain/account')
 const Commands = require('../../commands/transfer')
 const UrlParser = require('../../lib/urlparser')
 
@@ -42,7 +42,7 @@ exports.saveTransferPrepared = ({aggregate, payload, timestamp}) => {
   let debitAccount = UrlParser.nameFromAccountUri(payload.debits[0].account)
   let creditAccount = UrlParser.nameFromAccountUri(payload.credits[0].account)
 
-  return P.all([debitAccount, creditAccount].map(name => AccountsModel.getByName(name)))
+  return P.all([debitAccount, creditAccount].map(name => Account.getByName(name)))
     .then(accounts => {
       let accountIds = _.reduce(accounts, (m, acct) => _.set(m, acct.name, acct.accountId), {})
 

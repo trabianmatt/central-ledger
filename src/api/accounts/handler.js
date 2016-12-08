@@ -1,6 +1,6 @@
 'use strict'
 
-const Model = require('../../models/accounts')
+const Account = require('../../domain/account')
 const Config = require('../../lib/config')
 const UrlParser = require('../../lib/urlparser')
 const PositionService = require('../../services/position')
@@ -8,7 +8,7 @@ const NotFoundError = require('@leveloneproject/central-services-shared').NotFou
 const RecordExistsError = require('../../errors/record-exists-error')
 
 function buildResponse (account, { net = '0' } = {}) {
-  return {
+  const response = {
     id: UrlParser.toAccountUri(account.name),
     name: account.name,
     created: account.createdDate,
@@ -16,6 +16,10 @@ function buildResponse (account, { net = '0' } = {}) {
     is_disabled: false,
     ledger: Config.HOSTNAME
   }
+  if (account.credentials) {
+    response.credentials = account.credentials
+  }
+  return response
 }
 
 function handleExistingRecord () {
@@ -30,7 +34,7 @@ function handleExistingRecord () {
 
 function createAccount (payload) {
   return (entity) => {
-    return Model.create(payload)
+    return Account.create(payload)
   }
 }
 
@@ -44,7 +48,7 @@ function getPosition (account) {
 }
 
 exports.create = (request, reply) => {
-  Model.getByName(request.payload.name)
+  Account.getByName(request.payload.name)
     .then(handleExistingRecord())
     .then(createAccount(request.payload))
     .then(account => reply(buildResponse(account)).code(201))
@@ -52,7 +56,7 @@ exports.create = (request, reply) => {
 }
 
 exports.getByName = (request, reply) => {
-  Model.getByName(request.params.name)
+  Account.getByName(request.params.name)
     .then(getPosition)
     .then(result => reply(result))
     .catch(e => reply(e))

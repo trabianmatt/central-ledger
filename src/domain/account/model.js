@@ -1,6 +1,6 @@
 'use strict'
 
-const Db = require('../db')
+const Db = require('../../db')
 
 exports.getById = (id) => {
   return Db.connect().then(db => db.accounts.findOneAsync({ accountId: id }))
@@ -18,7 +18,9 @@ exports.create = (account) => {
   return Db.connect()
     .then(db => db.accounts.saveAsync(
       {
-        name: account.name
+        name: account.name,
+        key: account.key,
+        secret: account.secret
       })
     )
 }

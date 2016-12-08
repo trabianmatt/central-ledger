@@ -4,7 +4,7 @@ const P = require('bluebird')
 const Decimal = require('decimal.js')
 const Config = require('../../lib/config')
 const UrlParser = require('../../lib/urlparser')
-const Accounts = require('../../models/accounts')
+const Account = require('../../domain/account')
 const ValidationError = require('../../errors/validation-error')
 
 const allowedScale = Config.AMOUNT.SCALE
@@ -24,7 +24,7 @@ exports.validate = (transfer, transferId) => {
   })
   .then(accountNames => {
     return P.all(accountNames.map(n => {
-      return Accounts.getByName(n).then(a => { if (a) { return a } else { throw new ValidationError(`Account ${n} not found`) } })
+      return Account.getByName(n).then(a => { if (a) { return a } else { throw new ValidationError(`Account ${n} not found`) } })
     }))
   })
   .then(accounts => transfer)

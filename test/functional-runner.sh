@@ -59,9 +59,10 @@ psql <<'EOSQL'
 	  CREATE DATABASE "central_ledger_functional";
 EOSQL
 
->&2 printf "Central-ledger is starting ..."
-docker-compose -f $docker_compose_file -f $docker_functional_compose_file up -d central-ledger > /dev/null 2>&1
+>&2 printf "Central-ledger is building ..."
+docker-compose -f $docker_compose_file -f $docker_functional_compose_file up -d central-ledger
 
+>&2 printf "Central-ledger is starting ..."
 until is_central_ledger_up; do
   >&2 printf "."
   sleep 1

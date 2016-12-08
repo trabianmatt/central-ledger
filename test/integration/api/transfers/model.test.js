@@ -5,11 +5,11 @@ const _ = require('lodash')
 const P = require('bluebird')
 const Test = require('tape')
 const Model = require(`${src}/api/transfers/model`)
-const AccountsModel = require(`${src}/models/accounts`)
+const Account = require(`${src}/domain/account`)
 const Fixtures = require('../../../fixtures')
 
 function createAccounts (accountNames) {
-  return P.all(accountNames.map(name => AccountsModel.create({ name: name }))).then(accounts => _.reduce(accounts, (m, acct) => _.set(m, acct.name, acct.accountId), {}))
+  return P.all(accountNames.map(name => Account.create({ name: name }))).then(accounts => _.reduce(accounts, (m, acct) => _.set(m, acct.name, acct.accountId), {}))
 }
 
 Test('transfer model', function (modelTest) {

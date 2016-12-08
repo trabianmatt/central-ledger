@@ -6,7 +6,7 @@ const P = require('bluebird')
 const Test = require('tape')
 const Moment = require('moment')
 const Db = require(`${src}/db`)
-const AccountsModel = require(`${src}/models/accounts`)
+const Account = require(`${src}/domain/account`)
 const ReadModel = require(`${src}/models/transfers-read-model`)
 const Fixtures = require('../../fixtures')
 const TransferState = require('../../../src/domain/transfer/state')
@@ -18,7 +18,7 @@ let pastDate = () => {
 }
 
 function createAccounts (accountNames) {
-  return P.all(accountNames.map(name => AccountsModel.create({ name: name }))).then(accounts => _.reduce(accounts, (m, acct) => _.set(m, acct.name, acct.accountId), {}))
+  return P.all(accountNames.map(name => Account.create({ name: name }))).then(accounts => _.reduce(accounts, (m, acct) => _.set(m, acct.name, acct.accountId), {}))
 }
 
 function buildReadModelDebitOrCredit (accountName, amount, accountMap) {

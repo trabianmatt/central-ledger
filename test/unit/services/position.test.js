@@ -6,7 +6,7 @@ const Sinon = require('sinon')
 const P = require('bluebird')
 const Config = require(`${src}/lib/config`)
 const Service = require(`${src}/services/position`)
-const AccountsModel = require(`${src}/models/accounts`)
+const Account = require(`${src}/domain/account`)
 const SettleableTransfersReadModel = require(`${src}/models/settleable-transfers-read-model`)
 
 Test('Position Service tests', (serviceTest) => {
@@ -19,11 +19,11 @@ Test('Position Service tests', (serviceTest) => {
     sandbox = Sinon.sandbox.create()
     originalHostName = Config.HOSTNAME
     Config.HOSTNAME = hostname
-    sandbox.stub(AccountsModel, 'getAll')
-    sandbox.stub(AccountsModel, 'getById')
+    sandbox.stub(Account, 'getAll')
+    sandbox.stub(Account, 'getById')
     sandbox.stub(SettleableTransfersReadModel, 'getSettleableTransfers')
     sandbox.stub(SettleableTransfersReadModel, 'getSettleableTransfersByAccount')
-    AccountsModel.getAll.returns(P.resolve(accounts))
+    Account.getAll.returns(P.resolve(accounts))
     t.end()
   })
 
@@ -79,7 +79,7 @@ Test('Position Service tests', (serviceTest) => {
 
   serviceTest.test('calculateForAllAccounts should', (calcAllTest) => {
     calcAllTest.test('return no positions if no accounts retrieved', (assert) => {
-      AccountsModel.getAll.returns(P.resolve([]))
+      Account.getAll.returns(P.resolve([]))
 
       let transfers = [
         buildTransfer(accounts[0].name, 3, accounts[1].name, 3)
@@ -90,7 +90,7 @@ Test('Position Service tests', (serviceTest) => {
       let expected = []
       Service.calculateForAllAccounts()
         .then(positions => {
-          assert.ok(AccountsModel.getAll.called)
+          assert.ok(Account.getAll.called)
           assert.notOk(SettleableTransfersReadModel.getSettleableTransfers.called)
           assert.deepEqual(positions, expected)
           assert.end()
@@ -109,7 +109,7 @@ Test('Position Service tests', (serviceTest) => {
 
       Service.calculateForAllAccounts()
         .then(positions => {
-          assert.ok(AccountsModel.getAll.called)
+          assert.ok(Account.getAll.called)
           assert.ok(SettleableTransfersReadModel.getSettleableTransfers.called)
           assert.equal(positions.length, accounts.length)
           assert.deepEqual(positions, expected)
@@ -134,7 +134,7 @@ Test('Position Service tests', (serviceTest) => {
 
       Service.calculateForAllAccounts()
         .then(positions => {
-          assert.ok(AccountsModel.getAll.called)
+          assert.ok(Account.getAll.called)
           assert.ok(SettleableTransfersReadModel.getSettleableTransfers.calledOnce)
           assert.deepEqual(positions, expected)
           assert.end()
