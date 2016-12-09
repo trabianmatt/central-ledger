@@ -29,9 +29,9 @@ Test('Account service', serviceTest => {
       const name = 'dfsp1'
       const accountId = Uuid()
       const createdDate = new Date()
-      const key = Buffer.from('key')
-      const secret = Buffer.from('secret')
-      const hashedSecret = Buffer.from('hashed secret')
+      const key = 'key'
+      const secret = 'secret'
+      const hashedSecret = 'hashed secret'
       Model.create.returns(P.resolve({ name, accountId, createdDate }))
       Crypto.generateKey.returns(P.resolve(key))
       Crypto.generateSecret.returns(P.resolve(secret))
@@ -41,12 +41,12 @@ Test('Account service', serviceTest => {
         test.equal(account.accountId, accountId)
         test.equal(account.name, name)
         test.equal(account.createdDate, createdDate)
-        test.equal(account.credentials.key, key.toString('hex'))
-        test.equal(account.credentials.secret, secret.toString('hex'))
+        test.equal(account.credentials.key, key)
+        test.equal(account.credentials.secret, secret)
         const createArgs = Model.create.firstCall.args
         test.equal(createArgs[0].name, name)
-        test.equal(createArgs[0].key, key.toString('hex'))
-        test.equal(createArgs[0].secret, hashedSecret.toString('hex'))
+        test.equal(createArgs[0].key, key)
+        test.equal(createArgs[0].secret, hashedSecret)
         test.end()
       })
     })
@@ -114,6 +114,21 @@ Test('Account service', serviceTest => {
     getByIdTest.end()
   })
 
+  serviceTest.test('getByKey should', getByKeyTest => {
+    getByKeyTest.test('getByKey from Model', test => {
+      const account = {}
+      const key = '12345'
+      Model.getByKey.withArgs(key).returns(P.resolve(account))
+      AccountService.getByKey(key)
+      .then(result => {
+        test.equal(result, account)
+        test.end()
+      })
+    })
+
+    getByKeyTest.end()
+  })
+
   serviceTest.test('getByName should', getByNameTest => {
     getByNameTest.test('getByName from Model', test => {
       const account = {}
@@ -127,6 +142,46 @@ Test('Account service', serviceTest => {
     })
 
     getByNameTest.end()
+  })
+
+  serviceTest.test('verify should', verifyTest => {
+    verifyTest.test('return false if account not found', test => {
+      Model.getByKey.returns(P.resolve(null))
+      AccountService.verify('key', 'secret')
+        .catch(result => {
+          test.equal(result.message, 'Account does not exist')
+          test.end()
+        })
+    })
+
+    verifyTest.test('return false if account secret and secret are not match', test => {
+      const key = 'key'
+      const secret = 'secret'
+      const password = 'password'
+      Model.getByKey.withArgs(key).returns(P.resolve({ key, secret }))
+      Crypto.verifyHash.withArgs(secret, password).returns(P.resolve(false))
+      AccountService.verify(key, password)
+        .catch(result => {
+          test.equal(result.message, 'Secret is not valid for account')
+          test.end()
+        })
+    })
+
+    verifyTest.test('return account if account secret and secret match', test => {
+      const key = 'key'
+      const secret = 'secret'
+      const account = { key, secret }
+      Model.getByKey.withArgs(key).returns(P.resolve(account))
+      const password = 'password'
+      Crypto.verifyHash.withArgs(secret, password).returns(P.resolve(true))
+      AccountService.verify(key, password)
+        .then(result => {
+          test.equal(result, account)
+          test.end()
+        })
+    })
+
+    verifyTest.end()
   })
 
   serviceTest.end()

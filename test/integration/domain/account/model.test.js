@@ -1,10 +1,9 @@
 'use strict'
 
-const src = '../../../../src'
 const Test = require('tape')
 const Uuid = require('uuid4')
 const Fixtures = require('../../../fixtures')
-const Model = require(`${src}/domain/account/model`)
+const Model = require('../../../../src/domain/account/model')
 
 Test('accounts model', function (modelTest) {
   modelTest.test('create should', function (createTest) {
@@ -60,6 +59,22 @@ Test('accounts model', function (modelTest) {
     })
 
     getByIdTest.end()
+  })
+
+  modelTest.test('getByKey should', getByKeyTest => {
+    getByKeyTest.test('get account by key', test => {
+      const accountKey = Uuid()
+      const accountName = Fixtures.generateAccountName()
+      createAccount(accountName, accountKey)
+        .then(() => Model.getByKey(accountKey))
+        .then(found => {
+          test.equal(found.key, accountKey)
+          test.equal(found.name, accountName)
+          test.end()
+        })
+    })
+
+    getByKeyTest.end()
   })
 
   modelTest.test('getAll should', function (getAllTest) {

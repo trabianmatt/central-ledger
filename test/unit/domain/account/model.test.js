@@ -25,7 +25,7 @@ Test('accounts model', function (modelTest) {
 
   modelTest.test('getAll should', function (getAllTest) {
     getAllTest.test('return exception if db.connect throws', function (assert) {
-      let error = new Error()
+      const error = new Error()
       sandbox.stub(Db, 'connect').returns(Promise.reject(error))
 
       Model.getAll()
@@ -39,8 +39,8 @@ Test('accounts model', function (modelTest) {
     })
 
     getAllTest.test('return exception if db.findAsync throws', function (assert) {
-      let error = new Error()
-      let findAsync = function () { return Promise.reject(error) }
+      const error = new Error()
+      const findAsync = function () { return Promise.reject(error) }
       setupAccountsDb({ findAsync: findAsync })
 
       Model.getAll()
@@ -54,11 +54,11 @@ Test('accounts model', function (modelTest) {
     })
 
     getAllTest.test('return all accounts ordered by name', function (assert) {
-      let account1Name = 'dfsp1'
-      let account2Name = 'dfsp2'
-      let accounts = [{ name: account1Name }, { name: account2Name }]
+      const account1Name = 'dfsp1'
+      const account2Name = 'dfsp2'
+      const accounts = [{ name: account1Name }, { name: account2Name }]
 
-      let findAsync = Sinon.stub().returns(Promise.resolve(accounts))
+      const findAsync = Sinon.stub().returns(Promise.resolve(accounts))
       setupAccountsDb({ findAsync: findAsync })
 
       Model.getAll()
@@ -78,7 +78,7 @@ Test('accounts model', function (modelTest) {
 
   modelTest.test('getById should', function (getByIdTest) {
     getByIdTest.test('return exception if db.connect throws', function (assert) {
-      let error = new Error()
+      const error = new Error()
       sandbox.stub(Db, 'connect').returns(Promise.reject(error))
 
       Model.getById(1)
@@ -92,8 +92,8 @@ Test('accounts model', function (modelTest) {
     })
 
     getByIdTest.test('return exception if db.findOneAsync throws', function (assert) {
-      let error = new Error()
-      let findOneAsync = function () { return Promise.reject(error) }
+      const error = new Error()
+      const findOneAsync = function () { return Promise.reject(error) }
       setupAccountsDb({ findOneAsync: findOneAsync })
 
       Model.getById(1)
@@ -107,9 +107,9 @@ Test('accounts model', function (modelTest) {
     })
 
     getByIdTest.test('finds account by id', function (assert) {
-      let id = 1
-      let account = { accountId: id }
-      let findOneAsync = Sinon.stub().returns(Promise.resolve(account))
+      const id = 1
+      const account = { accountId: id }
+      const findOneAsync = Sinon.stub().returns(Promise.resolve(account))
       setupAccountsDb({ findOneAsync: findOneAsync })
 
       Model.getById(id)
@@ -124,6 +124,57 @@ Test('accounts model', function (modelTest) {
     })
 
     getByIdTest.end()
+  })
+
+  modelTest.test('getByKey should', getByKeyTest => {
+    getByKeyTest.test('return exception if db.connect throws', function (assert) {
+      const error = new Error()
+      sandbox.stub(Db, 'connect').returns(Promise.reject(error))
+
+      Model.getByKey(1)
+        .then(() => {
+          assert.fail('Should have thrown error')
+        })
+        .catch(err => {
+          assert.equal(err, error)
+          assert.end()
+        })
+    })
+
+    getByKeyTest.test('return exception if db.findOneAsync throws', function (assert) {
+      const error = new Error()
+      const findOneAsync = function () { return Promise.reject(error) }
+      setupAccountsDb({ findOneAsync: findOneAsync })
+
+      Model.getByKey(1)
+        .then(() => {
+          assert.fail('Should have thrown error')
+        })
+        .catch(err => {
+          assert.equal(err, error)
+          assert.end()
+        })
+    })
+
+    getByKeyTest.test('finds account by key', function (assert) {
+      const id = 1
+      const key = 'some-key'
+      const account = { accountId: id, key }
+      const findOneAsync = Sinon.stub().returns(Promise.resolve(account))
+      setupAccountsDb({ findOneAsync: findOneAsync })
+
+      Model.getByKey(key)
+        .then(r => {
+          assert.equal(r, account)
+          assert.equal(findOneAsync.firstCall.args[0].key, key)
+          assert.end()
+        })
+        .catch(err => {
+          assert.fail(err)
+        })
+    })
+
+    getByKeyTest.end()
   })
 
   modelTest.test('getByName should', function (getByNameTest) {

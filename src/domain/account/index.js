@@ -7,12 +7,15 @@ const UrlParser = require('../../lib/urlparser')
 const Crypto = require('../../lib/crypto')
 
 const createAccount = (name, key, secret) => {
-  return Model.create({ name, key: key.toString('hex'), secret: secret.toString('hex') })
+  return Model.create({ name, key, secret })
 }
 
 const createSecretAndHash = () => {
   return Crypto.generateSecret().then(secret => {
-    return Crypto.hash(secret).then(hashedSecret => ({ secret, hashedSecret }))
+    return Crypto.hash(secret).then(hashedSecret => ({
+      secret,
+      hashedSecret: hashedSecret
+    }))
   })
 }
 
@@ -32,8 +35,8 @@ const create = ({ name }) => {
           name: account.name,
           createdDate: account.createdDate,
           credentials: {
-            key: key.toString('hex'),
-            secret: secret.toString('hex')
+            key,
+            secret
           }
         }))
     })
@@ -63,8 +66,31 @@ const getById = (id) => {
   return Model.getById(id)
 }
 
+const getByKey = (key) => {
+  return Model.getByKey(key)
+}
+
 const getByName = (name) => {
   return Model.getByName(name)
+}
+
+const accountExists = (account) => {
+  if (account) return account
+  throw new Error('Account does not exist')
+}
+
+const verifyAccountSecret = (account, secret) => {
+  return Crypto.verifyHash(account.secret, secret)
+    .then(match => {
+      if (match) return account
+      throw new Error('Secret is not valid for account')
+    })
+}
+
+const verify = (key, secret) => {
+  return Model.getByKey(key)
+    .then(accountExists)
+    .then(account => verifyAccountSecret(account, secret))
 }
 
 module.exports = {
@@ -72,5 +98,7 @@ module.exports = {
   exists,
   getAll,
   getById,
-  getByName
+  getByKey,
+  getByName,
+  verify
 }

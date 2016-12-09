@@ -2,9 +2,15 @@
 
 let host = process.env.HOST_IP || 'localhost'
 const Request = require('supertest-as-promised')('http://' + host + ':3000')
+const Encoding = require('@leveloneproject/central-services-shared').Encoding
 
-function get (path) {
-  return Request.get(path)
+const basicAuth = (name, password) => {
+  const credentials = Encoding.toBase64(name + ':' + password)
+  return { 'Authorization': `Basic ${credentials}` }
+}
+
+function get (path, headers = {}) {
+  return Request.get(path).set(headers)
 }
 
 function post (path, data, contentType = 'application/json') {
@@ -44,6 +50,7 @@ function rejectTransfer (transferId, reason) {
 }
 
 module.exports = {
+  basicAuth,
   createAccount,
   fulfillTransfer,
   getTransfer,

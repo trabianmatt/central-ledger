@@ -15,8 +15,8 @@ Test('post and get an account', function (assert) {
       assert.notEqual(expectedCreated, undefined)
       assert.equal(res.body.name, accountName)
       assert.ok(res.body.credentials)
-      assert.ok(res.body.credentials.key.length >= 148)
-      assert.ok(res.body.credentials.secret.length >= 148)
+      assert.ok(res.body.credentials.key.length > 74)
+      assert.ok(res.body.credentials.secret.length > 74)
 
       Base.getAccount(accountName)
         .expect(200)

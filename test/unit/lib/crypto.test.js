@@ -5,6 +5,7 @@ const Sinon = require('sinon')
 const P = require('bluebird')
 const Sodium = require('sodium')
 const Argon2 = require('argon2')
+const Base64Url = require('urlsafe-base64')
 const Crypto = require('../../../src/lib/crypto')
 
 Test('crypto', cryptoTest => {
@@ -31,8 +32,8 @@ Test('crypto', cryptoTest => {
     keyTest.test('generate sodium random buffer with 74 bytes', test => {
       Crypto.generateKey()
         .then(key => {
-          test.equal(key.length, 74)
-          test.ok(sodiumApi.randombytes_buf.calledWith(key, 74))
+          test.equal(key, Base64Url.encode(Buffer.alloc(74)))
+          test.ok(sodiumApi.randombytes_buf.calledWith(Sinon.match.instanceOf(Buffer), 74))
           test.end()
         })
     })
@@ -43,8 +44,20 @@ Test('crypto', cryptoTest => {
     keyTest.test('generate sodium random buffer with 74 bytes', test => {
       Crypto.generateSecret()
         .then(key => {
-          test.equal(key.length, 74)
-          test.ok(sodiumApi.randombytes_buf.calledWith(key, 74))
+          test.equal(key, Base64Url.encode(Buffer.alloc(74)))
+          test.ok(sodiumApi.randombytes_buf.calledWith(Sinon.match.instanceOf(Buffer), 74))
+          test.end()
+        })
+    })
+    keyTest.end()
+  })
+
+  cryptoTest.test('generateToken should', keyTest => {
+    keyTest.test('generate sodium random buffer with 74 bytes', test => {
+      Crypto.generateToken()
+        .then(key => {
+          test.equal(key, Base64Url.encode(Buffer.alloc(74)))
+          test.ok(sodiumApi.randombytes_buf.calledWith(Sinon.match.instanceOf(Buffer), 74))
           test.end()
         })
     })

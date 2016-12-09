@@ -6,6 +6,10 @@ exports.getById = (id) => {
   return Db.connect().then(db => db.accounts.findOneAsync({ accountId: id }))
 }
 
+exports.getByKey = (key) => {
+  return Db.connect().then(db => db.accounts.findOneAsync({ key }))
+}
+
 exports.getByName = (name) => {
   return Db.connect().then(db => db.accounts.findOneAsync({ name: name }))
 }

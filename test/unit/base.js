@@ -14,7 +14,13 @@ exports.setup = () => {
     }
   })
 
-  server.register([ErrorHandling, require('../../src/api'), require('../../src/webhooks')])
+  server.register([
+    ErrorHandling,
+    require('@leveloneproject/central-services-auth'),
+    require('../../src/api/auth'),
+    require('../../src/api'),
+    require('../../src/webhooks')
+  ])
 
   fixtures.server = server
 

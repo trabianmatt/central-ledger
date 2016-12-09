@@ -31,6 +31,8 @@ module.exports = {
     },
     { plugin: 'blipp' },
     { plugin: '@leveloneproject/central-services-error-handling' },
+    { plugin: '@leveloneproject/central-services-auth' },
+    { plugin: './api/auth' },
     { plugin: './api' },
     { plugin: './webhooks' },
     (Config.EXPIRES_TIMEOUT) ? { plugin: './worker' } : null,

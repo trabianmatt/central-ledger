@@ -78,6 +78,16 @@ Test('manifest', function (manifestTest) {
       assert.end()
     })
 
+    registrationsTest.test('register auth plugin', function (assert) {
+      assert.ok(findPluginByPath(Manifest.registrations, '@leveloneproject/central-services-auth'))
+      assert.end()
+    })
+
+    registrationsTest.test('register api auth plugin', function (assert) {
+      assert.ok(findPluginByPath(Manifest.registrations, './api/auth'))
+      assert.end()
+    })
+
     registrationsTest.test('register api plugin', function (assert) {
       assert.ok(findPluginByPath(Manifest.registrations, './api'))
       assert.end()
