@@ -56,5 +56,21 @@ Test('tokens model', function (modelTest) {
     createTest.end()
   })
 
+  modelTest.test('byToken should', byTokenTest => {
+    byTokenTest.test('return Model byToken', test => {
+      const findAsync = Sinon.stub()
+      setupTokensDb({ findAsync: findAsync })
+
+      const account = { accountId: 1 }
+      Model.byAccount(account)
+        .then(() => {
+          test.ok(findAsync.calledWith(Sinon.match({ accountId: account.accountId })))
+          test.end()
+        })
+    })
+
+    byTokenTest.end()
+  })
+
   modelTest.end()
 })

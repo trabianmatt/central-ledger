@@ -1,6 +1,7 @@
 {
   "PORT": 3000,
   "HOSTNAME": "http://central-ledger",
+  "ENABLE_TOKEN_AUTH": false,
   "AMOUNT": {
     "PRECISION": 10,
     "SCALE": 2

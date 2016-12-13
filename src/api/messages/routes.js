@@ -3,6 +3,7 @@
 const Joi = require('joi')
 const Handler = require('./handler')
 const tags = ['api', 'messages']
+const Auth = require('../auth')
 
 module.exports = [
   {
@@ -13,6 +14,7 @@ module.exports = [
       tags,
       description: 'Send a notification to another account',
       id: 'send_message',
+      auth: Auth.routeAuth(),
       validate: {
         payload: {
           ledger: Joi.string().uri().required(),

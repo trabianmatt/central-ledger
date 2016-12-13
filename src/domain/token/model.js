@@ -9,6 +9,11 @@ const create = ({ accountId, token }) => {
   }))
 }
 
+const byAccount = ({ accountId }) => {
+  return Db.connect().then(db => db.tokens.findAsync({ accountId }))
+}
+
 module.exports = {
-  create
+  create,
+  byAccount
 }

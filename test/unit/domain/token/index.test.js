@@ -41,5 +41,21 @@ Test('Token Service', serviceTest => {
     })
     createTest.end()
   })
+
+  serviceTest.test('byAccount should', byAccountTest => {
+    byAccountTest.test('return byToken from Model', test => {
+      const accountId = 1
+      const account = { accountId }
+      Model.byAccount.returns(P.resolve([]))
+      TokenService.byAccount(account)
+        .then(result => {
+          test.ok(Model.byAccount.calledWith(Sinon.match({ accountId })))
+          test.end()
+        })
+    })
+
+    byAccountTest.end()
+  })
+
   serviceTest.end()
 })

@@ -18,6 +18,11 @@ const create = ({ accountId }) => {
   })
 }
 
+const byAccount = ({ accountId }) => {
+  return Model.byAccount({ accountId })
+}
+
 module.exports = {
-  create
+  create,
+  byAccount
 }
