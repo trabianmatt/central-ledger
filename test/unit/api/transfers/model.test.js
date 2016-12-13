@@ -123,12 +123,16 @@ Test('transfer model', function (modelTest) {
   modelTest.test('fulfill should', function (fulfillTest) {
     fulfillTest.test('Call Transfer fulfill method', function (assert) {
       let fulfillment = 'cf:0:_v8'
-      let payload = { id: '3a2a1d9e-8640-4d2d-b06c-84f2cd613204', fulfillment }
-      let transfer = createTransfer()
+      let transferId = '3a2a1d9e-8640-4d2d-b06c-84f2cd613204'
+      let expandedId = 'http://central-ledger/transfers/' + transferId
+      UrlParser.toTransferUri.withArgs(transferId).returns(expandedId)
+      let payload = { id: transferId, fulfillment }
+      let transfer = createTransfer(transferId)
+      transfer.id = transferId
       Transfer.fulfill.withArgs(payload).returns(P.resolve(transfer))
       Model.fulfill(payload)
         .then(result => {
-          assert.equal(result, fulfillment)
+          assert.equal(result.id, expandedId)
           assert.ok(Transfer.fulfill.calledWith(payload))
           assert.end()
         })
@@ -178,13 +182,17 @@ Test('transfer model', function (modelTest) {
   modelTest.test('reject should', rejectTest => {
     rejectTest.test('send RejectTransfer command', t => {
       let rejectionReason = 'some reason'
-      let payload = { id: '3a2a1d9e-8640-4d2d-b06c-84f2cd613204', rejection_reason: rejectionReason }
-      let transfer = createTransfer()
-      Transfer.reject.withArgs(payload).returns(P.resolve({ transfer, rejection_reason: rejectionReason }))
+      let transferId = '3a2a1d9e-8640-4d2d-b06c-84f2cd613204'
+      let expandedId = 'http://central-ledger/transfers/' + transferId
+      UrlParser.toTransferUri.withArgs(transferId).returns(expandedId)
+      let payload = { id: transferId, rejection_reason: rejectionReason }
+      let transfer = createTransfer(transferId)
+      transfer.id = transferId
+      Transfer.reject.withArgs(payload).returns(P.resolve(transfer))
 
       Model.reject(payload)
         .then(result => {
-          t.equal(result, rejectionReason)
+          t.equal(result.id, expandedId)
           t.ok(Transfer.reject.calledWith(payload))
           t.end()
         })

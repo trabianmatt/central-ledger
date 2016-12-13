@@ -42,7 +42,7 @@ exports.fulfill = (fulfillment) => {
   .then(transfer => {
     let t = cleanTransfer(transfer)
     Events.emitTransferExecuted(t, { execution_condition_fulfillment: fulfillment.fulfillment })
-    return fulfillment.fulfillment
+    return t
   })
   .catch(ExpiredTransferError, e => {
     return Commands.expire(fulfillment.id)
@@ -52,9 +52,10 @@ exports.fulfill = (fulfillment) => {
 
 exports.reject = (rejection) => {
   return Commands.reject(rejection)
-  .then(result => {
-    let t = cleanTransfer(result.transfer)
+  .then(transfer => {
+    let t = cleanTransfer(transfer)
+    t.rejection_reason = transfer.rejection_reason
     Events.emitTransferRejected(t)
-    return result.rejection_reason
+    return t
   })
 }

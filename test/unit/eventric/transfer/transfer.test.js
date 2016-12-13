@@ -213,30 +213,6 @@ Test('transfer', transferTest => {
       t.end()
     })
 
-    handleTest.test('reject credits', t => {
-      let transfer = new Transfer()
-      let account = 'account'
-      let rejectionReason = 'a b c d'
-      transfer.credits = [
-        {
-          account: account
-        },
-        {
-          account: 'not the account'
-        }
-      ]
-
-      let result = transfer.handleTransferRejected({
-        timestamp: new Date().getTime(),
-        payload: { rejection_reason: rejectionReason }
-      })
-      t.equal(result.credits[0].rejected, true)
-      t.equal(result.credits[0].rejection_message, rejectionReason)
-      t.equal(result.credits[1].rejected, true)
-      t.equal(result.credits[1].rejection_message, rejectionReason)
-      t.end()
-    })
-
     handleTest.test('update timeline rejected_at', t => {
       let time = new Date().getTime()
       let transfer = new Transfer()

@@ -186,9 +186,8 @@ Test('Transfer aggregate', aggregateTest => {
 
       P.resolve(context.command('PrepareTransfer', originalTransfer))
       .then(prepared => context.command('RejectTransfer', { id: originalTransfer.id, rejection_reason: rejectionReason }))
-      .then(({transfer, rejection_reason}) => {
+      .then(transfer => {
         compareTransfers(t, transfer, originalTransfer)
-        t.equal(rejection_reason, rejectionReason)
         t.equal(transfer.rejection_reason, rejectionReason)
         t.end()
       })
@@ -203,9 +202,8 @@ Test('Transfer aggregate', aggregateTest => {
 
       P.resolve(context.command('PrepareTransfer', originalTransfer))
       .then(prepared => context.command('RejectTransfer', { id: originalTransfer.id, rejection_reason: RejectionType.EXPIRED }))
-      .then(({transfer, rejection_reason}) => {
+      .then(transfer => {
         compareTransfers(t, transfer, originalTransfer)
-        t.equal(rejection_reason, RejectionType.EXPIRED)
         t.equal(transfer.rejection_reason, RejectionType.EXPIRED)
         t.end()
       })
@@ -221,10 +219,9 @@ Test('Transfer aggregate', aggregateTest => {
 
       P.resolve(context.command('PrepareTransfer', originalTransfer))
       .then(prepared => context.command('RejectTransfer', { id: originalTransfer.id, rejection_reason: rejectionReason }))
-      .then(() => context.command('RejectTransfer', { id: originalTransfer.id, rejection_reason: rejectionReason }))
-      .then(({ transfer, rejection_reason }) => {
+      .then(rejected => context.command('RejectTransfer', { id: originalTransfer.id, rejection_reason: rejectionReason }))
+      .then(transfer => {
         compareTransfers(t, transfer, originalTransfer)
-        t.equal(rejection_reason, rejectionReason)
         t.equal(transfer.rejection_reason, rejectionReason)
         t.end()
       })

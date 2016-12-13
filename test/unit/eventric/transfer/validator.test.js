@@ -292,13 +292,11 @@ Test('validator tests', validatorTest => {
   })
 
   validatorTest.test('validateReject should', rejectTest => {
-    rejectTest.test('return alreadyRejected if state is rejected and any credit has the same message', t => {
+    rejectTest.test('return alreadyRejected if state is rejected and rejectionReason matches', t => {
       let rejectionReason = 'r-e-j-e-c-t find out what it means to me'
       let transfer = {
         state: TransferState.REJECTED,
-        credits: [
-          { rejection_message: rejectionReason }
-        ]
+        rejection_reason: rejectionReason
       }
 
       Validator.validateReject(transfer, rejectionReason)

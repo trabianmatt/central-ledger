@@ -197,15 +197,35 @@ Test('transfer handler', handlerTest => {
 
   handlerTest.test('fulfillTransfer should', fulfillTransferTest => {
     fulfillTransferTest.test('return fulfilled transfer', test => {
+      let transfer = {
+        id: 'https://central-ledger/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204',
+        ledger: 'http://usd-ledger.example/USD',
+        debits: [
+          {
+            account: 'http://usd-ledger.example/USD/accounts/alice',
+            amount: '50'
+          }
+        ],
+        credits: [
+          {
+            account: 'http://usd-ledger.example/USD/accounts/bob',
+            amount: '50'
+          }
+        ],
+        execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
+        expires_at: '2015-06-16T00:00:01.000Z',
+        timeline: {}
+      }
+
       let fulfillment = { id: '3a2a1d9e-8640-4d2d-b06c-84f2cd613204', fulfillment: 'cf:0:_v8' }
 
-      Model.fulfill.returns(P.resolve(fulfillment.fulfillment))
+      Model.fulfill.returns(P.resolve(transfer))
 
       let reply = response => {
-        test.equal(response, fulfillment.fulfillment)
+        test.equal(response.id, transfer.id)
         return {
-          type: type => {
-            test.equal(type, 'text/plain')
+          code: statusCode => {
+            test.equal(statusCode, 200)
             test.end()
           }
         }
@@ -245,19 +265,41 @@ Test('transfer handler', handlerTest => {
   })
 
   handlerTest.test('reject transfer', rejectTransferTest => {
-    rejectTransferTest.test('should return 200', test => {
+    rejectTransferTest.test('should rejected transfer', test => {
+      let transfer = {
+        id: 'https://central-ledger/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204',
+        ledger: 'http://usd-ledger.example/USD',
+        debits: [
+          {
+            account: 'http://usd-ledger.example/USD/accounts/alice',
+            amount: '50'
+          }
+        ],
+        credits: [
+          {
+            account: 'http://usd-ledger.example/USD/accounts/bob',
+            amount: '50'
+          }
+        ],
+        execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
+        expires_at: '2015-06-16T00:00:01.000Z',
+        timeline: {}
+      }
+
       let rejectReason = 'error reason'
+
       let request = {
         params: { id: '3a2a1d9e-8640-4d2d-b06c-84f2cd613204' },
         payload: rejectReason
       }
 
-      Model.reject.returns(P.resolve(rejectReason))
+      Model.reject.returns(P.resolve(transfer))
+
       let reply = response => {
-        test.equal(response, rejectReason)
+        test.equal(response.id, transfer.id)
         return {
-          type: type => {
-            test.equal(type, 'text/plain')
+          code: statusCode => {
+            test.equal(statusCode, 200)
             test.end()
           }
         }

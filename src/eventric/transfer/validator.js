@@ -43,9 +43,9 @@ exports.validateExistingOnPrepare = (proposed, existing) => {
   })
 }
 
-exports.validateReject = ({state, credits = []}, rejectionReason) => {
+exports.validateReject = ({state, rejection_reason}, rejectionReason) => {
   return P.resolve().then(() => {
-    if (state === TransferState.REJECTED && credits.some(x => x.rejection_message === rejectionReason)) {
+    if (state === TransferState.REJECTED && rejection_reason === rejectionReason) { // eslint-disable-line
       return { alreadyRejected: true }
     }
 

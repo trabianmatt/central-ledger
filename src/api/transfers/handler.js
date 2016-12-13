@@ -27,7 +27,7 @@ exports.fulfillTransfer = function (request, reply) {
   }
 
   return Model.fulfill(fulfillment)
-    .then(result => reply(result).type('text/plain'))
+    .then(transfer => reply(TransferTranslator.toTransfer(transfer)).code(200))
     .catch(e => reply(e))
 }
 
@@ -38,7 +38,7 @@ exports.rejectTransfer = function (request, reply) {
   }
 
   return Model.reject(rejection)
-  .then(reason => reply(reason).type('text/plain'))
+  .then(transfer => reply(TransferTranslator.toTransfer(transfer)).code(200))
   .catch(e => reply(e))
 }
 

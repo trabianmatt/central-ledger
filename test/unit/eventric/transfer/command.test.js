@@ -167,8 +167,7 @@ Test('Commands Test', commandsTest => {
 
       Commands.RejectTransfer({ id: id, rejection_reason: rejectionReason })
       .then(result => {
-        t.equal(result.rejection_reason, rejectionReason)
-        t.equal(result.transfer, transfer)
+        t.equal(result, transfer)
         t.end()
       })
     })
@@ -189,9 +188,8 @@ Test('Commands Test', commandsTest => {
       Commands.$aggregate.load.withArgs('Transfer', id).returns(P.resolve(transfer))
 
       Commands.RejectTransfer({ id: id, rejection_reason: rejectionReason })
-      .then(result => {
-        t.equal(result.rejection_reason, rejectionReason)
-        t.equal(result.transfer, transfer)
+      .then(transfer => {
+        t.equal(transfer, transfer)
         t.ok(rejectStub.calledWith(Sinon.match({ rejection_reason: rejectionReason })))
         t.ok(saveStub.calledOnce)
         t.end()

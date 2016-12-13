@@ -16,7 +16,8 @@ let fromTransferAggregate = (t) => ({
   execution_condition: t.execution_condition,
   expires_at: t.expires_at,
   state: t.state,
-  timeline: removeNullOrUndefinedTimelineProperties(t.timeline)
+  timeline: removeNullOrUndefinedTimelineProperties(t.timeline),
+  rejection_reason: t.rejection_reason
 })
 
 let fromTransferReadModel = (t) => ({

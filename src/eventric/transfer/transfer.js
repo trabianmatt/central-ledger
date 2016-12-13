@@ -50,16 +50,13 @@ class Transfer {
   handleTransferExecuted (event) {
     this.state = TransferState.EXECUTED
     this.fulfillment = event.payload.fulfillment
+    this.timeline = this.timeline || {}
+    this.timeline.executed_at = Moment(event.timestamp).toISOString()
     return this
   }
 
   handleTransferRejected (event) {
     let rejection_reason = event.payload.rejection_reason // eslint-disable-line
-    let credits = this.credits || []
-    credits.forEach(c => {
-      c.rejection_message = rejection_reason // eslint-disable-line
-      c.rejected = true
-    })
     this.state = TransferState.REJECTED
     this.rejection_reason = rejection_reason // eslint-disable-line
     this.timeline = this.timeline || {}

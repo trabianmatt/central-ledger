@@ -14,7 +14,7 @@ const UrlParser = require('../../lib/urlparser')
 exports.rejectExpired = () => {
   let rejections = ReadModel.findExpired().then(expired => expired.map(x => Commands.expire(x.transferUuid)))
   return P.all(rejections).then(rejections => {
-    return rejections.map(r => r.transfer.id)
+    return rejections.map(r => r.id)
   })
 }
 

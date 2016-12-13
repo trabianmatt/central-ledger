@@ -28,7 +28,8 @@ Test('TransferTranslator', transferTranslatorTest => {
           prepared_at: '2016-12-16T00:00:01.000Z',
           executed_at: null,
           rejected_at: '2016-12-18T00:00:01.000Z'
-        }
+        },
+        rejection_reason: 'some reason'
       }
 
       let expected = {
@@ -51,7 +52,8 @@ Test('TransferTranslator', transferTranslatorTest => {
         timeline: {
           prepared_at: '2016-12-16T00:00:01.000Z',
           rejected_at: '2016-12-18T00:00:01.000Z'
-        }
+        },
+        rejection_reason: 'some reason'
       }
 
       let actual = TransferTranslator.toTransfer(from)

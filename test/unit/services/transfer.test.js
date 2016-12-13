@@ -43,7 +43,7 @@ Test('Transfer Service tests', serviceTest => {
 
   serviceTest.test('rejectExpired should', rejectTest => {
     rejectTest.test('find expired transfers and reject them', test => {
-      let transfers = [{ transferUuid: 1 }, { transferUuid: 2 }]
+      let transfers = [1, 2]
       ReadModel.findExpired.returns(P.resolve(transfers))
       transfers.forEach((x, i) => {
         Commands.expire.onCall(i).returns(P.resolve({ transfer: { id: x.transferUuid }, rejection_reason: RejectionType.EXPIRED }))
