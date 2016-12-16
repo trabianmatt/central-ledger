@@ -12,12 +12,11 @@ function generateAccountName () {
   return `dfsp${Uuid().replace(/-/g, '')}`
 }
 
-function buildDebitOrCredit (accountName, amount, memo, invoice) {
+function buildDebitOrCredit (accountName, amount, memo) {
   return {
     account: `http://${hostname}/accounts/${accountName}`,
     amount: amount,
     memo: memo,
-    invoice: invoice,
     authorized: true
   }
 }
@@ -110,11 +109,9 @@ function buildReadModelTransfer (transferId, debit, credit, state, expiresAt, pr
     debitAccountId: debit.accountId,
     debitAmount: debit.amount,
     debitMemo: debit.memo,
-    debitInvoice: debit.invoice,
     creditAccountId: credit.accountId,
     creditAmount: credit.amount,
     creditMemo: credit.memo,
-    creditInvoice: credit.invoice,
     executionCondition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
     rejectionReason: rejectionReason,
     expiresAt: expiresAt,

@@ -22,14 +22,12 @@ module.exports = [{
         debits: Joi.array().items(Joi.object().keys({
           account: Joi.string().uri().required().description('Debit account of the transfer'),
           amount: Joi.number().required().description('Debit amount of the transfer'),
-          invoice: Joi.string().uri().optional().description('Unique invoice URI'),
           memo: Joi.object().optional().unknown().description('Additional information related to the debit'),
           authorized: Joi.boolean().optional().description('Indicates whether debit has been authorized by account holder')
         })).required().description('Debits of the transfer'),
         credits: Joi.array().items(Joi.object().keys({
           account: Joi.string().uri().required().description('Credit account of the transfer'),
           amount: Joi.number().required().description('Credit amount of the transfer'),
-          invoice: Joi.string().uri().optional().description('Unique invoice URI'),
           memo: Joi.object().optional().unknown().description('Additional information related to the credit'),
           authorized: Joi.boolean().optional().description('Indicates whether debit has been authorized by account holder')
         })).required().description('Credits of the transfer'),

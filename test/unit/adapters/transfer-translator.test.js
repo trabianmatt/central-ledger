@@ -68,10 +68,8 @@ Test('TransferTranslator', transferTranslatorTest => {
         'ledger': 'http: //central-ledger',
         'debitAmount': '50.00',
         'debitMemo': null,
-        'debitInvoice': null,
         'creditAmount': '50.00',
         'creditMemo': null,
-        'creditInvoice': null,
         'executionCondition': 'cc: 0: 3: 8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y: 2',
         'cancellationCondition': null,
         'rejectionReason': null,
@@ -94,14 +92,12 @@ Test('TransferTranslator', transferTranslatorTest => {
         credits: [
           { account: 'http://central-ledger/accounts/bob',
             amount: '50.00',
-            invoice: null,
             memo: null
           }
         ],
         debits: [
           { account: 'http://central-ledger/accounts/alice',
             amount: '50.00',
-            invoice: null,
             memo: null
           }
         ],

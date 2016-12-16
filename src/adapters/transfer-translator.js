@@ -26,13 +26,11 @@ let fromTransferReadModel = (t) => ({
   debits: [{
     account: UrlParser.toAccountUri(t.debitAccountName),
     amount: t.debitAmount,
-    invoice: t.debitInvoice,
     memo: t.debitMemo
   }],
   credits: [{
     account: UrlParser.toAccountUri(t.creditAccountName),
     amount: t.creditAmount,
-    invoice: t.creditInvoice,
     memo: t.creditMemo
   }],
   execution_condition: t.executionCondition,
