@@ -1,0 +1,2 @@
+ALTER TABLE tokens
+ALTER COLUMN "accountId" DROP NOT NULL;

@@ -24,4 +24,6 @@ Test('GET /auth_token', getTest => {
         })
     })
   })
+
+  getTest.end()
 })

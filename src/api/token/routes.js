@@ -2,7 +2,8 @@
 
 const Handler = require('./handler')
 const AccountAuthStrategy = require('../auth/account')
-const tags = ['api', 'messages']
+const AdminAuthStrategy = require('../auth/admin')
+const tags = ['api', 'token']
 
 module.exports = [
   {
@@ -14,6 +15,16 @@ module.exports = [
       auth: AccountAuthStrategy.name,
       description: 'Get a token that can be used to authenticate future requests',
       id: 'auth_token'
+    }
+  },
+  {
+    method: 'GET',
+    path: '/admin_token',
+    handler: Handler.create,
+    config: {
+      tags,
+      auth: AdminAuthStrategy.name,
+      description: 'Get a token for admin authentication'
     }
   }
 ]

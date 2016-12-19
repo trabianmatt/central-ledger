@@ -3,11 +3,12 @@
 const Config = require('../../lib/config')
 const AccountStrategy = require('./account')
 const TokenStrategy = require('./token')
+const AdminStrategy = require('./admin')
 
 exports.register = (server, options, next) => {
   server.auth.strategy(AccountStrategy.name, AccountStrategy.scheme, { validate: AccountStrategy.validate })
   server.auth.strategy(TokenStrategy.name, TokenStrategy.scheme, { validate: TokenStrategy.validate })
-
+  server.auth.strategy(AdminStrategy.name, AdminStrategy.scheme, { validate: AdminStrategy.validate })
   next()
 }
 
