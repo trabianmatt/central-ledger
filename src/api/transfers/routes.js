@@ -10,7 +10,7 @@ module.exports = [{
   config: {
     id: 'transfer',
     tags: tags,
-    auth: Auth.routeAuth(),
+    auth: Auth.tokenAuth(),
     description: 'Prepare a transfer',
     validate: {
       params: {
@@ -43,7 +43,7 @@ module.exports = [{
   handler: Handler.getTransferById,
   config: {
     tags: tags,
-    auth: Auth.routeAuth(),
+    auth: Auth.tokenAuth(),
     description: 'Get transfer by ID',
     validate: {
       params: {
@@ -59,7 +59,7 @@ module.exports = [{
   config: {
     id: 'transfer_fulfillment',
     tags: tags,
-    auth: Auth.routeAuth(),
+    auth: Auth.tokenAuth(),
     description: 'Fulfill a transfer',
     validate: {
       headers: Joi.object({ 'content-type': Joi.string().required().valid('text/plain') }).unknown(),
@@ -77,7 +77,7 @@ module.exports = [{
   config: {
     id: 'transfer_rejection',
     tags: tags,
-    auth: Auth.routeAuth(),
+    auth: Auth.tokenAuth(),
     description: 'Reject a transfer',
     validate: {
       headers: Joi.object({ 'content-type': Joi.string().required().valid('text/plain') }).unknown(),
@@ -95,7 +95,7 @@ module.exports = [{
   config: {
     tags: tags,
     description: 'Get transfer fulfillment',
-    auth: Auth.routeAuth(),
+    auth: Auth.tokenAuth(),
     validate: {
       params: {
         id: Joi.string().guid().required().description('Id of transfer to retrieve fulfillment for')

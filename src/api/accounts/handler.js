@@ -22,6 +22,19 @@ function buildResponse (account, { net = '0' } = {}) {
   return response
 }
 
+function entityItem ({name, createdDate}) {
+  const link = UrlParser.toAccountUri(name)
+  return {
+    id: link,
+    name,
+    created: createdDate,
+    is_disabled: false,
+    '_links': {
+      self: link
+    }
+  }
+}
+
 function handleExistingRecord () {
   return (entity) => {
     if (entity) {
@@ -52,6 +65,13 @@ exports.create = (request, reply) => {
     .then(handleExistingRecord())
     .then(createAccount(request.payload))
     .then(account => reply(buildResponse(account)).code(201))
+    .catch(e => reply(e))
+}
+
+exports.getAll = (request, reply) => {
+  Account.getAll()
+    .then(results => results.map(entityItem))
+    .then(result => reply(result))
     .catch(e => reply(e))
 }
 

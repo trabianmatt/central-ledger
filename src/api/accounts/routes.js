@@ -13,7 +13,7 @@ module.exports = [
     config: {
       id: 'accounts',
       tags: tags,
-      auth: Auth.routeAuth(),
+      auth: Auth.tokenAuth(),
       description: 'Create an account.',
       validate: {
         payload: {
@@ -24,13 +24,23 @@ module.exports = [
   },
   {
     method: 'GET',
+    path: '/accounts',
+    handler: Handler.getAll,
+    config: {
+      tags: tags,
+      description: 'Retreive all accounts',
+      auth: Auth.adminTokenAuth()
+    }
+  },
+  {
+    method: 'GET',
     path: '/accounts/{name}',
     handler: Handler.getByName,
     config: {
       id: 'account',
       tags: tags,
       description: 'Retrieve an accounts details by name',
-      auth: Auth.routeAuth(),
+      auth: Auth.tokenAuth(),
       validate: {
         params: {
           name: nameValidator

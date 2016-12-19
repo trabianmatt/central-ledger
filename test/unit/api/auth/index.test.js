@@ -5,6 +5,7 @@ const Sinon = require('sinon')
 const Config = require('../../../../src/lib/config')
 const AccountStrategy = require('../../../../src/api/auth/account')
 const TokenStrategy = require('../../../../src/api/auth/token')
+
 const AuthModule = require('../../../../src/api/auth')
 
 Test('Auth module', authTest => {
@@ -38,7 +39,23 @@ Test('Auth module', authTest => {
       }
 
       const next = () => {
-        test.ok(strategySpy.calledWith(TokenStrategy.name, TokenStrategy.scheme, Sinon.match({ validate: TokenStrategy.validate })))
+        test.ok(strategySpy.calledWith(TokenStrategy.all.name, TokenStrategy.all.scheme, Sinon.match({ validate: TokenStrategy.all.validate })))
+        test.end()
+      }
+
+      AuthModule.register(server, {}, next)
+    })
+
+    registerTest.test('add AdminTokenAuth to server auth strategies', test => {
+      const strategySpy = Sinon.spy()
+      const server = {
+        auth: {
+          strategy: strategySpy
+        }
+      }
+
+      const next = () => {
+        test.ok(strategySpy.calledWith(TokenStrategy.adminOnly.name, TokenStrategy.adminOnly.scheme, Sinon.match({ validate: TokenStrategy.adminOnly.validate })))
         test.end()
       }
 
@@ -46,19 +63,34 @@ Test('Auth module', authTest => {
     })
   })
 
-  authTest.test('routeAuth should', routeAuthTest => {
-    routeAuthTest.test('return token if ENABLE_TOKEN_AUTH true', test => {
+  authTest.test('tokenAuth should', tokenAuthTest => {
+    tokenAuthTest.test('return token if ENABLE_TOKEN_AUTH true', test => {
       Config.ENABLE_TOKEN_AUTH = true
-      test.equal(AuthModule.routeAuth(), 'token')
+      test.equal(AuthModule.tokenAuth(), 'token')
       test.end()
     })
 
-    routeAuthTest.test('return false if ENABLE_TOKEN_AUTH is false', test => {
+    tokenAuthTest.test('return false if ENABLE_TOKEN_AUTH is false', test => {
       Config.ENABLE_TOKEN_AUTH = false
-      test.equal(AuthModule.routeAuth(), false)
+      test.equal(AuthModule.tokenAuth(), false)
       test.end()
     })
-    routeAuthTest.end()
+    tokenAuthTest.end()
+  })
+
+  authTest.test('adminTokenAuth should', adminTokenAuthTest => {
+    adminTokenAuthTest.test('return admin-token if ENABLE_TOKEN_AUTH true', test => {
+      Config.ENABLE_TOKEN_AUTH = true
+      test.equal(AuthModule.adminTokenAuth(), 'admin-token')
+      test.end()
+    })
+
+    adminTokenAuthTest.test('return false if ENABLE_TOKEN_AUTH is false', test => {
+      Config.ENABLE_TOKEN_AUTH = false
+      test.equal(AuthModule.adminTokenAuth(), false)
+      test.end()
+    })
+    adminTokenAuthTest.end()
   })
 
   authTest.end()

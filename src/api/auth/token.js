@@ -4,35 +4,60 @@ const P = require('bluebird')
 const UnauthorizedError = require('@leveloneproject/central-services-auth').UnauthorizedError
 const AccountService = require('../../domain/account')
 const TokenService = require('../../domain/token')
+const Config = require('../../lib/config')
 const Crypto = require('../../lib/crypto')
 
-const validate = (request, token, cb) => {
-  const headers = request.headers
-  const apiKey = headers['Ledger-Api-Key']
-
-  if (!apiKey) {
-    return cb(new UnauthorizedError('"Ledger-Api-Key" header is required'))
+const getAccount = (key, adminOnly = false) => {
+  if (Config.ADMIN_KEY && Config.ADMIN_KEY === key) {
+    return P.resolve({ is_admin: true, accountId: null })
+  } else if (adminOnly) {
+    return P.resolve({ is_admin: false })
+  } else {
+    return AccountService.getByKey(key)
   }
+}
 
-  AccountService.getByKey(apiKey)
-    .then(account => {
-      if (!account) {
-        return cb(new UnauthorizedError('"Ledger-Api-Key" header is not valid'))
-      }
-      return TokenService.byAccount(account).then(results => {
-        if (!results || results.length === 0) {
+const validate = (adminOnly) => {
+  return (request, token, cb) => {
+    const headers = request.headers
+    const apiKey = headers['ledger-api-key']
+    console.log(apiKey)
+    if (!apiKey) {
+      return cb(new UnauthorizedError('"Ledger-Api-Key" header is required'))
+    }
+
+    getAccount(apiKey, adminOnly)
+      .then(account => {
+        if (!account) {
+          return cb(new UnauthorizedError('"Ledger-Api-Key" header is not valid'))
+        }
+
+        if (adminOnly && !account.is_admin) {
           return cb(null, false)
         }
 
-        return P.all(results.map(x => Crypto.verifyHash(x.token, token)))
-        .then((verifications) => verifications.some(x => x))
-        .then(verified => cb(null, verified, account))
+        return TokenService.byAccount(account).then(results => {
+          if (!results || results.length === 0) {
+            return cb(null, false)
+          }
+
+          return P.all(results.map(x => Crypto.verifyHash(x.token, token)))
+          .then((verifications) => verifications.some(x => x))
+          .then(verified => cb(null, verified, account))
+        })
       })
-    })
+  }
 }
 
 module.exports = {
-  name: 'token',
-  scheme: 'bearer',
-  validate
+  adminOnly: {
+    name: 'admin-token',
+    scheme: 'bearer',
+    validate: validate(true)
+  },
+  all: {
+    name: 'token',
+    scheme: 'bearer',
+    validate: validate(false)
+  }
 }

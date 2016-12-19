@@ -14,7 +14,7 @@ module.exports = [
       tags,
       description: 'Send a notification to another account',
       id: 'send_message',
-      auth: Auth.routeAuth(),
+      auth: Auth.tokenAuth(),
       validate: {
         payload: {
           ledger: Joi.string().uri().required(),

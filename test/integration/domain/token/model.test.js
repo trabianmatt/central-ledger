@@ -39,6 +39,25 @@ Test('Token Model', modelTest => {
         test.end()
       })
     })
+
+    tokensByAccountTest.test('return admin tokens if accountId is null', test => {
+      createAccount()
+      .then(account1 => {
+        return P.all([
+          generateToken(account1),
+          generateToken({})
+        ]).then(([token1, token2]) => {
+          return Model.byAccount({ accountId: null }).then((results) => ({ results, token1, token2 }))
+        })
+      })
+      .then(({ results, token1, token2 }) => {
+        test.equal(results.length, 1)
+        test.ok(results.find(t => t.token === token2.token))
+        test.notOk(results.find(t => t.token === token1.token))
+        test.end()
+      })
+    })
+
     tokensByAccountTest.end()
   })
 
