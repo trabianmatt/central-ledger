@@ -5,6 +5,7 @@ const Sinon = require('sinon')
 const P = require('bluebird')
 const AccountService = require('../../../../src/domain/account')
 const AccountAuth = require('../../../../src/api/auth/account')
+const Logger = require('@leveloneproject/central-services-shared').Logger
 
 Test('account auth module', authTest => {
   let sandbox
@@ -12,6 +13,7 @@ Test('account auth module', authTest => {
   authTest.beforeEach(t => {
     sandbox = Sinon.sandbox.create()
     sandbox.stub(AccountService)
+    sandbox.stub(Logger)
     t.end()
   })
 
