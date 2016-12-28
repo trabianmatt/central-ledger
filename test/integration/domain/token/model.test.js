@@ -12,9 +12,9 @@ const createAccount = () => {
   return AccountModel.create({ name: accountName })
 }
 
-const generateToken = ({ accountId }) => {
+const generateToken = ({ accountId }, expiration = null) => {
   const token = Uuid().toString()
-  return Model.create({ accountId, token })
+  return Model.create({ accountId, token, expiration })
 }
 
 Test('Token Model', modelTest => {
@@ -59,6 +59,36 @@ Test('Token Model', modelTest => {
     })
 
     tokensByAccountTest.end()
+  })
+
+  modelTest.test('removeExpired should', removeExpiredTest => {
+    removeExpiredTest.test('remove all expired tokens', test => {
+      createAccount()
+      .then(account1 => {
+        return P.all([
+          generateToken(account1, 1582270860498),
+          generateToken(account1, 1582270860498),
+          generateToken(account1, 1),
+          generateToken(account1, 2)
+        ])
+        .then(([token1, token2, token3, token4]) => {
+          return Model.byAccount(account1).then(results => {
+            test.equal(results.length, 4)
+            return Model.removeExpired().then(results => {
+              test.equal(results.length, 2)
+            })
+          })
+          .then(() => {
+            return Model.byAccount(account1).then(results => {
+              test.equal(results.length, 2)
+              test.end()
+            })
+          })
+        })
+      })
+    })
+
+    removeExpiredTest.end()
   })
 
   modelTest.end()

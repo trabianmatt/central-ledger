@@ -6,7 +6,8 @@ const Sinon = require('sinon')
 const P = require('bluebird')
 const Logger = require('@leveloneproject/central-services-shared').Logger
 const Config = require(`${src}/lib/config`)
-const Service = require(`${src}/services/transfer`)
+const TransferService = require(`${src}/services/transfer`)
+const TokenService = require(`${src}/domain/token`)
 const Worker = require(`${src}/worker`)
 
 Test('Worker test', workerTest => {
@@ -14,7 +15,8 @@ Test('Worker test', workerTest => {
 
   workerTest.beforeEach(t => {
     sandbox = Sinon.sandbox.create()
-    sandbox.stub(Service, 'rejectExpired')
+    sandbox.stub(TransferService, 'rejectExpired')
+    sandbox.stub(TokenService, 'removeExpired')
     sandbox.stub(Logger, 'error')
     sandbox.stub(Logger, 'info')
     t.end()
@@ -28,13 +30,16 @@ Test('Worker test', workerTest => {
   workerTest.test('setup', setupTest => {
     setupTest.beforeEach(t => {
       sandbox.stub(global, 'setInterval')
-      sandbox.stub(Worker, 'rejectExpired')
+      sandbox.stub(Worker, 'rejectExpiredTransfers')
+      sandbox.stub(Worker, 'rejectExpiredTokens')
       t.end()
     })
 
     setupTest.test('should not set timeout when EXPIRES_TIMEOUT config value undefined', test => {
+      let expiresTimeout = 1000
+      Config.TOKEN_EXPIRATION = null
       let next = () => {
-        test.notOk(global.setInterval.called)
+        test.notOk(global.setInterval.calledWith(Worker.rejectExpiredTransfers, expiresTimeout))
         test.end()
       }
       Worker.register({}, {}, next)
@@ -44,7 +49,28 @@ Test('Worker test', workerTest => {
       let expiresTimeout = 1000
       Config.EXPIRES_TIMEOUT = expiresTimeout
       let next = () => {
-        test.ok(global.setInterval.calledWith(Worker.rejectExpired, expiresTimeout))
+        test.ok(global.setInterval.calledWith(Worker.rejectExpiredTransfers, expiresTimeout))
+        test.end()
+      }
+
+      Worker.register({}, {}, next)
+    })
+
+    setupTest.test('should not set tokenExpiration when TOKEN_EXPIRATION config value undefined', test => {
+      let tokenExpiration = 1000
+      Config.TOKEN_EXPIRATION = null
+      let next = () => {
+        test.notOk(global.setInterval.calledWith(Worker.rejectExpiredTokens, tokenExpiration))
+        test.end()
+      }
+      Worker.register({}, {}, next)
+    })
+
+    setupTest.test('should set tokenExpiration when TOKEN_EXPIRATION config value set', test => {
+      let tokenExpiration = 1000
+      Config.TOKEN_EXPIRATION = tokenExpiration
+      let next = () => {
+        test.ok(global.setInterval.calledWith(Worker.rejectExpiredTokens, tokenExpiration))
         test.end()
       }
 
@@ -67,17 +93,35 @@ Test('Worker test', workerTest => {
       t.end()
     })
 
-    runTest.test('should call Service.rejectExpired after interval elapse', test => {
+    runTest.test('should call Worker.rejectExpiredTransfers after interval elapse', test => {
       let expiresTimeout = 1000
-      sandbox.stub(Worker, 'rejectExpired')
-      Worker.rejectExpired.returns(P.resolve([]))
+      sandbox.stub(Worker, 'rejectExpiredTransfers')
+      Worker.rejectExpiredTransfers.returns(P.resolve([]))
       Config.EXPIRES_TIMEOUT = expiresTimeout
+      Config.TOKEN_EXPIRATION = null
       let next = () => {
-        test.notOk(Worker.rejectExpired.called)
+        test.notOk(Worker.rejectExpiredTransfers.called)
         clock.tick(expiresTimeout)
-        test.ok(Worker.rejectExpired.calledOnce)
+        test.ok(Worker.rejectExpiredTransfers.calledOnce)
         clock.tick(expiresTimeout)
-        test.ok(Worker.rejectExpired.calledTwice)
+        test.ok(Worker.rejectExpiredTransfers.calledTwice)
+        test.end()
+      }
+      Worker.register({}, {}, next)
+    })
+
+    runTest.test('should call Worker.rejectExpiredTokens after interval elapse', test => {
+      let tokenExpiration = 1000
+      sandbox.stub(Worker, 'rejectExpiredTokens')
+      Worker.rejectExpiredTokens.returns(P.resolve([]))
+      Config.EXPIRES_TIMEOUT = null
+      Config.TOKEN_EXPIRATION = tokenExpiration
+      let next = () => {
+        test.notOk(Worker.rejectExpiredTokens.called)
+        clock.tick(tokenExpiration)
+        test.ok(Worker.rejectExpiredTokens.calledOnce)
+        clock.tick(tokenExpiration)
+        test.ok(Worker.rejectExpiredTokens.calledTwice)
         test.end()
       }
       Worker.register({}, {}, next)
@@ -86,12 +130,12 @@ Test('Worker test', workerTest => {
     runTest.end()
   })
 
-  workerTest.test('rejectExpired should', rejectTest => {
-    rejectTest.test('call Service.rejectExpired and log results', test => {
+  workerTest.test('rejectExpiredTransfers should', rejectTest => {
+    rejectTest.test('call TransferService.rejectExpired and log results', test => {
       let expiredTransfers = [1, 2]
-      Service.rejectExpired.returns(P.resolve(expiredTransfers))
+      TransferService.rejectExpired.returns(P.resolve(expiredTransfers))
 
-      Worker.rejectExpired().then(result => {
+      Worker.rejectExpiredTransfers().then(result => {
         test.equal(result, expiredTransfers)
         test.ok(Logger.info.calledWith(`Rejected transfers: ${result}`))
         test.ok(Logger.error.notCalled)
@@ -99,13 +143,41 @@ Test('Worker test', workerTest => {
       })
     })
 
-    rejectTest.test('call Service.rejectExpired and log error if thrown', test => {
+    rejectTest.test('call TransferService.rejectExpired and log error if thrown', test => {
       let error = new Error()
-      Service.rejectExpired.returns(P.reject(error))
+      TransferService.rejectExpired.returns(P.reject(error))
 
-      Worker.rejectExpired().then(result => {
+      Worker.rejectExpiredTransfers().then(result => {
         test.notOk(result)
         test.ok(Logger.error.calledWith('Error rejecting transfers', error))
+        test.ok(Logger.info.notCalled)
+        test.end()
+      })
+    })
+
+    rejectTest.end()
+  })
+
+  workerTest.test('rejectExpiredTokens should', rejectTest => {
+    rejectTest.test('call TokenService.removeExpired and log results', test => {
+      let expiredTokens = [1, 2]
+      TokenService.removeExpired.returns(P.resolve(expiredTokens))
+
+      Worker.rejectExpiredTokens().then(result => {
+        test.equal(result, expiredTokens)
+        test.ok(Logger.info.calledWith(`Rejected tokens: ${result}`))
+        test.ok(Logger.error.notCalled)
+        test.end()
+      })
+    })
+
+    rejectTest.test('call TokenService.removeExpired and log error if thrown', test => {
+      let error = new Error()
+      TokenService.removeExpired.returns(P.reject(error))
+
+      Worker.rejectExpiredTokens().then(result => {
+        test.notOk(result)
+        test.ok(Logger.error.calledWith('Error rejecting tokens', error))
         test.ok(Logger.info.notCalled)
         test.end()
       })

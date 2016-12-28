@@ -22,7 +22,8 @@ exports.settle = () => {
   let settlementId = SettlementsModel.generateId()
   let settledTransfers = SettlementsModel.create(settlementId).then(() => {
     return SettleableTransfersReadModel.getSettleableTransfers().then(
-      transfers => transfers.map(x => Commands.settle({id: x.transferId, settlement_id: settlementId}))) })
+      transfers => transfers.map(x => Commands.settle({id: x.transferId, settlement_id: settlementId})))
+  })
 
   return P.all(settledTransfers).then(settledTransfers => {
     if (settledTransfers.length > 0) {

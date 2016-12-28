@@ -6,6 +6,12 @@ const AccountService = require('../../domain/account')
 const TokenService = require('../../domain/token')
 const Config = require('../../lib/config')
 const Crypto = require('../../lib/crypto')
+const Time = require('../../lib/time')
+
+const validateToken = (token, bearer) => {
+  const expired = token.expiration && (token.expiration < Time.getCurrentUTCTimeInMilliseconds())
+  return !expired && Crypto.verifyHash(token.token, bearer)
+}
 
 const getAccount = (key, adminOnly = false) => {
   if (Config.ADMIN_KEY && Config.ADMIN_KEY === key) {
@@ -21,7 +27,6 @@ const validate = (adminOnly) => {
   return (request, token, cb) => {
     const headers = request.headers
     const apiKey = headers['ledger-api-key']
-    console.log(apiKey)
     if (!apiKey) {
       return cb(new UnauthorizedError('"Ledger-Api-Key" header is required'))
     }
@@ -41,7 +46,7 @@ const validate = (adminOnly) => {
             return cb(null, false)
           }
 
-          return P.all(results.map(x => Crypto.verifyHash(x.token, token)))
+          return P.all(results.map(x => validateToken(x, token)))
           .then((verifications) => verifications.some(x => x))
           .then(verified => cb(null, verified, account))
         })

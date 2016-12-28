@@ -15,6 +15,15 @@ module.exports = [
   },
   {
     method: 'POST',
+    path: '/webhooks/reject-expired-tokens',
+    handler: Handler.rejectExpiredTokens,
+    config: {
+      tags: tags,
+      description: 'Reject expired tokens'
+    }
+  },
+  {
+    method: 'POST',
     path: '/webhooks/settle-transfers',
     handler: Handler.settle,
     config: {

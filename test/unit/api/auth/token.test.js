@@ -22,6 +22,7 @@ const createRequest = (apiKey = null) => {
 Test('Token Auth', tokenTest => {
   let sandbox
   let originalAdminKey
+  let originalTokenExpiration
 
   tokenTest.beforeEach(test => {
     sandbox = Sinon.sandbox.create()
@@ -29,12 +30,14 @@ Test('Token Auth', tokenTest => {
     sandbox.stub(TokenService, 'byAccount')
     sandbox.stub(Crypto, 'verifyHash')
     originalAdminKey = Config.ADMIN_KEY
+    originalTokenExpiration = Config.TOKEN_EXPIRATION
     test.end()
   })
 
   tokenTest.afterEach(test => {
     sandbox.restore()
     Config.ADMIN_KEY = originalAdminKey
+    Config.TOKEN_EXPIRATION = originalTokenExpiration
     test.end()
   })
 
@@ -131,6 +134,34 @@ Test('Token Auth', tokenTest => {
       }
 
       TokenAuth.all.validate(request, token, cb)
+    })
+
+    validateTest.test('be invalid if a token has expired', test => {
+      const key = 'some-key'
+      const tokenVal = 'token'
+      const expiration = 1
+      const token = { token: tokenVal, expiration }
+      const bearer = 'bearer'
+      const accountId = Uuid().toString()
+      const account = { accountId }
+      AccountService.getByKey.withArgs(key).returns(P.resolve(account))
+      const tokens = [
+        token
+      ]
+      Crypto.verifyHash.returns(P.resolve(false))
+      Crypto.verifyHash.withArgs(token.token, bearer).returns(P.resolve(true))
+      TokenService.byAccount.withArgs(account).returns(P.resolve(tokens))
+      const request = createRequest(key)
+      Config.TOKEN_EXPIRATION = 1
+
+      const cb = (err, isValid, credentials) => {
+        test.notOk(err)
+        test.equal(isValid, false)
+        test.equal(credentials, account)
+        test.end()
+      }
+
+      TokenAuth.all.validate(request, bearer, cb)
     })
 
     validateTest.end()

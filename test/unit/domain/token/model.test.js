@@ -4,6 +4,7 @@ const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const Model = require('../../../../src/domain/token/model')
 const Db = require('../../../../src/db')
+const Time = require('../../../../src/lib/time')
 
 Test('tokens model', function (modelTest) {
   let sandbox
@@ -14,6 +15,7 @@ Test('tokens model', function (modelTest) {
 
   modelTest.beforeEach((t) => {
     sandbox = Sinon.sandbox.create()
+    sandbox.stub(Time, 'getCurrentUTCTimeInMilliseconds')
     t.end()
   })
 
@@ -70,6 +72,24 @@ Test('tokens model', function (modelTest) {
     })
 
     byTokenTest.end()
+  })
+
+  modelTest.test('removeExpired should', removeExpiredTest => {
+    removeExpiredTest.test('remove expired tokens', test => {
+      const currentTime = 1
+      Time.getCurrentUTCTimeInMilliseconds.returns(currentTime)
+
+      const destroyAsync = Sinon.stub()
+      setupTokensDb({ destroyAsync: destroyAsync })
+
+      Model.removeExpired()
+        .then(() => {
+          test.ok(destroyAsync.calledWith(Sinon.match({ 'expiration <=': currentTime })))
+          test.end()
+        })
+    })
+
+    removeExpiredTest.end()
   })
 
   modelTest.end()

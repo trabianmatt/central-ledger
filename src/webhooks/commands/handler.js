@@ -1,15 +1,22 @@
 'use strict'
 
-const Service = require('../../services/transfer')
+const TransferService = require('../../services/transfer')
+const TokenService = require('../../domain/token')
 
 exports.rejectExpired = function (request, reply) {
-  return Service.rejectExpired()
+  return TransferService.rejectExpired()
   .then(response => reply(response))
   .catch(e => reply(e))
 }
 
 exports.settle = function (request, reply) {
-  return Service.settle()
+  return TransferService.settle()
+  .then(response => reply(response))
+  .catch(e => reply(e))
+}
+
+exports.rejectExpiredTokens = function (request, reply) {
+  return TokenService.removeExpired()
   .then(response => reply(response))
   .catch(e => reply(e))
 }

@@ -4,7 +4,8 @@ const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const Uuid = require('uuid4')
 const P = require('bluebird')
-const Service = require('../../../../src/services/transfer')
+const TransferService = require('../../../../src/services/transfer')
+const TokenService = require('../../../../src/domain/token')
 const Handler = require('../../../../src/webhooks/commands/handler')
 
 function createRequest (id, payload) {
@@ -24,8 +25,9 @@ Test('Handler Test', handlerTest => {
 
   handlerTest.beforeEach(t => {
     sandbox = Sinon.sandbox.create()
-    sandbox.stub(Service, 'rejectExpired')
-    sandbox.stub(Service, 'settle')
+    sandbox.stub(TransferService, 'rejectExpired')
+    sandbox.stub(TransferService, 'settle')
+    sandbox.stub(TokenService, 'removeExpired')
     t.end()
   })
 
@@ -37,7 +39,7 @@ Test('Handler Test', handlerTest => {
   handlerTest.test('rejectExpired should', rejectExpiredTest => {
     rejectExpiredTest.test('return rejected transfer ids', test => {
       let transferIds = [Uuid(), Uuid(), Uuid()]
-      Service.rejectExpired.returns(P.resolve(transferIds))
+      TransferService.rejectExpired.returns(P.resolve(transferIds))
 
       let reply = response => {
         test.equal(response, transferIds)
@@ -49,7 +51,7 @@ Test('Handler Test', handlerTest => {
 
     rejectExpiredTest.test('return error if rejectExpired fails', test => {
       let error = new Error()
-      Service.rejectExpired.returns(P.reject(error))
+      TransferService.rejectExpired.returns(P.reject(error))
 
       let reply = response => {
         test.equal(response, error)
@@ -65,7 +67,7 @@ Test('Handler Test', handlerTest => {
   handlerTest.test('settle should', settleTest => {
     settleTest.test('return settled transfer ids', test => {
       let transferIds = [Uuid(), Uuid(), Uuid()]
-      Service.settle.returns(P.resolve(transferIds))
+      TransferService.settle.returns(P.resolve(transferIds))
 
       let reply = response => {
         test.equal(response, transferIds)
@@ -77,7 +79,7 @@ Test('Handler Test', handlerTest => {
 
     settleTest.test('return error if settlement failed', test => {
       let error = new Error()
-      Service.settle.returns(P.reject(error))
+      TransferService.settle.returns(P.reject(error))
 
       let reply = response => {
         test.equal(response, error)
@@ -88,6 +90,34 @@ Test('Handler Test', handlerTest => {
     })
 
     settleTest.end()
+  })
+
+  handlerTest.test('removeExpired should', removeExpiredTest => {
+    removeExpiredTest.test('return expired tokens', test => {
+      let tokenIds = [Uuid(), Uuid(), Uuid()]
+      TokenService.removeExpired.returns(P.resolve(tokenIds))
+
+      let reply = response => {
+        test.equal(response, tokenIds)
+        test.end()
+      }
+
+      Handler.rejectExpiredTokens({}, reply)
+    })
+
+    removeExpiredTest.test('return error if removeExpired fails', test => {
+      let error = new Error()
+      TokenService.removeExpired.returns(P.reject(error))
+
+      let reply = response => {
+        test.equal(response, error)
+        test.end()
+      }
+
+      Handler.rejectExpiredTokens(createRequest(), reply)
+    })
+
+    removeExpiredTest.end()
   })
 
   handlerTest.end()
