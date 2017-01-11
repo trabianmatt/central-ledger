@@ -82,7 +82,6 @@ Test('Commands Test', commandsTest => {
     prepareTest.test('create new transfer if matching one does not exist', t => {
       let id = Uuid()
       let transfer = {
-        $setIdForCreation: () => {},
         $save: () => P.resolve()
       }
       Commands.$aggregate.load.withArgs('Transfer', id).returns(noAggregateFound(id))

@@ -30,21 +30,5 @@ Test('Index should', initializeTest => {
     setupTest.end()
   })
 
-  initializeTest.test('onContextInitialized should', onInitTest => {
-    onInitTest.test('setup transfer id and return context', t => {
-      let context = {
-        _getAggregateRepository: Sinon.stub()
-      }
-      let aggregateRepository = {}
-      context._getAggregateRepository.returns(aggregateRepository)
-      t.notOk(aggregateRepository._installSaveFunctionOnAggregateInstance)
-
-      let result = Transfer.onContextInitialized(context)
-      t.equal(result, context)
-      t.ok(aggregateRepository._installSaveFunctionOnAggregateInstance)
-      t.end()
-    })
-    onInitTest.end()
-  })
   initializeTest.end()
 })

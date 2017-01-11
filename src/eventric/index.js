@@ -11,7 +11,7 @@ exports.getContext = () => {
     let context = Eventric.context('Ledger')
     Transfer.setupContext(context)
     initializedContext = P.resolve(context.initialize())
-      .then(c => Transfer.onContextInitialized(context))
+      .then(() => context)
   }
 
   return initializedContext

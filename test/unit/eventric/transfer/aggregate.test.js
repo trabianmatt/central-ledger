@@ -55,7 +55,6 @@ Test('Transfer aggregate', aggregateTest => {
     PostgresStore.default = {}
     Transfer.setupContext(context)
     context.initialize()
-      .then(() => Transfer.onContextInitialized(context))
       .then(_t => t.end())
   })
 

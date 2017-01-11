@@ -18,9 +18,8 @@ module.exports = {
         credits,
         execution_condition,
         expires_at
-      })
+      }, id)
       .then(transfer => {
-        transfer.$setIdForCreation(id)
         return transfer.$save().then(() => { return { existing: false, transfer } })
       })
     })

@@ -16,7 +16,6 @@ Test('Eventric index', indexTest => {
     sandbox.stub(Eventric, 'context')
     sandbox.stub(Eventric, 'setStore')
     sandbox.stub(Transfer, 'setupContext')
-    sandbox.stub(Transfer, 'onContextInitialized')
     t.end()
   })
 
@@ -38,18 +37,15 @@ Test('Eventric index', indexTest => {
       .then(ctx => {
         t.ok(Eventric.setStore.calledWith(PostgresStore.default, {}))
         t.ok(Transfer.setupContext.calledWith(stubCtx))
-        t.ok(Transfer.onContextInitialized.calledWith(stubCtx))
       })
       .then(() => {
         Eventric.setStore.reset()
         Transfer.setupContext.reset()
-        Transfer.onContextInitialized.reset()
         return Index.getContext()
       })
       .then(() => {
         t.ok(Eventric.setStore.notCalled)
         t.ok(Transfer.setupContext.notCalled)
-        t.ok(Transfer.onContextInitialized.notCalled)
         t.end()
       })
     })
