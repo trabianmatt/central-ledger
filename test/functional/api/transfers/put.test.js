@@ -4,6 +4,7 @@ const Test = require('tape')
 const Base = require('../../base')
 const Fixtures = require('../../../fixtures')
 const TransferState = require('../../../../src/domain/transfer/state')
+const Moment = require('moment')
 
 Test('PUT /transfers', putTest => {
   putTest.test('should prepare a transfer', test => {
@@ -111,6 +112,31 @@ Test('PUT /transfers', putTest => {
           .then(res => {
             test.equal(res.body.id, 'AlreadyExistsError')
             test.equal(res.body.message, 'The specified entity already exists and may not be modified.')
+            test.end()
+          })
+      })
+  })
+
+  putTest.test('return error when preparing transfer with expired date', test => {
+    let account1Name = Fixtures.generateAccountName()
+    let account2Name = Fixtures.generateAccountName()
+    let transferId = Fixtures.generateTransferId()
+    let expiredDate = Moment.utc().add(-10, 'minutes')
+    let transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(account1Name, '50'), Fixtures.buildDebitOrCredit(account2Name, '50'), expiredDate)
+
+    Base.createAccount(account1Name)
+      .then(() => Base.createAccount(account2Name))
+      .then(() => Base.prepareTransfer(transferId, transfer))
+      .delay(100)
+      .then(() => Base.fulfillTransfer(transferId, 'cf:0:_v8'))
+      .delay(100)
+      .then(() => {
+        Base.prepareTransfer(transferId, transfer)
+          .expect(422)
+          .expect('Content-Type', /json/)
+          .then(res => {
+            test.equal(res.body.id, 'ValidationError')
+            test.equal(res.body.message, `expires_at date: ${expiredDate.toISOString()} has already expired.`)
             test.end()
           })
       })

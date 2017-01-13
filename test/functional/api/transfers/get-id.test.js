@@ -7,12 +7,6 @@ const Fixtures = require('../../../fixtures')
 const RejectionType = require('../../../../src/domain/transfer/rejection-type')
 const TransferState = require('../../../../src/domain/transfer/state')
 
-let pastDate = () => {
-  let d = new Date()
-  d.setTime(d.getTime() - 86400000)
-  return d
-}
-
 Test('GET /transfers/:id', getTest => {
   getTest.test('should return prepared transfer details', function (assert) {
     let account1Name = Fixtures.generateAccountName()
@@ -91,7 +85,7 @@ Test('GET /transfers/:id', getTest => {
     Base.createAccount(account1Name)
     .then(() => Base.createAccount(account2Name))
     .then(() => Base.prepareTransfer(transferId, transfer))
-    .delay(100)
+    .delay(2000)
     .then(() => Base.rejectTransfer(transferId, reason))
     .then(() => {
       Base.getTransfer(transferId)
@@ -121,14 +115,14 @@ Test('GET /transfers/:id', getTest => {
     let account1Name = Fixtures.generateAccountName()
     let account2Name = Fixtures.generateAccountName()
     let transferId = Fixtures.generateTransferId()
-    let transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(account1Name, '50'), Fixtures.buildDebitOrCredit(account2Name, '50'), pastDate())
+    let transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(account1Name, '50'), Fixtures.buildDebitOrCredit(account2Name, '50'), Fixtures.getMomentToExpire())
 
     Base.createAccount(account1Name)
     .then(() => Base.createAccount(account2Name))
     .then(() => Base.prepareTransfer(transferId, transfer))
-    .delay(100)
+    .delay(3000)
     .then(() => Base.post('/webhooks/reject-expired-transfers', {}))
-    .delay(100)
+    .delay(3000)
     .then(() => {
       Base.getTransfer(transferId)
         .expect(200)

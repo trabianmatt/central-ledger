@@ -1,5 +1,13 @@
 # Level One Project Onboarding
 ***
+### Introduction 
+In this document we'll walk through the setup for the Level One Project Central Ledger. It consists of three sections:
+
+* [Software List](#software-list)
+* [Setup](#setup)
+* [Errors On Setup](#errors-on-setup)
+
+***
 
 ### Software List
 1. Github
@@ -56,6 +64,7 @@ services:
 
 ##### Setup nvm & npm
 * run `curl -udwolla:AP6vR3LGrB6zm8WQjLvJHnQzjJp "https://modusbox.jfrog.io/modusbox/api/npm/level1-npm/auth/leveloneproject" >> ~/.npmrc`
+* run `cp ~/.npmrc .npmrc` which will allow you to run the functional tests on your machine
 * to install nvm run `curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.32.1/install.sh | bash`
 * create a *.bash_profile* file with `touch ~/.bash_profile` and verify your *.bash_profile* looks like this:
 ```
@@ -81,3 +90,7 @@ export CLEDG_DATABASE_URI=postgres://central_ledger:cVq8iFqaLuHy8jjKuA@localhost
 * click on **Central Ledger** and then **Prepare transfer**
 * click **Send**
 * if you get a valid response, you should be ready to go
+
+### Errors On Setup
+* `./src/argon2_node.cpp:6:10: fatal error: 'tuple' file not found` 
+  - resolved by running `CXX='clang++ -std=c++11 -stdlib=libc++' npm install argon2`

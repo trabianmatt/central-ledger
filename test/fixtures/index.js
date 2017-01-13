@@ -1,6 +1,7 @@
 'use strict'
 
 const Uuid = require('uuid4')
+const Moment = require('moment')
 
 let hostname = 'central-ledger'
 
@@ -138,6 +139,10 @@ function buildAccountPosition (accountName, payments, receipts) {
   }
 }
 
+function getMomentToExpire (timeToPrepareTransfer = 2) {
+  return Moment.utc().add(timeToPrepareTransfer, 'seconds')
+}
+
 module.exports = {
   hostname,
   buildAccountPosition,
@@ -149,5 +154,6 @@ module.exports = {
   buildReadModelTransfer,
   findAccountPositions,
   generateAccountName,
-  generateTransferId
+  generateTransferId,
+  getMomentToExpire
 }

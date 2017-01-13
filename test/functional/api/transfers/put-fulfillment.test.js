@@ -5,12 +5,6 @@ const Base = require('../../base')
 const Fixtures = require('../../../fixtures')
 const TransferState = require('../../../../src/domain/transfer/state')
 
-let pastDate = () => {
-  let d = new Date()
-  d.setTime(d.getTime() - 86400000)
-  return d
-}
-
 Test('PUT /transfer/:id/fulfillment', putTest => {
   putTest.test('should fulfill a transfer', test => {
     let fulfillment = 'cf:0:_v8'
@@ -99,12 +93,12 @@ Test('PUT /transfer/:id/fulfillment', putTest => {
     let account1Name = Fixtures.generateAccountName()
     let account2Name = Fixtures.generateAccountName()
     let transferId = Fixtures.generateTransferId()
-    let transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(account1Name, '25'), Fixtures.buildDebitOrCredit(account2Name, '25'), pastDate())
+    let transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(account1Name, '25'), Fixtures.buildDebitOrCredit(account2Name, '25'), Fixtures.getMomentToExpire())
 
     Base.createAccount(account1Name)
       .then(() => Base.createAccount(account2Name))
       .then(() => Base.prepareTransfer(transferId, transfer))
-      .delay(100)
+      .delay(3000)
       .then(() => {
         Base.fulfillTransfer(transferId, fulfillment)
           .expect(422)

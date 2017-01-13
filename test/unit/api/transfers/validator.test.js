@@ -3,16 +3,17 @@
 const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const Uuid = require('uuid4')
+const Moment = require('moment')
+const P = require('bluebird')
 const Config = require('../../../../src/lib/config')
 const UrlParser = require('../../../../src/lib/urlparser')
 const Account = require('../../../../src/domain/account')
 const Validator = require('../../../../src/api/transfers/validator')
 const ValidationError = require('../../../../src/errors/validation-error')
-const P = require('bluebird')
 
 let assertValidationError = (promise, assert, message) => {
   promise.then(a => {
-    assert.fail()
+    assert.fail('fail fail fail')
     assert.end()
   })
   .catch(e => {
@@ -29,6 +30,7 @@ Test('transfer validator', (test) => {
   const badAccountUri = 'bad_account_uri'
   const badPrecisionAmount = '100000000.23'
   const badScaleAmount = '1.123'
+  const expiredAt = Moment('2016-12-26T00:00:01.000Z').utc()
   let transferId
   let originalScale
   let originalPrecision
@@ -65,7 +67,8 @@ Test('transfer validator', (test) => {
           account: account2Uri,
           amount: '50.00'
         }
-      ]
+      ],
+      expires_at: expiredAt.toISOString()
     }
   }
 
@@ -74,6 +77,8 @@ Test('transfer validator', (test) => {
     sandbox.stub(UrlParser, 'nameFromAccountUri')
     sandbox.stub(UrlParser, 'idFromTransferUri')
     sandbox.stub(Account, 'getByName')
+    sandbox.stub(Moment, 'utc')
+    Moment.utc.returns(expiredAt.add(1, 'hour'))
     originalHostName = Config.HOSTNAME
     originalPrecision = Config.AMOUNT.PRECISION
     originalHostName = Config.HOSTNAME
@@ -171,6 +176,12 @@ Test('transfer validator', (test) => {
     transfer.debits[0].amount = badScaleAmount
 
     assertValidationError(Validator.validate(transfer, transferId), assert, `Amount ${badScaleAmount} exceeds allowed scale of ${allowedScale}`)
+  })
+
+  test.test('reject if transfer.expires_at has already passed', assert => {
+    let transfer = goodTransfer()
+    transfer.expires_at = Moment(expiredAt).subtract(1, 'year').toISOString()
+    assertValidationError(Validator.validate(transfer, transferId), assert, `expires_at date: ${transfer.expires_at} has already expired.`)
   })
 
   test.test('return transfer if all checks pass', assert => {

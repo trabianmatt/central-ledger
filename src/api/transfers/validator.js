@@ -6,6 +6,7 @@ const Config = require('../../lib/config')
 const UrlParser = require('../../lib/urlparser')
 const Account = require('../../domain/account')
 const ValidationError = require('../../errors/validation-error')
+const Moment = require('moment')
 
 const allowedScale = Config.AMOUNT.SCALE
 const allowedPrecision = Config.AMOUNT.PRECISION
@@ -16,6 +17,8 @@ exports.validate = (transfer, transferId) => {
     let id = UrlParser.idFromTransferUri(transfer.id)
     if (!id || id !== transferId) throw new ValidationError('transfer.id: Invalid URI')
     if (transfer.ledger !== Config.HOSTNAME) throw new ValidationError('transfer.ledger is not valid for this ledger')
+    let expiresAt = Moment(transfer.expires_at)
+    if (expiresAt.isBefore(Moment.utc())) throw new ValidationError(`expires_at date: ${expiresAt.toISOString()} has already expired.`)
 
     let credit = validateEntry(transfer.credits[0])
     let debit = validateEntry(transfer.debits[0])
