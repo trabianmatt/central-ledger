@@ -21,6 +21,7 @@ machine:
 
 dependencies:
   pre:
+    - sudo rm -f /usr/local/bin/docker-compose
     - sudo pip install docker-compose
     - curl -udwolla:$NPM_TOKEN "https://modusbox.jfrog.io/modusbox/api/npm/level1-npm-release/auth/leveloneproject" >> .npmrc
   post:
