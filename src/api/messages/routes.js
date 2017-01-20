@@ -13,7 +13,7 @@ module.exports = [
     config: {
       tags,
       description: 'Send a notification to another account',
-      id: 'send_message',
+      id: 'message',
       auth: Auth.tokenAuth(),
       validate: {
         payload: {
