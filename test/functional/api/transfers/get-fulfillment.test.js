@@ -6,7 +6,7 @@ const Fixtures = require('../../../fixtures')
 
 Test('GET /transfers/:id/fulfillment', getTest => {
   getTest.test('should return fulfillment for transfer', test => {
-    let fulfillment = 'cf:0:_v8'
+    let fulfillment = 'oAKAAA'
     let account1Name = Fixtures.generateAccountName()
     let account2Name = Fixtures.generateAccountName()
     let transferId = Fixtures.generateTransferId()

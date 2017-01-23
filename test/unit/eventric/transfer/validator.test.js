@@ -9,9 +9,10 @@ const Validator = require(`${src}/eventric/transfer/validator`)
 const TransferState = require(`${src}/domain/transfer/state`)
 const UnpreparedTransferError = require(`${src}/errors/unprepared-transfer-error`)
 const UnexecutedTransferError = require(`${src}/errors/unexecuted-transfer-error`)
-const CryptoFulfillments = require(`${src}/crypto-conditions/fulfillments`)
+const CryptoConditions = require(`${src}/crypto-conditions`)
 const AlreadyExistsError = require(`${src}/errors/already-exists-error`)
 const ExpiredTransferError = require(`${src}/errors/expired-transfer-error`)
+const executionCondition = 'ni:///sha-256;47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU?fpt=preimage-sha-256&cost=0'
 
 Test('validator tests', validatorTest => {
   let sandbox
@@ -20,7 +21,7 @@ Test('validator tests', validatorTest => {
 
   validatorTest.beforeEach(t => {
     sandbox = Sinon.sandbox.create()
-    sandbox.stub(CryptoFulfillments, 'validateConditionFulfillment')
+    sandbox.stub(CryptoConditions, 'validateFulfillment')
 
     clock = Sinon.useFakeTimers(now.unix())
     t.end()
@@ -84,7 +85,7 @@ Test('validator tests', validatorTest => {
       let error = new Error()
       let fulfillment = 'fulfillment'
       let executionCondition = 'execution_condition'
-      CryptoFulfillments.validateConditionFulfillment.withArgs(executionCondition, fulfillment).throws(error)
+      CryptoConditions.validateFulfillment.withArgs(fulfillment, executionCondition).throws(error)
       let transfer = {
         state: TransferState.PREPARED,
         execution_condition: executionCondition,
@@ -103,7 +104,7 @@ Test('validator tests', validatorTest => {
     })
 
     fulfillmentTest.test('return not previouslyFulfilled if transfer passes all checks', t => {
-      CryptoFulfillments.validateConditionFulfillment.returns(true)
+      CryptoConditions.validateFulfillment.returns(true)
       let transfer = {
         state: TransferState.PREPARED,
         expires_at: now.clone().add(1, 'hour').unix()
@@ -117,7 +118,7 @@ Test('validator tests', validatorTest => {
     })
 
     fulfillmentTest.test('throw error if current time is greater than expired_at', t => {
-      CryptoFulfillments.validateConditionFulfillment.returns(true)
+      CryptoConditions.validateFulfillment.returns(true)
 
       let transfer = {
         state: TransferState.PREPARED,
@@ -175,7 +176,7 @@ Test('validator tests', validatorTest => {
             amount: '50'
           }
         ],
-        execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
+        execution_condition: executionCondition,
         expires_at: '2015-06-16T00:00:01.000Z'
       }
       let existing = _.omit(proposed, ['debits'])
@@ -200,7 +201,7 @@ Test('validator tests', validatorTest => {
             amount: '50'
           }
         ],
-        execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
+        execution_condition: executionCondition,
         expires_at: '2015-06-16T00:00:01.000Z'
       }
       let existing = {
@@ -218,7 +219,7 @@ Test('validator tests', validatorTest => {
             amount: '50'
           }
         ],
-        execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
+        execution_condition: executionCondition,
         expires_at: '2015-06-16T00:00:01.000Z',
         state: TransferState.PREPARED,
         $save: () => {},
@@ -248,7 +249,7 @@ Test('validator tests', validatorTest => {
             amount: '50'
           }
         ],
-        execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
+        execution_condition: executionCondition,
         expires_at: '2015-06-16T00:00:01.000Z'
       }
       let existing = {
@@ -265,7 +266,7 @@ Test('validator tests', validatorTest => {
             amount: '50'
           }
         ],
-        execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
+        execution_condition: executionCondition,
         expires_at: '2015-06-16T00:00:01.000Z',
         state: TransferState.PREPARED,
         $save: () => {},

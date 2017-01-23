@@ -4,10 +4,10 @@ const Test = require('tape')
 const Base = require('../../base')
 const Fixtures = require('../../../fixtures')
 const TransferState = require('../../../../src/domain/transfer/state')
+const fulfillment = 'oAKAAA'
 
 Test('PUT /transfer/:id/fulfillment', putTest => {
   putTest.test('should fulfill a transfer', test => {
-    let fulfillment = 'cf:0:_v8'
     let account1Name = Fixtures.generateAccountName()
     let account2Name = Fixtures.generateAccountName()
     let transferId = Fixtures.generateTransferId()
@@ -40,7 +40,6 @@ Test('PUT /transfer/:id/fulfillment', putTest => {
   })
 
   putTest.test('should return error when fulfilling non-existing transfer', test => {
-    let fulfillment = 'cf:0:_v8'
     let transferId = Fixtures.generateTransferId()
 
     Base.put(`/transfers/${transferId}/fulfillment`, fulfillment, 'text/plain')
@@ -54,7 +53,6 @@ Test('PUT /transfer/:id/fulfillment', putTest => {
   })
 
   putTest.test('should return fulfillment when fulfilling already fulfilled transfer', test => {
-    let fulfillment = 'cf:0:_v8'
     let account1Name = Fixtures.generateAccountName()
     let account2Name = Fixtures.generateAccountName()
     let transferId = Fixtures.generateTransferId()
@@ -89,7 +87,6 @@ Test('PUT /transfer/:id/fulfillment', putTest => {
   })
 
   putTest.test('should return error when fulfilling expired transfer', test => {
-    let fulfillment = 'cf:0:_v8'
     let account1Name = Fixtures.generateAccountName()
     let account2Name = Fixtures.generateAccountName()
     let transferId = Fixtures.generateTransferId()

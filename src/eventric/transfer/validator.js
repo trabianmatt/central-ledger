@@ -4,7 +4,7 @@ const P = require('bluebird')
 const _ = require('lodash')
 const Moment = require('moment')
 const TransferState = require('../../domain/transfer/state')
-const CryptoFulfillments = require('../../crypto-conditions/fulfillments')
+const CryptoConditions = require('../../crypto-conditions')
 const UnpreparedTransferError = require('../../errors/unprepared-transfer-error')
 const UnexecutedTransferError = require('../../errors/unexecuted-transfer-error')
 const AlreadyExistsError = require('../../errors/already-exists-error')
@@ -26,7 +26,7 @@ exports.validateFulfillment = ({state, fulfillment, execution_condition, expires
       throw new ExpiredTransferError()
     }
 
-    CryptoFulfillments.validateConditionFulfillment(execution_condition, fulfillmentCondition)
+    CryptoConditions.validateFulfillment(fulfillmentCondition, execution_condition)
 
     return {
       previouslyFulfilled: false

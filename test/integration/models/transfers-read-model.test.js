@@ -61,7 +61,7 @@ Test('transfers read model', function (modelTest) {
           let transfer = Fixtures.buildReadModelTransfer(transferId, buildReadModelDebitOrCredit(debitAccountName, '50', accountMap), buildReadModelDebitOrCredit(creditAccountName, '50', accountMap), TransferState.PREPARED)
           ReadModel.saveTransfer(transfer)
             .then(() => {
-              let updatedFields = { state: TransferState.EXECUTED, fulfillment: 'cf:0:_v8', executedDate: Moment(1474471284081) }
+              let updatedFields = { state: TransferState.EXECUTED, fulfillment: 'oAKAAA', executedDate: Moment(1474471284081) }
               return ReadModel.updateTransfer(transferId, updatedFields)
                 .then(updatedTransfer => {
                   assert.equal(updatedTransfer.transferUuid, transferId)

@@ -122,7 +122,7 @@ Test('transfer model', function (modelTest) {
 
   modelTest.test('fulfill should', function (fulfillTest) {
     fulfillTest.test('Call Transfer fulfill method', function (assert) {
-      let fulfillment = 'cf:0:_v8'
+      let fulfillment = 'oAKAAA'
       let transferId = '3a2a1d9e-8640-4d2d-b06c-84f2cd613204'
       let expandedId = 'http://central-ledger/transfers/' + transferId
       UrlParser.toTransferUri.withArgs(transferId).returns(expandedId)
@@ -139,7 +139,7 @@ Test('transfer model', function (modelTest) {
     })
 
     fulfillTest.test('Emit transfer executed event', t => {
-      let fulfillment = 'cf:0:_v8'
+      let fulfillment = 'oAKAAA'
       let transferId = '3a2a1d9e-8640-4d2d-b06c-84f2cd613204'
       let expandedId = 'http://central-ledger/transfers/' + transferId
       UrlParser.toTransferUri.withArgs(transferId).returns(expandedId)
@@ -159,7 +159,7 @@ Test('transfer model', function (modelTest) {
     })
 
     fulfillTest.test('reject and throw error if transfer is expired', assert => {
-      let fulfillment = 'cf:0:_v8'
+      let fulfillment = 'oAKAAA'
       let transfer = createTransfer()
       let payload = { id: transfer.id, fulfillment }
 

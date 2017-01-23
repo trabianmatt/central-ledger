@@ -16,6 +16,7 @@ const TransfersReadModel = require(`${src}/models/transfers-read-model`)
 const AlreadyExistsError = require(`${src}/errors/already-exists-error`)
 const ValidationError = require(`${src}/errors/validation-error`)
 const UnpreparedTransferError = require(`${src}/errors/unprepared-transfer-error`)
+const executionCondition = 'ni:///sha-256;47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU?fpt=preimage-sha-256&cost=0'
 
 const createRequest = (id, payload) => {
   let requestId = id || Uuid()
@@ -69,7 +70,7 @@ Test('transfer handler', handlerTest => {
             amount: '50'
           }
         ],
-        execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
+        execution_condition: executionCondition,
         expires_at: '2015-06-16T00:00:01.000Z'
       }
 
@@ -115,7 +116,7 @@ Test('transfer handler', handlerTest => {
             amount: '50'
           }
         ],
-        execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
+        execution_condition: executionCondition,
         expires_at: '2015-06-16T00:00:01.000Z'
       }
 
@@ -177,7 +178,7 @@ Test('transfer handler', handlerTest => {
             amount: '50'
           }
         ],
-        execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
+        execution_condition: executionCondition,
         expires_at: '2015-06-16T00:00:01.000Z'
       }
 
@@ -212,12 +213,12 @@ Test('transfer handler', handlerTest => {
             amount: '50'
           }
         ],
-        execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
+        execution_condition: executionCondition,
         expires_at: '2015-06-16T00:00:01.000Z',
         timeline: {}
       }
 
-      let fulfillment = { id: '3a2a1d9e-8640-4d2d-b06c-84f2cd613204', fulfillment: 'cf:0:_v8' }
+      let fulfillment = { id: '3a2a1d9e-8640-4d2d-b06c-84f2cd613204', fulfillment: 'oAKAAA' }
 
       Model.fulfill.returns(P.resolve(transfer))
 
@@ -235,7 +236,7 @@ Test('transfer handler', handlerTest => {
     })
 
     fulfillTransferTest.test('return error if transfer is not prepared', test => {
-      let fulfillment = { id: '3a2a1d9e-8640-4d2d-b06c-84f2cd613204', fulfillment: 'cf:0:_v8' }
+      let fulfillment = { id: '3a2a1d9e-8640-4d2d-b06c-84f2cd613204', fulfillment: 'oAKAAA' }
       let error = new UnpreparedTransferError()
       Model.fulfill.returns(P.reject(error))
 
@@ -248,7 +249,7 @@ Test('transfer handler', handlerTest => {
     })
 
     fulfillTransferTest.test('return error if transfer has no domain events', test => {
-      const fulfillment = { id: '3a2a1d9e-8640-4d2d-b06c-84f2cd613204', fulfillment: 'cf:0:_v8' }
+      const fulfillment = { id: '3a2a1d9e-8640-4d2d-b06c-84f2cd613204', fulfillment: 'oAKAAA' }
 
       const error = new NotFoundError()
       Model.fulfill.returns(P.reject(error))
@@ -281,7 +282,7 @@ Test('transfer handler', handlerTest => {
             amount: '50'
           }
         ],
-        execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
+        execution_condition: executionCondition,
         expires_at: '2015-06-16T00:00:01.000Z',
         timeline: {}
       }
@@ -341,7 +342,7 @@ Test('transfer handler', handlerTest => {
         creditAccountName: 'dfsp2',
         creditAmount: '15',
         creditRejected: 0,
-        executionCondition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
+        executionCondition: executionCondition,
         expiresAt: '2015-06-16T00:00:01.000Z',
         state: TransferState.PREPARED,
         preparedDate: new Date()
@@ -400,7 +401,7 @@ Test('transfer handler', handlerTest => {
     getTransferFulfillmentTest.test('get fulfillment by transfer id', test => {
       let id = Uuid()
 
-      let transfer = { transferUuid: id, fulfillment: 'cf:0:_v8', state: TransferState.EXECUTED }
+      let transfer = { transferUuid: id, fulfillment: 'oAKAAA', state: TransferState.EXECUTED }
       sandbox.stub(TransfersReadModel, 'getById').returns(P.resolve(transfer))
 
       let reply = response => {
@@ -419,7 +420,7 @@ Test('transfer handler', handlerTest => {
     getTransferFulfillmentTest.test('reply with NotFoundError if transfer not executed', test => {
       let id = Uuid()
 
-      let transfer = { transferUuid: id, fulfillment: 'cf:0:_v8', state: TransferState.PREPARED }
+      let transfer = { transferUuid: id, fulfillment: 'oAKAAA', state: TransferState.PREPARED }
       sandbox.stub(TransfersReadModel, 'getById').returns(P.resolve(transfer))
 
       let reply = response => {

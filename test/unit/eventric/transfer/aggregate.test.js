@@ -10,7 +10,7 @@ const Transfer = require(`${src}/eventric/transfer`)
 const TransfersProjection = require(`${src}/eventric/transfer/transfers-projection`)
 const SettleableTransfersProjection = require(`${src}/eventric/transfer/settleable-transfers-projection`)
 const PostgresStore = require(`${src}/eventric/postgres-store`)
-const CryptoConditions = require(`${src}/crypto-conditions/conditions`)
+const CryptoConditions = require(`${src}/crypto-conditions`)
 const AlreadyExistsError = require(`${src}/errors/already-exists-error`)
 const UnpreparedTransferError = require(`${src}/errors/unprepared-transfer-error`)
 const RejectionType = require(`${src}/domain/transfer/rejection-type`)
@@ -23,7 +23,7 @@ let createTransfer = () => {
     ledger: 'ledger',
     debits: [{ amount: 10, account: 'test' }],
     credits: [{ amount: 10, account: 'test' }],
-    execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
+    execution_condition: 'ni:///sha-256;47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU?fpt=preimage-sha-256&cost=0',
     expires_at: now.clone().add(1, 'hour').toISOString()
   }
 }
@@ -45,12 +45,14 @@ Test('Transfer aggregate', aggregateTest => {
   aggregateTest.beforeEach(t => {
     sandbox = Sinon.sandbox.create()
     sandbox.stub(CryptoConditions, 'validateCondition')
+    sandbox.stub(CryptoConditions, 'validateFulfillment')
     sandbox.stub(TransfersProjection)
     sandbox.stub(SettleableTransfersProjection)
     clock = Sinon.useFakeTimers(now.unix())
     TransfersProjection.initialize.yields()
     SettleableTransfersProjection.initialize.yields()
     CryptoConditions.validateCondition.returns(true)
+    CryptoConditions.validateFulfillment.returns(true)
     context = Eventric.context('TestContext')
     PostgresStore.default = {}
     Transfer.setupContext(context)
@@ -123,7 +125,7 @@ Test('Transfer aggregate', aggregateTest => {
   aggregateTest.test('FulfillTransfer should', fulfillTest => {
     fulfillTest.test('load and fulfill transfer', t => {
       let transfer = createTransfer()
-      let fulfillment = 'cf:0:_v8'
+      let fulfillment = 'oAKAAA'
       P.resolve(context.command('PrepareTransfer', transfer))
       .then(() => {
         return context.command('FulfillTransfer', { id: transfer.id, fulfillment })
@@ -140,7 +142,7 @@ Test('Transfer aggregate', aggregateTest => {
 
     fulfillTest.test('return previouslyFulfilled transfer', t => {
       let transfer = createTransfer()
-      let fulfillment = 'cf:0:_v8'
+      let fulfillment = 'oAKAAA'
       P.resolve(context.command('PrepareTransfer', transfer))
       .then(prepared => { return context.command('FulfillTransfer', { id: transfer.id, fulfillment }) })
       .then(f => { return context.command('FulfillTransfer', { id: transfer.id, fulfillment }) })

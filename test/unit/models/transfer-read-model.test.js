@@ -40,7 +40,7 @@ Test('transfer model', function (modelTest) {
       debitAmount: '50',
       creditAccountId: 2,
       creditAmount: '50',
-      executionCondition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
+      executionCondition: 'ni:///sha-256;47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU?fpt=preimage-sha-256&cost=0',
       expiresAt: '2015-06-16T00:00:01.000Z',
       preparedDate: Moment(1474471273588)
     }
@@ -80,7 +80,7 @@ Test('transfer model', function (modelTest) {
       setupTransfersDb({ updateAsync: updateAsync })
 
       let transferId = Uuid()
-      let fields = { state: TransferState.EXECUTED, fulfillment: 'cf:0:_v8' }
+      let fields = { state: TransferState.EXECUTED, fulfillment: 'oAKAAA' }
 
       TransfersReadModel.updateTransfer(transferId, fields)
         .then(() => {

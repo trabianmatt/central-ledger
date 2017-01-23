@@ -4,6 +4,7 @@ const Uuid = require('uuid4')
 const Moment = require('moment')
 
 let hostname = 'central-ledger'
+const executionCondition = 'ni:///sha-256;47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU?fpt=preimage-sha-256&cost=0'
 
 function generateTransferId () {
   return Uuid()
@@ -35,7 +36,7 @@ function buildTransfer (transferId, debit, credit, expiresAt) {
     ledger: `http://${hostname}`,
     debits: [debit],
     credits: [credit],
-    execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
+    execution_condition: executionCondition,
     expires_at: expiresAt
   }
 }
@@ -49,7 +50,7 @@ function buildTransferPreparedEvent (transferId, debit, credit, expiresAt) {
       ledger: `${hostname}`,
       debits: [debit],
       credits: [credit],
-      execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
+      execution_condition: executionCondition,
       expires_at: expiresAt
     },
     aggregate: {
@@ -70,9 +71,9 @@ function buildTransferExecutedEvent (transferId, debit, credit, expiresAt) {
       ledger: `${hostname}`,
       debits: [debit],
       credits: [credit],
-      execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
+      execution_condition: executionCondition,
       expires_at: expiresAt,
-      fulfillment: 'cf:0:_v8'
+      fulfillment: 'oAKAAA'
     },
     aggregate: {
       id: transferId,
@@ -113,7 +114,7 @@ function buildReadModelTransfer (transferId, debit, credit, state, expiresAt, pr
     creditAccountId: credit.accountId,
     creditAmount: credit.amount,
     creditMemo: credit.memo,
-    executionCondition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
+    executionCondition: executionCondition,
     rejectionReason: rejectionReason,
     expiresAt: expiresAt,
     preparedDate: preparedDate

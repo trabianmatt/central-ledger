@@ -41,7 +41,7 @@ Test('transfer model', function (modelTest) {
   })
 
   modelTest.test('fulfill should', function (fulfillTest) {
-    let fulfillment = 'cf:0:_v8'
+    let fulfillment = 'oAKAAA'
 
     fulfillTest.test('fulfill a transfer', function (assert) {
       let debitAccountName = Fixtures.generateAccountName()

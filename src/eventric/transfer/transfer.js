@@ -1,7 +1,7 @@
 'use strict'
 
 const Moment = require('moment')
-const CryptoConditions = require('../../crypto-conditions/conditions')
+const CryptoConditions = require('../../crypto-conditions')
 const TransferState = require('../../domain/transfer/state')
 
 class Transfer {

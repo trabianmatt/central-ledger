@@ -6,7 +6,7 @@ const Fixtures = require('../../../fixtures')
 
 Test('GET /positions', getTest => {
   getTest.test('should return net positions', test => {
-    let fulfillment = 'cf:0:_v8'
+    let fulfillment = 'oAKAAA'
     let account1Name = Fixtures.generateAccountName()
     let account2Name = Fixtures.generateAccountName()
     let account3Name = Fixtures.generateAccountName()

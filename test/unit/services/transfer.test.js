@@ -15,6 +15,7 @@ const Commands = require(`${src}/commands/transfer`)
 const Service = require(`${src}/services/transfer`)
 const TransferState = require(`${src}/domain/transfer/state`)
 const RejectionType = require(`${src}/domain/transfer/rejection-type`)
+const executionCondition = 'ni:///sha-256;47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU?fpt=preimage-sha-256&cost=0'
 
 Test('Transfer Service tests', serviceTest => {
   let sandbox
@@ -132,7 +133,7 @@ Test('Transfer Service tests', serviceTest => {
           account: dfsp2Account.url,
           amount: '50'
         }],
-        execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
+        execution_condition: executionCondition,
         expires_at: '2015-06-16T00:00:01.000Z'
       },
       aggregate: {
@@ -189,9 +190,9 @@ Test('Transfer Service tests', serviceTest => {
           account: `${hostname}/accounts/dfsp2`,
           amount: '50'
         }],
-        execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
+        execution_condition: executionCondition,
         expires_at: '2015-06-16T00:00:01.000Z',
-        fulfillment: 'cf:0:_v8'
+        fulfillment: 'oAKAAA'
       },
       aggregate: {
         id: Uuid(),

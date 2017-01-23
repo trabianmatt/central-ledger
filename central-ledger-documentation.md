@@ -181,7 +181,7 @@ Content-Type: application/json
       "account": "http://central-ledger/accounts/dfsp2",
       "amount": "50"
     }],
-    "execution_condition": "cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2",
+    "execution_condition": "ni:///sha-256;47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU?fpt=preimage-sha-256&cost=0",
     "expires_at": "2016-12-26T00:00:01.000Z"
   }
 ```
@@ -205,7 +205,7 @@ Content-Type: application/json
       "amount": 50
     }
   ],
-  "execution_condition": "cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2",
+  "execution_condition": "ni:///sha-256;47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU?fpt=preimage-sha-256&cost=0",
   "expires_at": "2016-12-26T00:00:01.000Z",
   "state": "prepared",
   "timeline": {
@@ -218,7 +218,6 @@ Content-Type: application/json
 | Field | Description |
 | ----- | ----------- |
 | UnprocessableEntityError | The provided entity is syntactically correct, but there is a generic semantic problem with it | 
-| UnsupportedCryptoTypeError | The crypto type specified in the condition is not supported |
 ``` http
 {
   "id": "UnprocessableEntityError",
@@ -256,7 +255,7 @@ The fulfill transfer endpoint will either execute or cancel a transfer, dependin
 ``` http
 PUT http://central-ledger/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/fulfillment HTTP/1.1
 Content-Type: text/plain
-cf:0:_v8
+oAKAAA
 ```
 
 ##### Response
@@ -286,7 +285,7 @@ Content-Type: application/json
       "account": "http://central-ledger/accounts/dfsp2"
     }
   ],
-  "execution_condition": "cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2",
+  "execution_condition": "ni:///sha-256;47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU?fpt=preimage-sha-256&cost=0",
   "expires_at": "2016-12-26T00:00:01.000Z",
   "state": "executed",
   "timeline": {
@@ -357,7 +356,7 @@ HTTP/1.1 200 OK
       "account": "http://central-ledger/accounts/dfsp2"
     }
   ],
-  "execution_condition": "cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2",
+  "execution_condition": "ni:///sha-256;47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU?fpt=preimage-sha-256&cost=0",
   "expires_at": "2016-12-26T00:00:01.000Z",
   "state": "rejected",
   "timeline": {
@@ -419,7 +418,7 @@ HTTP/1.1 200 OK
       "memo": "{\"path\":\"blah\",\"interledger\":\"blah\"}"
     }
   ],
-  "execution_condition": "cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2",
+  "execution_condition": "ni:///sha-256;47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU?fpt=preimage-sha-256&cost=0",
   "expires_at": "2016-12-26T00:00:01.000Z",
   "state": "executed",
   "timeline": {
@@ -465,7 +464,7 @@ GET http://central-ledger/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/fulfill
 ##### Response
 ``` http
 HTTP/1.1 200 OK
-cf:0:_v8
+oAKAAA
 ```
 
 ##### Errors (4xx)

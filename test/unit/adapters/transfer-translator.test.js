@@ -2,7 +2,7 @@
 
 const Test = require('tapes')(require('tape'))
 const TransferTranslator = require('../../../src/adapters/transfer-translator')
-
+const executionCondition = 'ni:///sha-256;47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU?fpt=preimage-sha-256&cost=0'
 Test('TransferTranslator', transferTranslatorTest => {
   transferTranslatorTest.test('toTransfer should', function (toTransferTest) {
     toTransferTest.test('translate an argument containing a "id" field', function (t) {
@@ -21,7 +21,7 @@ Test('TransferTranslator', transferTranslatorTest => {
             'amount': 50
           }
         ],
-        'execution_condition': 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
+        'execution_condition': executionCondition,
         'expires_at': '2016-12-16T00:00:01.000Z',
         'state': 'prepared',
         timeline: {
@@ -46,7 +46,7 @@ Test('TransferTranslator', transferTranslatorTest => {
             amount: 50
           }
         ],
-        execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
+        execution_condition: executionCondition,
         expires_at: '2016-12-16T00:00:01.000Z',
         state: 'prepared',
         timeline: {
@@ -70,7 +70,7 @@ Test('TransferTranslator', transferTranslatorTest => {
         'debitMemo': null,
         'creditAmount': '50.00',
         'creditMemo': null,
-        'executionCondition': 'cc: 0: 3: 8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y: 2',
+        'executionCondition': executionCondition,
         'cancellationCondition': null,
         'rejectionReason': null,
         'expiresAt': '2016-12-16T00: 00: 01.000Z',
@@ -101,7 +101,7 @@ Test('TransferTranslator', transferTranslatorTest => {
             memo: null
           }
         ],
-        execution_condition: 'cc: 0: 3: 8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y: 2',
+        execution_condition: executionCondition,
         expires_at: '2016-12-16T00: 00: 01.000Z',
         rejection_reason: null,
         state: 'prepared',

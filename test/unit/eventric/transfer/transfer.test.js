@@ -5,7 +5,8 @@ const Test = require('tapes')(require('tape'))
 const Uuid = require('uuid4')
 const TransferState = require('../../../../src/domain/transfer/state')
 const Transfer = require('../../../../src/eventric/transfer/transfer')
-const CryptoConditions = require('../../../../src/crypto-conditions/conditions')
+const CryptoConditions = require('../../../../src/crypto-conditions')
+const executionCondition = 'ni:///sha-256;47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU?fpt=preimage-sha-256&cost=0'
 
 Test('transfer', transferTest => {
   let sandbox
@@ -44,7 +45,7 @@ Test('transfer', transferTest => {
             amount: '50'
           }
         ],
-        execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
+        execution_condition: executionCondition,
         expires_at: '2015-06-16T00:00:01.000Z'
       }
 
@@ -75,7 +76,7 @@ Test('transfer', transferTest => {
             amount: '50'
           }
         ],
-        execution_condition: 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2',
+        execution_condition: executionCondition,
         expires_at: '2015-06-16T00:00:01.000Z'
       }
 
@@ -91,13 +92,13 @@ Test('transfer', transferTest => {
   transferTest.test('fulfill should', fulfillTransferTest => {
     fulfillTransferTest.test('emit TransferExecuted event', assert => {
       let transfer = new Transfer()
-      transfer.execution_condition = 'cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2'
+      transfer.execution_condition = executionCondition
       transfer.state = TransferState.PREPARED
 
       let emitDomainEvent = Sinon.stub()
       transfer.$emitDomainEvent = emitDomainEvent
 
-      let fulfillment = 'cf:0:_v8'
+      let fulfillment = 'oAKAAA'
 
       transfer.fulfill({ fulfillment })
 

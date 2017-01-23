@@ -15,7 +15,7 @@ Test('POST /webhooks/settle-transfers', settleTest => {
       .then(() => Base.createAccount(account2Name))
       .then(() => Base.prepareTransfer(transferId, transfer))
       .delay(100)
-      .then(() => Base.fulfillTransfer(transferId, 'cf:0:_v8'))
+      .then(() => Base.fulfillTransfer(transferId, 'oAKAAA'))
       .delay(100)
       .then(() => {
         Base.post('/webhooks/settle-transfers', {})

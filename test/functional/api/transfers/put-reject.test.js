@@ -81,7 +81,7 @@ Test('PUT /transfers/:id/reject', putTest => {
   putTest.test('should return error when rejecting fulfulled transfer', test => {
     let reason = 'some reason'
     let transferId = Fixtures.generateTransferId()
-    let fulfillment = 'cf:0:_v8'
+    let fulfillment = 'oAKAAA'
 
     let account1Name = Fixtures.generateAccountName()
     let account2Name = Fixtures.generateAccountName()

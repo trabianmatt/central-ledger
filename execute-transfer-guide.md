@@ -89,7 +89,7 @@ Content-Type: application/json
       "account": "http://central-ledger/accounts/dfsp2",
       "amount": "100"
     }],
-    "execution_condition": "cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2",
+    "execution_condition": "ni:///sha-256;47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU?fpt=preimage-sha-256&cost=0",
     "expires_at": "2017-12-31T00:00:01.000Z"
   }
 ```
@@ -112,7 +112,7 @@ HTTP/1.1 201 Created
       "amount": 50
     }
   ],
-  "execution_condition": "cc:0:3:8ZdpKBDUV-KX_OnFZTsCWB_5mlCFI3DynX5f5H2dN-Y:2",
+  "execution_condition": "ni:///sha-256;47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU?fpt=preimage-sha-256&cost=0",
   "expires_at": "2017-12-31T00:00:01.000Z",
   "state": "prepared",
   "timeline": {
@@ -128,13 +128,13 @@ Now that the transfer is prepared, you are free to execute the transfer. This co
 ```
 PUT http://central-ledger/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/fulfillment HTTP/1.1
 Content-Type: text/plain
-cf:0:_v8
+oAKAAA
 ```
 
 #### Response
 ```
 HTTP/1.1 200 OK
-cf:0:_v8
+oAKAAA
 ```
 
 

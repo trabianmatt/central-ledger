@@ -36,7 +36,7 @@ Test('post and get an account', function (assert) {
 })
 
 Test('return the net position for the account as the balance', function (assert) {
-  let fulfillment = 'cf:0:_v8'
+  let fulfillment = 'oAKAAA'
   let account1Name = Fixtures.generateAccountName()
   let account2Name = Fixtures.generateAccountName()
 
