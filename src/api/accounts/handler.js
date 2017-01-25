@@ -7,7 +7,7 @@ const PositionService = require('../../services/position')
 const NotFoundError = require('@leveloneproject/central-services-shared').NotFoundError
 const RecordExistsError = require('../../errors/record-exists-error')
 
-function buildResponse (account, { net = '0' } = {}) {
+const buildResponse = (account, { net = '0' } = {}) => {
   const response = {
     id: UrlParser.toAccountUri(account.name),
     name: account.name,
@@ -22,7 +22,7 @@ function buildResponse (account, { net = '0' } = {}) {
   return response
 }
 
-function handleExistingRecord () {
+const handleExistingRecord = () => {
   return (entity) => {
     if (entity) {
       throw new RecordExistsError()
@@ -32,17 +32,21 @@ function handleExistingRecord () {
   }
 }
 
-function createAccount (payload) {
-  return (entity) => {
+const createAccount = (payload) => {
+  return () => {
     return Account.create(payload)
   }
 }
 
-function getPosition (account) {
-  if (!account) throw new NotFoundError('The requested resource could not be found.')
+const getPosition = (account) => {
+  if (!account) {
+    throw new NotFoundError('The requested resource could not be found.')
+  }
   return PositionService.calculateForAccount(account)
     .then(position => {
-      if (!position) throw new NotFoundError('The requested resource could not be found.')
+      if (!position) {
+        throw new NotFoundError('The requested resource could not be found.')
+      }
       return buildResponse(account, position)
     })
 }

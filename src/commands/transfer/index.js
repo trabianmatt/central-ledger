@@ -12,12 +12,12 @@ exports.fulfill = (fulfillment) => {
 }
 
 exports.reject = ({id, rejection_reason}) => {
-  let payload = { id: id, rejection_reason: rejection_reason }
+  const payload = { id: id, rejection_reason: rejection_reason }
   return Eventric.getContext().then(ctx => ctx.command('RejectTransfer', payload))
 }
 
 exports.expire = (id) => {
-  let payload = { id: id, rejection_reason: RejectionType.EXPIRED }
+  const payload = { id: id, rejection_reason: RejectionType.EXPIRED }
   return Eventric.getContext().then(ctx => ctx.command('RejectTransfer', payload))
 }
 

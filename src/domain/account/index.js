@@ -45,14 +45,18 @@ const create = ({ name }) => {
 const exists = (accountUri) => {
   return new P((resolve, reject) => {
     UrlParser.nameFromAccountUri(accountUri, (err, result) => {
-      if (err) reject(new ValidationError(`Invalid account URI: ${accountUri}`))
+      if (err) {
+        reject(new ValidationError(`Invalid account URI: ${accountUri}`))
+      }
       resolve(result)
     })
   })
   .then(name => {
     return Model.getByName(name)
       .then(account => {
-        if (account) return account
+        if (account) {
+          return account
+        }
         throw new ValidationError(`Account ${name} not found`)
       })
   })
@@ -75,14 +79,18 @@ const getByName = (name) => {
 }
 
 const accountExists = (account) => {
-  if (account) return account
+  if (account) {
+    return account
+  }
   throw new Error('Account does not exist')
 }
 
 const verifyAccountSecret = (account, secret) => {
   return Crypto.verifyHash(account.secret, secret)
     .then(match => {
-      if (match) return account
+      if (match) {
+        return account
+      }
       throw new Error('Secret is not valid for account')
     })
 }

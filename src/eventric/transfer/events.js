@@ -21,7 +21,7 @@ module.exports = {
     return this
   },
 
-  TransferRejected ({ rejection_reason, rejection_type }) {
+  TransferRejected ({ rejection_reason }) {
     this.rejection_reason = rejection_reason // eslint-disable-line
     return this
   },

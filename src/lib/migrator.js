@@ -5,7 +5,7 @@ const Config = require('./config')
 const MigrateConfig = require('../../config/db-migrate.json')
 
 exports.migrate = function () {
-  let dbMigrate = DbMigrate.getInstance(true, buildOptions())
+  const dbMigrate = DbMigrate.getInstance(true, buildOptions())
   return dbMigrate.up()
 }
 

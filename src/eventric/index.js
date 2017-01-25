@@ -8,7 +8,7 @@ let initializedContext
 exports.getContext = () => {
   if (!initializedContext) {
     Eventric.setStore(PostgresStore.default, {})
-    let context = Eventric.context('Ledger')
+    const context = Eventric.context('Ledger')
     Transfer.setupContext(context)
     initializedContext = P.resolve(context.initialize())
       .then(() => context)

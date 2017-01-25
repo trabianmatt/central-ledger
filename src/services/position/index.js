@@ -7,9 +7,50 @@ const PositionCalculator = require('./position-calculator')
 const Account = require('../../domain/account')
 const SettleableTransfersReadmodel = require('../../models/settleable-transfers-read-model')
 
+const buildEmptyPosition = () => {
+  return buildPosition(new Decimal('0'), new Decimal('0'), new Decimal('0'))
+}
+
+const buildPosition = (payments, receipts, net) => {
+  return {
+    payments: payments,
+    receipts: receipts,
+    net: net
+  }
+}
+
+const buildResponse = (positionMap) => {
+  return Array.from(positionMap.keys()).sort().map(p => _.assign({ account: p }, _.forOwn(positionMap.get(p), (value, key, obj) => (obj[key] = value.toString()))))
+}
+
+const calculatePositions = (executedTransfers, positionMap) => {
+  if (executedTransfers.length === 0) {
+    return positionMap
+  } else {
+    const head = executedTransfers[0]
+    const tail = (executedTransfers.length > 1) ? executedTransfers.slice(1) : []
+
+    const addToExistingPositionFor = (key) => {
+      if (positionMap.has(key)) {
+        return v => positionMap.set(key, PositionCalculator.sum(positionMap.get(key), v))
+      } else {
+        return v => positionMap.set(key, v)
+      }
+    }
+
+    const debitAccount = UrlParser.toAccountUri(head.debitAccountName)
+    const creditAccount = UrlParser.toAccountUri(head.creditAccountName)
+
+    addToExistingPositionFor(debitAccount)(buildPosition(new Decimal(head.debitAmount), new Decimal('0'), (new Decimal(head.debitAmount)).times(-1)))
+    addToExistingPositionFor(creditAccount)(buildPosition(new Decimal('0'), new Decimal(head.creditAmount), new Decimal(head.creditAmount)))
+
+    return calculatePositions(tail, positionMap)
+  }
+}
+
 exports.calculateForAccount = (account) => {
-  let accountUri = UrlParser.toAccountUri(account.name)
-  let positionMap = new Map().set(accountUri, buildEmptyPosition())
+  const accountUri = UrlParser.toAccountUri(account.name)
+  const positionMap = new Map().set(accountUri, buildEmptyPosition())
 
   return SettleableTransfersReadmodel.getSettleableTransfersByAccount(account.accountId)
     .then(transfers => calculatePositions(transfers, positionMap))
@@ -20,9 +61,11 @@ exports.calculateForAccount = (account) => {
 exports.calculateForAllAccounts = () => {
   return Account.getAll()
     .then(accounts => {
-      if (!accounts || accounts.length === 0) return []
+      if (!accounts || accounts.length === 0) {
+        return []
+      }
 
-      let positionMap = new Map()
+      const positionMap = new Map()
       accounts.forEach(a => {
         positionMap.set(UrlParser.toAccountUri(a.name), buildEmptyPosition())
       })
@@ -31,45 +74,4 @@ exports.calculateForAllAccounts = () => {
         .then(transfers => calculatePositions(transfers, positionMap))
         .then(buildResponse)
     })
-}
-
-function calculatePositions (executedTransfers, positionMap) {
-  if (executedTransfers.length === 0) {
-    return positionMap
-  } else {
-    let head = executedTransfers[0]
-    let tail = (executedTransfers.length > 1) ? executedTransfers.slice(1) : []
-
-    let addToExistingPositionFor = function (key) {
-      if (positionMap.has(key)) {
-        return v => positionMap.set(key, PositionCalculator.sum(positionMap.get(key), v))
-      } else {
-        return v => positionMap.set(key, v)
-      }
-    }
-
-    let debitAccount = UrlParser.toAccountUri(head.debitAccountName)
-    let creditAccount = UrlParser.toAccountUri(head.creditAccountName)
-
-    addToExistingPositionFor(debitAccount)(buildPosition(new Decimal(head.debitAmount), new Decimal('0'), (new Decimal(head.debitAmount)).times(-1)))
-    addToExistingPositionFor(creditAccount)(buildPosition(new Decimal('0'), new Decimal(head.creditAmount), new Decimal(head.creditAmount)))
-
-    return calculatePositions(tail, positionMap)
-  }
-}
-
-function buildResponse (positionMap) {
-  return Array.from(positionMap.keys()).sort().map(p => _.assign({ account: p }, _.forOwn(positionMap.get(p), (value, key, obj) => (obj[key] = value.toString()))))
-}
-
-function buildPosition (payments, receipts, net) {
-  return {
-    payments: payments,
-    receipts: receipts,
-    net: net
-  }
-}
-
-function buildEmptyPosition () {
-  return buildPosition(new Decimal('0'), new Decimal('0'), new Decimal('0'))
 }

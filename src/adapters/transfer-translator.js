@@ -2,13 +2,21 @@
 
 const UrlParser = require('../lib/urlparser')
 
-exports.toTransfer = (t) => {
-  if (t.id) return fromTransferAggregate(t)
-  else if (t.transferUuid) return fromTransferReadModel(t)
-  else throw new Error(`Unable to translate to transfer: ${t}`)
+const removeNullOrUndefinedTimelineProperties = (timeline) => {
+  var newTimeline = {}
+  if (timeline.prepared_at) {
+    newTimeline.prepared_at = timeline.prepared_at
+  }
+  if (timeline.executed_at) {
+    newTimeline.executed_at = timeline.executed_at
+  }
+  if (timeline.rejected_at) {
+    newTimeline.rejected_at = timeline.rejected_at
+  }
+  return newTimeline
 }
 
-let fromTransferAggregate = (t) => ({
+const fromTransferAggregate = (t) => ({
   id: t.id,
   ledger: t.ledger,
   debits: t.debits,
@@ -20,7 +28,7 @@ let fromTransferAggregate = (t) => ({
   rejection_reason: t.rejection_reason
 })
 
-let fromTransferReadModel = (t) => ({
+const fromTransferReadModel = (t) => ({
   id: UrlParser.toTransferUri(t.transferUuid),
   ledger: t.ledger,
   debits: [{
@@ -44,11 +52,11 @@ let fromTransferReadModel = (t) => ({
   rejection_reason: t.rejectionReason
 })
 
-const removeNullOrUndefinedTimelineProperties = (timeline) => {
-  var newTimeline = {}
-  if (timeline.prepared_at) newTimeline.prepared_at = timeline.prepared_at
-  if (timeline.executed_at) newTimeline.executed_at = timeline.executed_at
-  if (timeline.rejected_at) newTimeline.rejected_at = timeline.rejected_at
-
-  return newTimeline
+exports.toTransfer = (t) => {
+  if (t.id) {
+    return fromTransferAggregate(t)
+  } else if (t.transferUuid) {
+    return fromTransferReadModel(t)
+  } else throw new Error(`Unable to translate to transfer: ${t}`)
 }
+

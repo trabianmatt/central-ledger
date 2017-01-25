@@ -8,8 +8,10 @@ const Validator = require('./validator')
 const TransferState = require('../../domain/transfer/state')
 const TransferTranslator = require('../../adapters/transfer-translator')
 
-let buildGetTransferResponse = (record) => {
-  if (!record) throw new NotFoundError('The requested resource could not be found.')
+const buildGetTransferResponse = (record) => {
+  if (!record) {
+    throw new NotFoundError('The requested resource could not be found.')
+  }
   return TransferTranslator.toTransfer(record)
 }
 
@@ -21,7 +23,7 @@ exports.prepareTransfer = function (request, reply) {
 }
 
 exports.fulfillTransfer = function (request, reply) {
-  let fulfillment = {
+  const fulfillment = {
     id: request.params.id,
     fulfillment: request.payload
   }
@@ -32,7 +34,7 @@ exports.fulfillTransfer = function (request, reply) {
 }
 
 exports.rejectTransfer = function (request, reply) {
-  let rejection = {
+  const rejection = {
     id: request.params.id,
     rejection_reason: request.payload
   }

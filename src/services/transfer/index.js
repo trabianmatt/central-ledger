@@ -12,15 +12,15 @@ const Commands = require('../../commands/transfer')
 const UrlParser = require('../../lib/urlparser')
 
 exports.rejectExpired = () => {
-  let rejections = ReadModel.findExpired().then(expired => expired.map(x => Commands.expire(x.transferUuid)))
+  const rejections = ReadModel.findExpired().then(expired => expired.map(x => Commands.expire(x.transferUuid)))
   return P.all(rejections).then(rejections => {
     return rejections.map(r => r.id)
   })
 }
 
 exports.settle = () => {
-  let settlementId = SettlementsModel.generateId()
-  let settledTransfers = SettlementsModel.create(settlementId).then(() => {
+  const settlementId = SettlementsModel.generateId()
+  const settledTransfers = SettlementsModel.create(settlementId).then(() => {
     return SettleableTransfersReadModel.getSettleableTransfers().then(
       transfers => transfers.map(x => Commands.settle({id: x.transferId, settlement_id: settlementId})))
   })
@@ -39,14 +39,14 @@ exports.getExecuted = () => {
 }
 
 exports.saveTransferPrepared = ({aggregate, payload, timestamp}) => {
-  let debitAccount = UrlParser.nameFromAccountUri(payload.debits[0].account)
-  let creditAccount = UrlParser.nameFromAccountUri(payload.credits[0].account)
+  const debitAccount = UrlParser.nameFromAccountUri(payload.debits[0].account)
+  const creditAccount = UrlParser.nameFromAccountUri(payload.credits[0].account)
 
   return P.all([debitAccount, creditAccount].map(name => Account.getByName(name)))
     .then(accounts => {
-      let accountIds = _.reduce(accounts, (m, acct) => _.set(m, acct.name, acct.accountId), {})
+      const accountIds = _.reduce(accounts, (m, acct) => _.set(m, acct.name, acct.accountId), {})
 
-      let record = {
+      const record = {
         transferUuid: aggregate.id,
         state: TransferState.PREPARED,
         ledger: payload.ledger,
@@ -69,7 +69,7 @@ exports.saveTransferPrepared = ({aggregate, payload, timestamp}) => {
 }
 
 exports.saveTransferExecuted = ({aggregate, payload, timestamp}) => {
-  let fields = {
+  const fields = {
     state: TransferState.EXECUTED,
     fulfillment: payload.fulfillment,
     executedDate: Moment(timestamp)
@@ -78,7 +78,7 @@ exports.saveTransferExecuted = ({aggregate, payload, timestamp}) => {
 }
 
 exports.saveTransferRejected = ({aggregate, payload, timestamp}) => {
-  let fields = {
+  const fields = {
     state: TransferState.REJECTED,
     rejectionReason: payload.rejection_reason,
     creditRejected: 1,

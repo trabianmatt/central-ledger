@@ -8,8 +8,8 @@ const transfersRegex = new RegExp(`${Config.HOSTNAME}/transfers/([a-f\\d]{8}(-[a
 const accountsTransfersRouteRegex = new RegExp(/\/accounts\/([A-Za-z0-9_]*)\/transfers/, 'i')
 
 exports.nameFromAccountUri = (uri, callback) => {
-  let matches = uri.match(accountRegex)
-  let hasCallback = (typeof callback === 'function')
+  const matches = uri.match(accountRegex)
+  const hasCallback = (typeof callback === 'function')
   if (matches) {
     return (hasCallback) ? callback(null, matches[1]) : matches[1]
   } else {
@@ -19,7 +19,7 @@ exports.nameFromAccountUri = (uri, callback) => {
 
 exports.accountNameFromTransfersRoute = (url) => {
   return new P((resolve, reject) => {
-    let matches = url.match(accountsTransfersRouteRegex)
+    const matches = url.match(accountsTransfersRouteRegex)
     if (matches) {
       resolve(matches[1])
     } else {
@@ -29,8 +29,8 @@ exports.accountNameFromTransfersRoute = (url) => {
 }
 
 exports.idFromTransferUri = (uri, callback) => {
-  let matches = uri.match(transfersRegex)
-  let hasCallback = (typeof callback === 'function')
+  const matches = uri.match(transfersRegex)
+  const hasCallback = (typeof callback === 'function')
   if (matches) {
     return hasCallback ? callback(null, matches[1]) : matches[1]
   } else {

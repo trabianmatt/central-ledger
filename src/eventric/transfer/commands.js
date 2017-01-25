@@ -7,11 +7,11 @@ const NotFoundError = require('@leveloneproject/central-services-shared').NotFou
 
 module.exports = {
   PrepareTransfer (proposed) {
-    let {id, ledger, debits, credits, execution_condition, expires_at} = proposed
+    const {id, ledger, debits, credits, execution_condition, expires_at} = proposed
     return P.resolve(this.$aggregate.load('Transfer', id))
     .then(existing => Validator.validateExistingOnPrepare(proposed, existing))
     .then(existing => { return { existing: true, transfer: existing } })
-    .catch(AggregateNotFoundError, e => {
+    .catch(AggregateNotFoundError, () => {
       return this.$aggregate.create('Transfer', {
         ledger,
         debits,
@@ -20,7 +20,7 @@ module.exports = {
         expires_at
       }, id)
       .then(transfer => {
-        return transfer.$save().then(() => { return { existing: false, transfer } })
+        return transfer.$save().then(() => ({ existing: false, transfer }))
       })
     })
   },
@@ -30,7 +30,9 @@ module.exports = {
       .then(transfer => {
         return Validator.validateFulfillment(transfer, fulfillment)
         .then(({ previouslyFulfilled }) => {
-          if (previouslyFulfilled) { return transfer }
+          if (previouslyFulfilled) {
+            return transfer
+          }
           transfer.fulfill({fulfillment})
           return transfer.$save().then(() => transfer)
         })
@@ -45,9 +47,11 @@ module.exports = {
       .then(transfer => {
         return Validator.validateReject(transfer, rejection_reason)
         .then(result => {
-          if (result.alreadyRejected) return transfer // eslint-disable-line
+          if (result.alreadyRejected) {
+            return transfer
+          }
           transfer.reject({ rejection_reason: rejection_reason }) // eslint-disable-line
-          return transfer.$save().then(() => transfer) // eslint-disable-line
+          return transfer.$save().then(() => transfer)
         })
       })
       .catch(AggregateNotFoundError, () => {

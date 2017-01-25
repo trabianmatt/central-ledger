@@ -44,7 +44,7 @@ Test('db', dbTest => {
     })
 
     connectTest.test('promisify db', t => {
-      let d = { someFunction: function () {} }
+      const d = { someFunction: function () {} }
       Massive.connect.yields(null, d)
       Db.connect()
       .then(db => {
@@ -54,13 +54,26 @@ Test('db', dbTest => {
     })
 
     connectTest.test('promisify only db object properties', t => {
-      let d = { prop1: {}, prop2: {}, func1: function () {} }
+      const d = { prop1: {}, prop2: {}, func1: function () {} }
       Massive.connect.yields(null, d)
       Db.connect()
       .then(db => {
         t.ok(P.promisifyAll.calledWith(d.prop1))
         t.ok(P.promisifyAll.calledWith(d.prop2))
         t.notOk(P.promisifyAll.calledWith(d.func1))
+        t.end()
+      })
+    })
+
+    connectTest.test('does not promisify inherited properties', t => {
+      const d = { prop1: { key: 'value' } }
+      const d2 = Object.create(d)
+      d2['prop2'] = { key: 'some-other-value' }
+      Massive.connect.yields(null, d2)
+      Db.connect()
+      .then(db => {
+        t.ok(P.promisifyAll.calledWith(d2.prop2))
+        t.notOk(P.promisifyAll.calledWith(d2.prop1))
         t.end()
       })
     })

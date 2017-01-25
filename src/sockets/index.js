@@ -16,8 +16,8 @@ const createWebSocketServer = (listener) => {
 }
 
 const getAccounts = (transfer) => {
-  let credits = transfer.credits || []
-  let debits = transfer.debits || []
+  const credits = transfer.credits || []
+  const debits = transfer.debits || []
   return [...credits, ...debits].map(c => c.account)
 }
 

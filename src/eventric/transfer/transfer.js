@@ -56,7 +56,7 @@ class Transfer {
   }
 
   handleTransferRejected (event) {
-    let rejection_reason = event.payload.rejection_reason // eslint-disable-line
+    const rejection_reason = event.payload.rejection_reason // eslint-disable-line
     this.state = TransferState.REJECTED
     this.rejection_reason = rejection_reason // eslint-disable-line
     this.timeline = this.timeline || {}

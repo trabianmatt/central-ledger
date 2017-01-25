@@ -22,7 +22,7 @@ class InvalidSubscriptionRequestError extends ValidationError {
 }
 
 const reformatValidationError = (err) => {
-  let details = err.details.map(d => ({ message: d.message, params: d.context }))
+  const details = err.details.map(d => ({ message: d.message, params: d.context }))
   return new InvalidSubscriptionRequestError(...details)
 }
 
@@ -30,7 +30,9 @@ const validateSubscriptionRequest = (data, cb) => {
   try {
     const request = JSON.parse(data)
     return Joi.validate(request, requestSchema, validationOptions, (err, result) => {
-      if (err) return cb(reformatValidationError(err))
+      if (err) {
+        return cb(reformatValidationError(err))
+      }
       P.all(result.params.accounts.map(accountUri => AccountService.exists(accountUri)))
       .then(() => cb(null, { id: result.id, jsonrpc: result.jsonrpc, accountUris: result.params.accounts }))
       .catch(e => {

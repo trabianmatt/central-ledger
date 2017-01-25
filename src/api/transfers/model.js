@@ -6,7 +6,7 @@ const Commands = require('../../commands/transfer')
 const ExpiredTransferError = require('../../errors/expired-transfer-error')
 const UnpreparedTransferError = require('../../errors/unprepared-transfer-error')
 
-let cleanTransfer = (transfer) => {
+const cleanTransfer = (transfer) => {
   return {
     id: UrlParser.toTransferUri(transfer.id),
     ledger: transfer.ledger,
@@ -20,7 +20,7 @@ let cleanTransfer = (transfer) => {
 }
 
 exports.prepare = (transfer) => {
-  let payload = {
+  const payload = {
     id: UrlParser.idFromTransferUri(transfer.id),
     ledger: transfer.ledger,
     debits: transfer.debits,
@@ -30,7 +30,7 @@ exports.prepare = (transfer) => {
   }
   return Commands.prepare(payload)
     .then(result => {
-      let t = cleanTransfer(result.transfer)
+      const t = cleanTransfer(result.transfer)
       Events.emitTransferPrepared(t)
       t.existing = result.existing
       return t
@@ -40,11 +40,11 @@ exports.prepare = (transfer) => {
 exports.fulfill = (fulfillment) => {
   return Commands.fulfill(fulfillment)
   .then(transfer => {
-    let t = cleanTransfer(transfer)
+    const t = cleanTransfer(transfer)
     Events.emitTransferExecuted(t, { execution_condition_fulfillment: fulfillment.fulfillment })
     return t
   })
-  .catch(ExpiredTransferError, e => {
+  .catch(ExpiredTransferError, () => {
     return Commands.expire(fulfillment.id)
     .then(() => { throw new UnpreparedTransferError() })
   })
@@ -53,7 +53,7 @@ exports.fulfill = (fulfillment) => {
 exports.reject = (rejection) => {
   return Commands.reject(rejection)
   .then(transfer => {
-    let t = cleanTransfer(transfer)
+    const t = cleanTransfer(transfer)
     t.rejection_reason = transfer.rejection_reason
     Events.emitTransferRejected(t)
     return t
