@@ -31,7 +31,7 @@ Test('GET /positions', getTest => {
     .then(() => Base.fulfillTransfer(transfer3Id, fulfillment))
     .delay(100)
     .then(() => {
-      Base.get('/positions')
+      Base.getApi('/positions')
         .expect(200)
         .expect('Content-Type', /json/)
         .then(res => {

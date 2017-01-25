@@ -63,7 +63,10 @@ const wireEvents = () => {
 
 exports.register = (server, options, next) => {
   manager = SocketManager.create()
-  const wss = createWebSocketServer(server.listener)
+
+  let connection = server.select('api')
+
+  const wss = createWebSocketServer(connection.listener)
 
   wireConnection(wss)
 

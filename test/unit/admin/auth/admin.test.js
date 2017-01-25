@@ -2,7 +2,7 @@
 
 const Test = require('tapes')(require('tape'))
 const Config = require('../../../../src/lib/config')
-const AdminAuth = require('../../../../src/api/auth/admin')
+const AdminAuth = require('../../../../src/admin/auth/admin')
 
 const invalid = (test) => {
   return (err, isValid) => {

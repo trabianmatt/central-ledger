@@ -42,7 +42,7 @@ Test('PUT /transfer/:id/fulfillment', putTest => {
   putTest.test('should return error when fulfilling non-existing transfer', test => {
     let transferId = Fixtures.generateTransferId()
 
-    Base.put(`/transfers/${transferId}/fulfillment`, fulfillment, 'text/plain')
+    Base.putApi(`/transfers/${transferId}/fulfillment`, fulfillment, 'text/plain')
       .expect(404)
       .then(res => {
         test.equal(res.body.id, 'NotFoundError')

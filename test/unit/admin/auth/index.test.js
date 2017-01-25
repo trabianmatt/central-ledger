@@ -3,19 +3,19 @@
 const Test = require('tape')
 const Sinon = require('sinon')
 const Config = require('../../../../src/lib/config')
-const AccountStrategy = require('../../../../src/api/auth/account')
-const TokenStrategy = require('../../../../src/api/auth/token')
+const AdminStrategy = require('../../../../src/admin/auth/admin')
+const TokenStrategy = require('../../../../src/admin/auth/token')
 
-const AuthModule = require('../../../../src/api/auth')
+const AuthModule = require('../../../../src/admin/auth')
 
 Test('Auth module', authTest => {
-  authTest.test('should be named "auth"', test => {
-    test.equal(AuthModule.register.attributes.name, 'auth')
+  authTest.test('should be named "admin auth"', test => {
+    test.equal(AuthModule.register.attributes.name, 'admin auth')
     test.end()
   })
 
   authTest.test('register should', registerTest => {
-    registerTest.test('add AccountStrategy to server auth strategies', test => {
+    registerTest.test('add AdminStrategy to server auth strategies', test => {
       const strategySpy = Sinon.spy()
       const server = {
         auth: {
@@ -23,7 +23,7 @@ Test('Auth module', authTest => {
         }
       }
       const next = () => {
-        test.ok(strategySpy.calledWith(AccountStrategy.name, AccountStrategy.scheme, Sinon.match({ validate: AccountStrategy.validate })))
+        test.ok(strategySpy.calledWith(AdminStrategy.name, AdminStrategy.scheme, Sinon.match({ validate: AdminStrategy.validate })))
         test.end()
       }
 
@@ -52,7 +52,7 @@ Test('Auth module', authTest => {
   authTest.test('tokenAuth should', tokenAuthTest => {
     tokenAuthTest.test('return token if ENABLE_TOKEN_AUTH true', test => {
       Config.ENABLE_TOKEN_AUTH = true
-      test.equal(AuthModule.tokenAuth(), 'token')
+      test.equal(AuthModule.tokenAuth(), TokenStrategy.name)
       test.end()
     })
 

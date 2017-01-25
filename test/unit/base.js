@@ -1,30 +1,21 @@
 'use strict'
 
-const Hapi = require('hapi')
-const ErrorHandling = require('@leveloneproject/central-services-error-handling')
+const Path = require('path')
+const Glue = require('glue')
+const Manifest = require('../../src/manifest')
 
-exports.setup = () => {
-  const fixtures = {}
+let serverPromise
 
-  const server = new Hapi.Server()
-  server.connection({
-    port: 8000,
-    routes: {
-      validate: ErrorHandling.validateRoutes()
-    }
-  })
+const setupServer = () => {
+  if (!serverPromise) {
+    let serverPath = Path.normalize(Path.join(__dirname, '../../src/'))
+    serverPromise = Glue.compose(Manifest, { relativeTo: serverPath })
+  }
+  return serverPromise
+}
 
-  server.register([
-    ErrorHandling,
-    require('@leveloneproject/central-services-auth'),
-    require('../../src/api/auth'),
-    require('../../src/api'),
-    require('../../src/webhooks')
-  ])
-
-  fixtures.server = server
-
-  return fixtures
+exports.setup = (connection = 'api') => {
+  return setupServer().then(server => server.select(connection))
 }
 
 exports.buildRequest = (options) => {

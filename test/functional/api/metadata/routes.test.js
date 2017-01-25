@@ -5,7 +5,7 @@ const Base = require('../../base')
 const Fixtures = require('../../../fixtures')
 
 Test('return metadata', function (assert) {
-  Base.get('/')
+  Base.getApi('/')
     .expect(200)
     .expect('Content-Type', /json/)
     .then(res => {
@@ -29,7 +29,7 @@ Test('return metadata', function (assert) {
 })
 
 Test('return api documentation', function (assert) {
-  Base.get('/documentation')
+  Base.getApi('/documentation')
     .expect(200)
     .expect('Content-Type', /html/)
     .then(res => {
@@ -38,7 +38,7 @@ Test('return api documentation', function (assert) {
 })
 
 Test('return health', function (assert) {
-  Base.get('/health')
+  Base.getApi('/health')
     .expect(200)
     .expect('Content-Type', /json/)
     .then(res => {

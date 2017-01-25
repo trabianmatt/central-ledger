@@ -21,6 +21,7 @@
     "dev": "npm run docker:stop && docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d",
     "test": "npm run test:unit | faucet",
     "pretest": "standard",
+    "standard": "standard",
     "test:unit": "tape 'test/unit/**/*.test.js'",
     "test:all": "npm test && npm run test:integration && npm run test:functional",
     "test:xunit": "tape 'test/unit/**/*.test.js' | tap-xunit",

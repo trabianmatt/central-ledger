@@ -1,7 +1,8 @@
 'use strict'
 
 let host = process.env.HOST_IP || 'localhost'
-const Request = require('supertest-as-promised')('http://' + host + ':3000')
+const RequestApi = require('supertest-as-promised')('http://' + host + ':3000')
+const RequestAdmin = require('supertest-as-promised')('http://' + host + ':3001')
 const Encoding = require('@leveloneproject/central-services-shared').Encoding
 
 const basicAuth = (name, password) => {
@@ -9,44 +10,56 @@ const basicAuth = (name, password) => {
   return { 'Authorization': `Basic ${credentials}` }
 }
 
-function get (path, headers = {}) {
-  return Request.get(path).set(headers)
+function getApi (path, headers = {}) {
+  return RequestApi.get(path).set(headers)
 }
 
-function post (path, data, contentType = 'application/json') {
-  return Request.post(path).set('Content-Type', contentType).send(data)
+function postApi (path, data, contentType = 'application/json') {
+  return RequestApi.post(path).set('Content-Type', contentType).send(data)
 }
 
-function put (path, data, contentType = 'application/json') {
-  return Request.put(path).set('Content-Type', contentType).send(data)
+function putApi (path, data, contentType = 'application/json') {
+  return RequestApi.put(path).set('Content-Type', contentType).send(data)
+}
+
+function getAdmin (path, headers = {}) {
+  return RequestAdmin.get(path).set(headers)
+}
+
+function postAdmin (path, data, contentType = 'application/json') {
+  return RequestAdmin.post(path).set('Content-Type', contentType).send(data)
+}
+
+function putAdmin (path, data, contentType = 'application/json') {
+  return RequestAdmin.put(path).set('Content-Type', contentType).send(data)
 }
 
 function createAccount (accountName) {
-  return post('/accounts', { name: accountName })
+  return postApi('/accounts', { name: accountName })
 }
 
 function getAccount (accountName) {
-  return get(`/accounts/${accountName}`)
+  return getApi(`/accounts/${accountName}`)
 }
 
 function getTransfer (transferId) {
-  return get(`/transfers/${transferId}`)
+  return getApi(`/transfers/${transferId}`)
 }
 
 function getFulfillment (transferId) {
-  return get(`/transfers/${transferId}/fulfillment`)
+  return getApi(`/transfers/${transferId}/fulfillment`)
 }
 
 function prepareTransfer (transferId, transfer) {
-  return put(`/transfers/${transferId}`, transfer)
+  return putApi(`/transfers/${transferId}`, transfer)
 }
 
 function fulfillTransfer (transferId, fulfillment) {
-  return put(`/transfers/${transferId}/fulfillment`, fulfillment, 'text/plain')
+  return putApi(`/transfers/${transferId}/fulfillment`, fulfillment, 'text/plain')
 }
 
 function rejectTransfer (transferId, reason) {
-  return put(`/transfers/${transferId}/rejection`, reason, 'text/plain')
+  return putApi(`/transfers/${transferId}/rejection`, reason, 'text/plain')
 }
 
 module.exports = {
@@ -55,10 +68,13 @@ module.exports = {
   fulfillTransfer,
   getTransfer,
   getFulfillment,
-  get,
+  getApi,
+  getAdmin,
   getAccount,
-  post,
+  postApi,
+  postAdmin,
   prepareTransfer,
-  put,
+  putApi,
+  putAdmin,
   rejectTransfer
 }

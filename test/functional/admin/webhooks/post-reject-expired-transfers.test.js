@@ -1,10 +1,10 @@
 'use strict'
 
 const Test = require('tape')
-const Base = require('../base')
-const Fixtures = require('../../fixtures')
-const State = require('../../../src/domain/transfer/state')
-const RejectionType = require('../../../src/domain/transfer/rejection-type')
+const Base = require('../../base')
+const Fixtures = require('../../../fixtures')
+const State = require('../../../../src/domain/transfer/state')
+const RejectionType = require('../../../../src/domain/transfer/rejection-type')
 
 Test('POST /webhooks/reject-expired-transfers', rejectTest => {
   rejectTest.test('should reject expired transfers', test => {
@@ -18,7 +18,7 @@ Test('POST /webhooks/reject-expired-transfers', rejectTest => {
       .then(() => Base.prepareTransfer(transferId, transfer))
       .delay(3000)
       .then(() => {
-        Base.post('/webhooks/reject-expired-transfers', {})
+        Base.postAdmin('/webhooks/reject-expired-transfers', {})
           .expect(200)
           .expect('Content-Type', /json/)
           .then(res => {
@@ -38,7 +38,7 @@ Test('POST /webhooks/reject-expired-transfers', rejectTest => {
       .then(() => Base.createAccount(account2Name))
       .then(() => Base.prepareTransfer(transferId, transfer))
       .delay(3000)
-      .then(() => Base.post('/webhooks/reject-expired-transfers', {}))
+      .then(() => Base.postAdmin('/webhooks/reject-expired-transfers', {}))
       .delay(100)
       .then(() => {
         Base.getTransfer(transferId)

@@ -14,6 +14,14 @@ Test('Socket Module', moduleTest => {
   let sandbox
   let socketManager
 
+  let mockServer = (listener = {}, serverTag = 'api') => {
+    const server = {
+      select: sandbox.stub()
+    }
+    server.select.withArgs(serverTag).returns({ listener })
+    return server
+  }
+
   moduleTest.beforeEach(test => {
     sandbox = Sinon.sandbox.create()
     sandbox.stub(WS, 'Server')
@@ -38,10 +46,8 @@ Test('Socket Module', moduleTest => {
       const listener = {}
 
       WS.Server.withArgs(Sinon.match({ server: listener })).returns(new EventEmitter())
-      const server = {
-        listener
-      }
-      Index.register(server, {}, () => {
+
+      Index.register(mockServer(listener), {}, () => {
         test.ok(WS.Server.called)
         test.end()
       })
@@ -53,7 +59,7 @@ Test('Socket Module', moduleTest => {
       }
       WS.Server.returns(wsServer)
 
-      Index.register({}, {}, () => {
+      Index.register(mockServer(), {}, () => {
         test.ok(wsServer.on.calledWith('connection'))
         test.end()
       })
@@ -61,7 +67,7 @@ Test('Socket Module', moduleTest => {
 
     registerTest.test('Wire up event handlers', test => {
       WS.Server.returns(new EventEmitter())
-      Index.register({}, {}, () => {
+      Index.register(mockServer(), {}, () => {
         test.ok(Events.onTransferExecuted.called)
         test.ok(Events.onTransferPrepared.called)
         test.end()
@@ -81,7 +87,7 @@ Test('Socket Module', moduleTest => {
       const wsServer = new EventEmitter()
       WS.Server.returns(wsServer)
 
-      Index.register({}, {}, () => {
+      Index.register(mockServer(), {}, () => {
         wsServer.emit('connection', ws)
         test.ok(WebSocket.initialize.calledWith(ws, Sinon.match(socketManager)))
         test.notOk(AccountTransfers.initialize.called)
@@ -99,7 +105,7 @@ Test('Socket Module', moduleTest => {
       const wsServer = new EventEmitter()
       WS.Server.returns(wsServer)
 
-      Index.register({}, {}, () => {
+      Index.register(mockServer(), {}, () => {
         wsServer.emit('connection', ws)
         test.ok(AccountTransfers.initialize.calledWith(ws, url, Sinon.match(socketManager)))
         test.notOk(WebSocket.initialize.called)
@@ -119,7 +125,7 @@ Test('Socket Module', moduleTest => {
     eventsTest.test('onTransferPrepared should do nothing if transfer credits and debits are empty', test => {
       const message = { resource: {} }
       Events.onTransferPrepared.yields(message)
-      Index.register({}, {}, () => {
+      Index.register(mockServer(), {}, () => {
         test.equal(socketManager.send.callCount, 0)
         test.end()
       })
@@ -138,7 +144,7 @@ Test('Socket Module', moduleTest => {
       }
       const message = { resource: transfer }
       Events.onTransferPrepared.yields(message)
-      Index.register({}, {}, () => {
+      Index.register(mockServer(), {}, () => {
         test.ok(socketManager.send.calledWith(creditAccount, message))
         test.ok(socketManager.send.calledWith(debitAccount, message))
         test.end()
@@ -148,7 +154,7 @@ Test('Socket Module', moduleTest => {
     eventsTest.test('onTransferExecuted should do nothing if transfer credits and debits are empty', test => {
       const message = { resource: {} }
       Events.onTransferExecuted.yields(message)
-      Index.register({}, {}, () => {
+      Index.register(mockServer(), {}, () => {
         test.equal(socketManager.send.callCount, 0)
         test.end()
       })
@@ -167,7 +173,7 @@ Test('Socket Module', moduleTest => {
       }
       const message = { resource: transfer }
       Events.onTransferExecuted.yields(message)
-      Index.register({}, {}, () => {
+      Index.register(mockServer(), {}, () => {
         test.ok(socketManager.send.calledWith(creditAccount, message))
         test.ok(socketManager.send.calledWith(debitAccount, message))
         test.end()
@@ -177,7 +183,7 @@ Test('Socket Module', moduleTest => {
     eventsTest.test('onTransferRejected should do nothing if transfer credits and debits are empty', test => {
       const message = { resource: {} }
       Events.onTransferRejected.yields(message)
-      Index.register({}, {}, () => {
+      Index.register(mockServer(), {}, () => {
         test.equal(socketManager.send.callCount, 0)
         test.end()
       })
@@ -196,7 +202,7 @@ Test('Socket Module', moduleTest => {
       }
       const message = { resource: transfer }
       Events.onTransferRejected.yields(message)
-      Index.register({}, {}, () => {
+      Index.register(mockServer(), {}, () => {
         test.ok(socketManager.send.calledWith(creditAccount, message))
         test.ok(socketManager.send.calledWith(debitAccount, message))
         test.end()
@@ -213,7 +219,7 @@ Test('Socket Module', moduleTest => {
         data
       }
       Events.onMessageSent.yields(message)
-      Index.register({}, {}, () => {
+      Index.register(mockServer(), {}, () => {
         const args = socketManager.send.firstCall.args
         test.equal(args[0], toAccount)
         test.equal(args[1].jsonrpc, '2.0')

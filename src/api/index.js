@@ -1,7 +1,9 @@
-let glob = require('glob')
+'use strict'
+
+const Glob = require('glob')
 
 exports.register = function (server, options, next) {
-  glob.sync('**/routes.js', { cwd: __dirname }).forEach(function (x) {
+  Glob.sync('**/routes.js', { cwd: __dirname }).forEach(function (x) {
     server.route(require('./' + x))
   })
 
@@ -9,5 +11,5 @@ exports.register = function (server, options, next) {
 }
 
 exports.register.attributes = {
-  name: 'api'
+  name: 'api routes'
 }

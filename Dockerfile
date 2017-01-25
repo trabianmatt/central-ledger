@@ -9,4 +9,5 @@ RUN npm link sodium && \
   npm uninstall -g npm
 
 EXPOSE 3000
+EXPOSE 3001
 CMD node src/server.js

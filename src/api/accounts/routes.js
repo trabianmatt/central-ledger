@@ -24,16 +24,6 @@ module.exports = [
   },
   {
     method: 'GET',
-    path: '/accounts',
-    handler: Handler.getAll,
-    config: {
-      tags: tags,
-      description: 'Retreive all accounts',
-      auth: Auth.adminTokenAuth()
-    }
-  },
-  {
-    method: 'GET',
     path: '/accounts/{name}',
     handler: Handler.getByName,
     config: {

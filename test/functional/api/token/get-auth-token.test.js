@@ -12,7 +12,7 @@ Test('GET /auth_token', getTest => {
     .then(res => {
       const key = res.body.credentials.key
       const secret = res.body.credentials.secret
-      Base.get('/auth_token', Base.basicAuth(key, secret))
+      Base.getApi('/auth_token', Base.basicAuth(key, secret))
         .expect('Content-Type', /json/)
         .then(res => {
           const token = res.body.token

@@ -6,7 +6,7 @@ const Uuid = require('uuid4')
 const P = require('bluebird')
 const TransferService = require('../../../../src/services/transfer')
 const TokenService = require('../../../../src/domain/token')
-const Handler = require('../../../../src/webhooks/commands/handler')
+const Handler = require('../../../../src/admin/webhooks/handler')
 
 function createRequest (id, payload) {
   let requestId = id || Uuid()

@@ -1,8 +1,8 @@
 'use strict'
 
 const Test = require('tape')
-const Base = require('../base')
-const Fixtures = require('../../fixtures')
+const Base = require('../../base')
+const Fixtures = require('../../../fixtures')
 
 Test('POST /webhooks/settle-transfers', settleTest => {
   settleTest.test('should settle transfers', test => {
@@ -18,7 +18,7 @@ Test('POST /webhooks/settle-transfers', settleTest => {
       .then(() => Base.fulfillTransfer(transferId, 'oAKAAA'))
       .delay(100)
       .then(() => {
-        Base.post('/webhooks/settle-transfers', {})
+        Base.postAdmin('/webhooks/settle-transfers', {})
           .expect(200)
           .expect('Content-Type', /json/)
           .then(res => {

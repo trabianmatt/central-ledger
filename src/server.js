@@ -15,4 +15,8 @@ module.exports = Migrator.migrate()
   .then(() => Db.connect())
   .then(() => Eventric.getContext())
   .then(() => Glue.compose(Manifest, composeOptions))
-  .then(server => server.start().then(() => Logger.info('Server running at: %s', server.info.uri)))
+  .then(server => server.start().then(() => {
+    server.connections.forEach(c => {
+      Logger.info('%s server running at: %s', c.settings.labels, c.info.uri)
+    })
+  }))

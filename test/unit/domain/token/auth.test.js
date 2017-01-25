@@ -4,12 +4,13 @@ const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const P = require('bluebird')
 const Uuid = require('uuid4')
-const TokenAuth = require('../../../../src/api/auth/token')
 const TokenService = require('../../../../src/domain/token')
 const AccountService = require('../../../../src/domain/account')
 const UnauthorizedError = require('@leveloneproject/central-services-auth').UnauthorizedError
 const Crypto = require('../../../../src/lib/crypto')
 const Config = require('../../../../src/lib/config')
+
+const TokenAuth = require('../../../../src/domain/token/auth')
 
 const createRequest = (apiKey = null) => {
   return {
@@ -52,7 +53,7 @@ Test('Token Auth', tokenTest => {
         test.end()
       }
 
-      TokenAuth.all.validate(request, 'token', cb)
+      TokenAuth.validate(false)(request, 'token', cb)
     })
 
     validateTest.test('be unauthorized if Ledger-Api-Key not found', test => {
@@ -67,7 +68,7 @@ Test('Token Auth', tokenTest => {
         test.end()
       }
 
-      TokenAuth.all.validate(request, 'token', cb)
+      TokenAuth.validate(false)(request, 'token', cb)
     })
 
     validateTest.test('be invalid if token not found by account', test => {
@@ -84,7 +85,7 @@ Test('Token Auth', tokenTest => {
         test.end()
       }
 
-      TokenAuth.all.validate(request, 'token', cb)
+      TokenAuth.validate(false)(request, 'token', cb)
     })
 
     validateTest.test('be invalid if no account tokens can be verified', test => {
@@ -107,7 +108,7 @@ Test('Token Auth', tokenTest => {
         test.end()
       }
 
-      TokenAuth.all.validate(request, token, cb)
+      TokenAuth.validate(false)(request, token, cb)
     })
 
     validateTest.test('pass with account if one token can be verified', test => {
@@ -133,7 +134,7 @@ Test('Token Auth', tokenTest => {
         test.end()
       }
 
-      TokenAuth.all.validate(request, token, cb)
+      TokenAuth.validate(false)(request, token, cb)
     })
 
     validateTest.test('be invalid if a token has expired', test => {
@@ -161,7 +162,7 @@ Test('Token Auth', tokenTest => {
         test.end()
       }
 
-      TokenAuth.all.validate(request, bearer, cb)
+      TokenAuth.validate(false)(request, bearer, cb)
     })
 
     validateTest.end()
@@ -181,7 +182,7 @@ Test('Token Auth', tokenTest => {
         test.end()
       }
 
-      TokenAuth.adminOnly.validate(request, 'token', cb)
+      TokenAuth.validate(true)(request, 'token', cb)
     })
 
     validateTest.test('return admin if admin only and key is admin key', test => {
@@ -202,7 +203,7 @@ Test('Token Auth', tokenTest => {
         test.end()
       }
 
-      TokenAuth.adminOnly.validate(request, token, cb)
+      TokenAuth.validate(true)(request, token, cb)
     })
 
     validateTest.end()

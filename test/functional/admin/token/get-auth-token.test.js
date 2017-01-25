@@ -3,9 +3,9 @@
 const Test = require('tape')
 const Base = require('../../base')
 
-Test('GET /admin_token', getTest => {
+Test('GET /auth_token', getTest => {
   getTest.test('should return token', test => {
-    Base.get('/admin_token', Base.basicAuth('admin', 'admin'))
+    Base.getAdmin('/auth_token', Base.basicAuth('admin', 'admin'))
       .expect('Content-Type', /json/)
       .then(res => {
         const token = res.body.token

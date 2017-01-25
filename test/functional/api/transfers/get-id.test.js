@@ -121,7 +121,7 @@ Test('GET /transfers/:id', getTest => {
     .then(() => Base.createAccount(account2Name))
     .then(() => Base.prepareTransfer(transferId, transfer))
     .delay(3000)
-    .then(() => Base.post('/webhooks/reject-expired-transfers', {}))
+    .then(() => Base.postAdmin('/webhooks/reject-expired-transfers', {}))
     .delay(3000)
     .then(() => {
       Base.getTransfer(transferId)

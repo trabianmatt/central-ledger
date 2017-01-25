@@ -32,7 +32,24 @@ Test('server', function (serverTest) {
 
     exportingTest.test('run all required actions when starting server', function (assert) {
       let startStub = sandbox.stub().returns(Promise.resolve({}))
-      let server = { start: startStub, info: { uri: serverUri } }
+      let connection1 = {
+        settings: {
+          labels: 'api'
+        },
+        info: {
+          uri: serverUri
+        }
+      }
+      let connection2 = {
+        settings: {
+          labels: 'admin'
+        },
+        info: {
+          uri: serverUri
+        }
+      }
+      let connections = [connection1, connection2]
+      let server = { start: startStub, connections: connections }
 
       Glue.compose.returns(Promise.resolve(server))
       Db.connect.returns(Promise.resolve({}))
@@ -46,8 +63,9 @@ Test('server', function (serverTest) {
           assert.ok(Eventric.getContext.calledOnce)
           assert.ok(Glue.compose.calledOnce)
           assert.ok(startStub.calledOnce)
-          assert.ok(Logger.info.calledOnce)
-          assert.ok(Logger.info.calledWith('Server running at: %s', serverUri))
+          assert.equal(Logger.info.callCount, connections.length)
+          assert.ok(Logger.info.calledWith('%s server running at: %s', connection1.settings.labels, connection1.info.uri))
+          assert.ok(Logger.info.calledWith('%s server running at: %s', connection2.settings.labels, connection2.info.uri))
           assert.end()
         })
     })

@@ -1,17 +1,17 @@
 'use strict'
 
 const Config = require('../../lib/config')
-const AccountStrategy = require('./account')
+const AdminStrategy = require('./admin')
 const TokenStrategy = require('./token')
 
 exports.register = (server, options, next) => {
-  server.auth.strategy(AccountStrategy.name, AccountStrategy.scheme, { validate: AccountStrategy.validate })
+  server.auth.strategy(AdminStrategy.name, AdminStrategy.scheme, { validate: AdminStrategy.validate })
   server.auth.strategy(TokenStrategy.name, TokenStrategy.scheme, { validate: TokenStrategy.validate })
   next()
 }
 
 exports.register.attributes = {
-  name: 'auth'
+  name: 'admin auth'
 }
 
 exports.tokenAuth = () => {

@@ -26,10 +26,15 @@ Test('manifest', function (manifestTest) {
       assert.end()
     })
 
-    connectionsTest.test('have one connection with configured port', function (assert) {
+    connectionsTest.test('have two connections with configured ports', function (assert) {
       let Manifest = getManifest()
-      assert.equal(Manifest.connections.length, 1)
-      assert.equal(Manifest.connections[0].port, Config.PORT)
+      assert.equal(Manifest.connections.length, 2)
+      let apiConnection = Manifest.connections[0]
+      assert.equal(apiConnection.port, Config.PORT)
+      assert.deepEqual(apiConnection.labels, 'api')
+      let adminConnection = Manifest.connections[1]
+      assert.equal(adminConnection.port, Config.ADMIN_PORT)
+      assert.deepEqual(adminConnection.labels, 'admin')
       assert.end()
     })
 
@@ -93,8 +98,8 @@ Test('manifest', function (manifestTest) {
       assert.end()
     })
 
-    registrationsTest.test('register webhooks plugin', function (assert) {
-      assert.ok(findPluginByPath(Manifest.registrations, './webhooks'))
+    registrationsTest.test('register admin plugin', function (assert) {
+      assert.ok(findPluginByPath(Manifest.registrations, './admin'))
       assert.end()
     })
 

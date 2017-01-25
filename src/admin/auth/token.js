@@ -3,8 +3,8 @@
 const TokenAuth = require('../../domain/token/auth')
 
 module.exports = {
-  name: 'token',
+  name: 'admin-token',
   scheme: 'bearer',
-  validate: TokenAuth.validate(false)
+  validate: TokenAuth.validate(true)
 }
 
