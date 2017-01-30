@@ -3,11 +3,11 @@
 const AccountService = require('../../domain/account')
 const Logger = require('@leveloneproject/central-services-shared').Logger
 
-const validate = (request, username, password, cb) => {
+const validate = (request, name, password, cb) => {
   if (!password) {
     return cb(null, false)
   }
-  return AccountService.verify(username, password)
+  return AccountService.verify(name, password)
     .then(account => cb(null, true, account))
     .catch(e => {
       Logger.error(e)

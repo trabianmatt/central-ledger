@@ -6,38 +6,18 @@ const ValidationError = require('../../errors/validation-error')
 const UrlParser = require('../../lib/urlparser')
 const Crypto = require('../../lib/crypto')
 
-const createAccount = (name, key, secret) => {
-  return Model.create({ name, key, secret })
+const createAccount = (name, hashedPassword) => {
+  return Model.create({ name, hashedPassword })
 }
 
-const createSecretAndHash = () => {
-  return Crypto.generateSecret().then(secret => {
-    return Crypto.hash(secret).then(hashedSecret => ({
-      secret,
-      hashedSecret: hashedSecret
-    }))
-  })
-}
-
-const createKeyAndSecret = () => {
-  return P.all([Crypto.generateKey(), createSecretAndHash()])
-    .then(results => {
-      return { key: results[0], secret: results[1].secret, hashedSecret: results[1].hashedSecret }
-    })
-}
-
-const create = ({ name }) => {
-  return createKeyAndSecret()
-    .then(({key, secret, hashedSecret}) => {
-      return createAccount(name, key, hashedSecret)
+const create = (payload) => {
+  return Crypto.hash(payload.password)
+    .then(hashedPassword => {
+      return createAccount(payload.name, hashedPassword)
         .then(account => ({
           accountId: account.accountId,
           name: account.name,
-          createdDate: account.createdDate,
-          credentials: {
-            key,
-            secret
-          }
+          createdDate: account.createdDate
         }))
     })
 }
@@ -70,10 +50,6 @@ const getById = (id) => {
   return Model.getById(id)
 }
 
-const getByKey = (key) => {
-  return Model.getByKey(key)
-}
-
 const getByName = (name) => {
   return Model.getByName(name)
 }
@@ -85,20 +61,25 @@ const accountExists = (account) => {
   throw new Error('Account does not exist')
 }
 
-const verifyAccountSecret = (account, secret) => {
-  return Crypto.verifyHash(account.secret, secret)
+const retrieveUserCredentials = (account) => {
+  return Model.retrieveUserCredentials(account)
+}
+
+const verifyUserCredentials = (account, userCredentials, password) => {
+  return Crypto.verifyHash(userCredentials.password, password)
     .then(match => {
       if (match) {
         return account
       }
-      throw new Error('Secret is not valid for account')
+      throw new Error('Username and password are invalid')
     })
 }
 
-const verify = (key, secret) => {
-  return Model.getByKey(key)
-    .then(accountExists)
-    .then(account => verifyAccountSecret(account, secret))
+const verify = (name, password) => {
+  return Model.getByName(name)
+  .then(accountExists)
+  .then(account => retrieveUserCredentials(account)
+  .then(userCredentials => verifyUserCredentials(account, userCredentials, password)))
 }
 
 module.exports = {
@@ -106,7 +87,6 @@ module.exports = {
   exists,
   getAll,
   getById,
-  getByKey,
   getByName,
   verify
 }

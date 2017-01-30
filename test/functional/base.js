@@ -34,8 +34,8 @@ function putAdmin (path, data, contentType = 'application/json') {
   return RequestAdmin.put(path).set('Content-Type', contentType).send(data)
 }
 
-function createAccount (accountName) {
-  return postApi('/accounts', { name: accountName })
+function createAccount (accountName, password = '1234') {
+  return postApi('/accounts', { name: accountName, password: password })
 }
 
 function getAccount (accountName) {

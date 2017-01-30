@@ -1,21 +1,22 @@
 'use strict'
 
 const Test = require('tape')
-const Uuid = require('uuid4')
 const Fixtures = require('../../../fixtures')
 const Model = require('../../../../src/domain/account/model')
+
+function createAccount (name, hashedPassword = 'password') {
+  const payload = { name, hashedPassword }
+  return Model.create(payload)
+}
 
 Test('accounts model', function (modelTest) {
   modelTest.test('create should', function (createTest) {
     createTest.test('create a new account', function (assert) {
       const accountName = Fixtures.generateAccountName()
-      const key = 'some-key'
-      const secret = 'some-secret'
-      createAccount(accountName, key, secret)
+      const hashedPassword = 'some-password'
+      createAccount(accountName, hashedPassword)
         .then((account) => {
           assert.equal(account.name, accountName)
-          assert.equal(account.key, key)
-          assert.equal(account.secret, secret)
           assert.ok(account.createdDate)
           assert.ok(account.accountId)
           assert.end()
@@ -61,22 +62,6 @@ Test('accounts model', function (modelTest) {
     getByIdTest.end()
   })
 
-  modelTest.test('getByKey should', getByKeyTest => {
-    getByKeyTest.test('get account by key', test => {
-      const accountKey = Uuid()
-      const accountName = Fixtures.generateAccountName()
-      createAccount(accountName, accountKey)
-        .then(() => Model.getByKey(accountKey))
-        .then(found => {
-          test.equal(found.key, accountKey)
-          test.equal(found.name, accountName)
-          test.end()
-        })
-    })
-
-    getByKeyTest.end()
-  })
-
   modelTest.test('getAll should', function (getAllTest) {
     getAllTest.test('return all accounts', function (assert) {
       const account1Name = Fixtures.generateAccountName()
@@ -95,10 +80,21 @@ Test('accounts model', function (modelTest) {
     getAllTest.end()
   })
 
+  modelTest.test('retrieveUserCredentials should', function (retrieveUserCredentialsTest) {
+    retrieveUserCredentialsTest.test('return user credentials for a given account', function (assert) {
+      const account = Fixtures.generateAccountName()
+      const password = 'password'
+      createAccount(account, password)
+        .then((createdAccount) => Model.retrieveUserCredentials(createdAccount)
+        .then((userCredentials) => {
+          assert.equal(userCredentials.accountId, createdAccount.accountId)
+          assert.equal(userCredentials.password, password)
+          assert.end()
+        }))
+    })
+
+    retrieveUserCredentialsTest.end()
+  })
+
   modelTest.end()
 })
-
-function createAccount (name, key = Uuid().toString(), secret = 'secret') {
-  const payload = { name, key, secret }
-  return Model.create(payload)
-}

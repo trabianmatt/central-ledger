@@ -4,6 +4,7 @@ const Auth = require('../auth')
 
 const tags = ['api', 'accounts']
 const nameValidator = Joi.string().token().max(256).required().description('Name of the account')
+const passwordValidator = Joi.string().token().max(256).required().description('Password for the account')
 
 module.exports = [
   {
@@ -17,7 +18,8 @@ module.exports = [
       description: 'Create an account.',
       validate: {
         payload: {
-          name: nameValidator
+          name: nameValidator,
+          password: passwordValidator
         }
       }
     }

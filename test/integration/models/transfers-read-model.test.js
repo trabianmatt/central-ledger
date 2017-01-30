@@ -18,7 +18,7 @@ let pastDate = () => {
 }
 
 function createAccounts (accountNames) {
-  return P.all(accountNames.map(name => Account.create({ name: name }))).then(accounts => _.reduce(accounts, (m, acct) => _.set(m, acct.name, acct.accountId), {}))
+  return P.all(accountNames.map(name => Account.create({ name: name, password: '1234' }))).then(accounts => _.reduce(accounts, (m, acct) => _.set(m, acct.name, acct.accountId), {}))
 }
 
 function buildReadModelDebitOrCredit (accountName, amount, accountMap) {

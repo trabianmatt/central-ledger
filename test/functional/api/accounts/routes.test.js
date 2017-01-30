@@ -5,18 +5,16 @@ const Base = require('../../base')
 const Fixtures = require('../../../fixtures')
 
 Test('post and get an account', function (assert) {
-  let accountName = Fixtures.generateAccountName()
+  const accountName = Fixtures.generateAccountName()
+  const password = '1234'
 
-  Base.createAccount(accountName)
+  Base.createAccount(accountName, password)
     .expect(201)
     .expect('Content-Type', /json/)
     .then(res => {
       let expectedCreated = res.body.created
       assert.notEqual(expectedCreated, undefined)
       assert.equal(res.body.name, accountName)
-      assert.ok(res.body.credentials)
-      assert.ok(res.body.credentials.key.length > 74)
-      assert.ok(res.body.credentials.secret.length > 74)
 
       Base.getAccount(accountName)
         .expect(200)
@@ -27,9 +25,6 @@ Test('post and get an account', function (assert) {
           assert.equal('0', getRes.body.balance)
           assert.equal(false, getRes.body.is_disabled)
           assert.equal('http://central-ledger', getRes.body.ledger)
-          assert.notOk(getRes.body.hasOwnProperty['credentials'])
-          assert.notOk(getRes.body.hasOwnProperty['key'])
-          assert.notOk(getRes.body.hasOwnProperty['secret'])
           assert.end()
         })
     })
@@ -68,13 +63,14 @@ Test('return the net position for the account as the balance', function (assert)
 })
 
 Test('ensure an account name can only be registered once', function (assert) {
-  let accountName = Fixtures.generateAccountName()
+  const accountName = Fixtures.generateAccountName()
+  const password = '1234'
 
-  Base.createAccount(accountName)
+  Base.createAccount(accountName, password)
     .expect(201)
     .expect('Content-Type', /json/)
     .then(() => {
-      Base.createAccount(accountName)
+      Base.createAccount(accountName, password)
         .expect(422)
         .expect('Content-Type', /json/)
         .then(res => {

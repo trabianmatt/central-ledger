@@ -8,7 +8,7 @@ Test('return error if required field missing', assert => {
 
   Base.setup().then(server => {
     server.inject(req, res => {
-      Base.assertBadRequestError(assert, res, [{ message: 'name is required', params: { key: 'name' } }])
+      Base.assertBadRequestError(assert, res, [{ message: 'name is required', params: { key: 'name' } }, { message: 'password is required', params: { key: 'password' } }])
       assert.end()
     })
   })
@@ -19,7 +19,7 @@ Test('return error if name is not a token', assert => {
 
   Base.setup().then(server => {
     server.inject(req, res => {
-      Base.assertBadRequestError(assert, res, [{ message: 'name must only contain alpha-numeric and underscore characters', params: { key: 'name', value: 'this contains spaces' } }])
+      Base.assertBadRequestError(assert, res, [{ message: 'name must only contain alpha-numeric and underscore characters', params: { key: 'name', value: 'this contains spaces' } }, { message: 'password is required', params: { key: 'password' } }])
       assert.end()
     })
   })

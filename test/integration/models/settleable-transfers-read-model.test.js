@@ -33,10 +33,10 @@ Test('transfers read model', function (modelTest) {
       ExecutedTransfersModel.create({ id: unSettledTransferId })
         .then(() => ExecutedTransfersModel.create({ id: settledTransferId }))
         .then(() => SettledTransfersModel.create({ id: settledTransferId, settlementId: Uuid() }))
-        .then(() => Account.create({ name: unSettledCreditAccountName }).then(account => { unSettledCreditAccountId = account.accountId }))
-        .then(() => Account.create({ name: unSettledDebitAccountName }).then(account => { unSettledDebitAccountId = account.accountId }))
-        .then(() => Account.create({ name: settledCreditAccountName }).then(account => { settledCreditAccountId = account.accountId }))
-        .then(() => Account.create({ name: settledDebitAccountName }).then(account => { settledDebitAccountId = account.accountId }))
+        .then(() => Account.create({ name: unSettledCreditAccountName, password: '1234' }).then(account => { unSettledCreditAccountId = account.accountId }))
+        .then(() => Account.create({ name: unSettledDebitAccountName, password: '1234' }).then(account => { unSettledDebitAccountId = account.accountId }))
+        .then(() => Account.create({ name: settledCreditAccountName, password: '1234' }).then(account => { settledCreditAccountId = account.accountId }))
+        .then(() => Account.create({ name: settledDebitAccountName, password: '1234' }).then(account => { settledDebitAccountId = account.accountId }))
         .then(() => {
           let credit = Fixtures.buildDebitOrCredit(unSettledCreditAccountName, unSettledCreditAmount)
           credit.accountId = unSettledCreditAccountId
@@ -88,9 +88,9 @@ Test('transfers read model', function (modelTest) {
         .then(() => ExecutedTransfersModel.create({ id: unSettledOtherTransferId }))
         .then(() => ExecutedTransfersModel.create({ id: settledTransferId }))
         .then(() => SettledTransfersModel.create({ id: settledTransferId, settlementId: Uuid() }))
-        .then(() => Account.create({ name: account1Name }).then(account => { account1Id = account.accountId }))
-        .then(() => Account.create({ name: account2Name }).then(account => { account2Id = account.accountId }))
-        .then(() => Account.create({ name: account3Name }).then(account => { account3Id = account.accountId }))
+        .then(() => Account.create({ name: account1Name, password: '1234' }).then(account => { account1Id = account.accountId }))
+        .then(() => Account.create({ name: account2Name, password: '1234' }).then(account => { account2Id = account.accountId }))
+        .then(() => Account.create({ name: account3Name, password: '1234' }).then(account => { account3Id = account.accountId }))
         .then(() => {
           let credit = Fixtures.buildDebitOrCredit(account1Name, unSettledCreditAmount)
           credit.accountId = account1Id

@@ -44,9 +44,9 @@ Test('account auth module', authTest => {
     })
 
     validateTest.test('return false if password cannot be verified', test => {
-      const key = 'key'
-      const secret = 'secret'
-      AccountService.verify.withArgs(key, secret).returns(P.reject({}))
+      const name = 'name'
+      const password = 'password'
+      AccountService.verify.withArgs(name, password).returns(P.reject({}))
 
       const cb = (err, isValid) => {
         test.notOk(err)
@@ -54,14 +54,14 @@ Test('account auth module', authTest => {
         test.end()
       }
 
-      AccountAuth.validate({}, key, secret, cb)
+      AccountAuth.validate({}, name, password, cb)
     })
 
     validateTest.test('return true and account if password verified', test => {
-      const key = 'key'
-      const secret = 'secret'
-      const account = { key, secret }
-      AccountService.verify.withArgs(key, secret).returns(P.resolve(account))
+      const name = 'name'
+      const password = 'password'
+      const account = { name, password }
+      AccountService.verify.withArgs(name, password).returns(P.resolve(account))
 
       const cb = (err, isValid, credentials) => {
         test.notOk(err)
@@ -70,7 +70,7 @@ Test('account auth module', authTest => {
         test.end()
       }
 
-      AccountAuth.validate({}, key, secret, cb)
+      AccountAuth.validate({}, name, password, cb)
     })
 
     validateTest.end()

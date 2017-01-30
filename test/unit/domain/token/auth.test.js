@@ -27,7 +27,7 @@ Test('Token Auth', tokenTest => {
 
   tokenTest.beforeEach(test => {
     sandbox = Sinon.sandbox.create()
-    sandbox.stub(AccountService, 'getByKey')
+    sandbox.stub(AccountService, 'getByName')
     sandbox.stub(TokenService, 'byAccount')
     sandbox.stub(Crypto, 'verifyHash')
     originalAdminKey = Config.ADMIN_KEY
@@ -57,9 +57,9 @@ Test('Token Auth', tokenTest => {
     })
 
     validateTest.test('be unauthorized if Ledger-Api-Key not found', test => {
-      const key = 'some-key'
-      AccountService.getByKey.withArgs(key).returns(P.resolve(null))
-      const request = createRequest(key)
+      const name = 'some-name'
+      AccountService.getByName.withArgs(name).returns(P.resolve(null))
+      const request = createRequest(name)
 
       const cb = (err) => {
         test.ok(err)
@@ -72,12 +72,12 @@ Test('Token Auth', tokenTest => {
     })
 
     validateTest.test('be invalid if token not found by account', test => {
-      const key = 'some-key'
+      const name = 'some-name'
       const accountId = Uuid().toString()
       const account = { accountId }
-      AccountService.getByKey.withArgs(key).returns(P.resolve(account))
+      AccountService.getByName.withArgs(name).returns(P.resolve(account))
       TokenService.byAccount.withArgs(account).returns(P.resolve([]))
-      const request = createRequest(key)
+      const request = createRequest(name)
 
       const cb = (err, isValid) => {
         test.notOk(err)
@@ -89,18 +89,18 @@ Test('Token Auth', tokenTest => {
     })
 
     validateTest.test('be invalid if no account tokens can be verified', test => {
-      const key = 'some-key'
+      const name = 'some-name'
       const token = 'token'
       const accountId = Uuid().toString()
       const account = { accountId }
-      AccountService.getByKey.withArgs(key).returns(P.resolve(account))
+      AccountService.getByName.withArgs(name).returns(P.resolve(account))
       const tokens = [
         { token: 'bad-token1' },
         { token: 'bad-token2' }
       ]
       Crypto.verifyHash.returns(P.resolve(false))
       TokenService.byAccount.withArgs(account).returns(P.resolve(tokens))
-      const request = createRequest(key)
+      const request = createRequest(name)
 
       const cb = (err, isValid) => {
         test.notOk(err)
@@ -112,11 +112,11 @@ Test('Token Auth', tokenTest => {
     })
 
     validateTest.test('pass with account if one token can be verified', test => {
-      const key = 'some-key'
+      const name = 'some-name'
       const token = 'token'
       const accountId = Uuid().toString()
       const account = { accountId }
-      AccountService.getByKey.withArgs(key).returns(P.resolve(account))
+      AccountService.getByName.withArgs(name).returns(P.resolve(account))
       const tokens = [
         { token: 'bad-token1' },
         { token: 'bad-token2' },
@@ -125,7 +125,7 @@ Test('Token Auth', tokenTest => {
       Crypto.verifyHash.returns(P.resolve(false))
       Crypto.verifyHash.withArgs(token).returns(P.resolve(true))
       TokenService.byAccount.withArgs(account).returns(P.resolve(tokens))
-      const request = createRequest(key)
+      const request = createRequest(name)
 
       const cb = (err, isValid, credentials) => {
         test.notOk(err)
@@ -138,21 +138,21 @@ Test('Token Auth', tokenTest => {
     })
 
     validateTest.test('be invalid if a token has expired', test => {
-      const key = 'some-key'
+      const name = 'some-name'
       const tokenVal = 'token'
       const expiration = 1
       const token = { token: tokenVal, expiration }
       const bearer = 'bearer'
       const accountId = Uuid().toString()
       const account = { accountId }
-      AccountService.getByKey.withArgs(key).returns(P.resolve(account))
+      AccountService.getByName.withArgs(name).returns(P.resolve(account))
       const tokens = [
         token
       ]
       Crypto.verifyHash.returns(P.resolve(false))
       Crypto.verifyHash.withArgs(token.token, bearer).returns(P.resolve(true))
       TokenService.byAccount.withArgs(account).returns(P.resolve(tokens))
-      const request = createRequest(key)
+      const request = createRequest(name)
       Config.TOKEN_EXPIRATION = 1
 
       const cb = (err, isValid, credentials) => {

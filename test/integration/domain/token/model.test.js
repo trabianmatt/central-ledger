@@ -9,7 +9,7 @@ const AccountModel = require('../../../../src/domain/account/model')
 
 const createAccount = () => {
   const accountName = Fixtures.generateAccountName()
-  return AccountModel.create({ name: accountName })
+  return AccountModel.create({ name: accountName, hashedPassword: 'password' })
 }
 
 const generateToken = ({ accountId }, expiration = null) => {

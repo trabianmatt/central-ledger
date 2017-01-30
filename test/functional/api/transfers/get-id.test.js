@@ -85,8 +85,8 @@ Test('GET /transfers/:id', getTest => {
     Base.createAccount(account1Name)
     .then(() => Base.createAccount(account2Name))
     .then(() => Base.prepareTransfer(transferId, transfer))
-    .delay(2000)
     .then(() => Base.rejectTransfer(transferId, reason))
+    .delay(2000)
     .then(() => {
       Base.getTransfer(transferId)
         .expect(200)

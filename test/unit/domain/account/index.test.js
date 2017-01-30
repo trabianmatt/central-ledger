@@ -25,28 +25,21 @@ Test('Account service', serviceTest => {
   })
 
   serviceTest.test('create should', createTest => {
-    createTest.test('add key and hashed secret to account in model', test => {
+    createTest.test('add username and hashed password to account in model', test => {
       const name = 'dfsp1'
       const accountId = Uuid()
       const createdDate = new Date()
-      const key = 'key'
-      const secret = 'secret'
-      const hashedSecret = 'hashed secret'
+      const password = 'password'
+      const hashedPassword = 'hashed password'
       Model.create.returns(P.resolve({ name, accountId, createdDate }))
-      Crypto.generateKey.returns(P.resolve(key))
-      Crypto.generateSecret.returns(P.resolve(secret))
-      Crypto.hash.withArgs(secret).returns(P.resolve(hashedSecret))
-      AccountService.create({ name })
+      Crypto.hash.withArgs(password).returns(P.resolve(hashedPassword))
+      AccountService.create({ name, password })
       .then(account => {
         test.equal(account.accountId, accountId)
         test.equal(account.name, name)
         test.equal(account.createdDate, createdDate)
-        test.equal(account.credentials.key, key)
-        test.equal(account.credentials.secret, secret)
         const createArgs = Model.create.firstCall.args
-        test.equal(createArgs[0].name, name)
-        test.equal(createArgs[0].key, key)
-        test.equal(createArgs[0].secret, hashedSecret)
+        test.equal(createArgs[0].hashedPassword, hashedPassword)
         test.end()
       })
     })
@@ -114,21 +107,6 @@ Test('Account service', serviceTest => {
     getByIdTest.end()
   })
 
-  serviceTest.test('getByKey should', getByKeyTest => {
-    getByKeyTest.test('getByKey from Model', test => {
-      const account = {}
-      const key = '12345'
-      Model.getByKey.withArgs(key).returns(P.resolve(account))
-      AccountService.getByKey(key)
-      .then(result => {
-        test.equal(result, account)
-        test.end()
-      })
-    })
-
-    getByKeyTest.end()
-  })
-
   serviceTest.test('getByName should', getByNameTest => {
     getByNameTest.test('getByName from Model', test => {
       const account = {}
@@ -146,35 +124,42 @@ Test('Account service', serviceTest => {
 
   serviceTest.test('verify should', verifyTest => {
     verifyTest.test('return false if account not found', test => {
-      Model.getByKey.returns(P.resolve(null))
-      AccountService.verify('key', 'secret')
+      Model.getByName.returns(P.resolve(null))
+      AccountService.verify('name', 'password')
         .catch(result => {
           test.equal(result.message, 'Account does not exist')
           test.end()
         })
     })
 
-    verifyTest.test('return false if account secret and secret are not match', test => {
-      const key = 'key'
-      const secret = 'secret'
+    verifyTest.test('return error if passwords do not match', test => {
+      const accountId = '1234'
+      const name = 'name'
       const password = 'password'
-      Model.getByKey.withArgs(key).returns(P.resolve({ key, secret }))
-      Crypto.verifyHash.withArgs(secret, password).returns(P.resolve(false))
-      AccountService.verify(key, password)
+      const account = { name, accountId }
+      const userCredentials = { accountId, password }
+      Model.getByName.withArgs(name).returns(P.resolve(account))
+      Model.retrieveUserCredentials.returns(P.resolve(userCredentials))
+      Crypto.verifyHash.withArgs(password, userCredentials.password).returns(P.resolve(false))
+
+      AccountService.verify(name, password)
         .catch(result => {
-          test.equal(result.message, 'Secret is not valid for account')
+          test.equal(result.message, 'Username and password are invalid')
           test.end()
         })
     })
 
-    verifyTest.test('return account if account secret and secret match', test => {
-      const key = 'key'
-      const secret = 'secret'
-      const account = { key, secret }
-      Model.getByKey.withArgs(key).returns(P.resolve(account))
+    verifyTest.test('return account if passwords match', test => {
+      const accountId = '1234'
+      const name = 'name'
       const password = 'password'
-      Crypto.verifyHash.withArgs(secret, password).returns(P.resolve(true))
-      AccountService.verify(key, password)
+      const account = { name, accountId }
+      const userCredentials = { accountId, password }
+      Model.getByName.withArgs(name).returns(P.resolve(account))
+      Model.retrieveUserCredentials.returns(P.resolve(userCredentials))
+      Crypto.verifyHash.withArgs(password, userCredentials.password).returns(P.resolve(true))
+
+      AccountService.verify(name, password)
         .then(result => {
           test.equal(result, account)
           test.end()
