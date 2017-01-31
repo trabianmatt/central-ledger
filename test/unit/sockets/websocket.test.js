@@ -24,11 +24,28 @@ Test('WebSocket', socketTest => {
     test.end()
   })
 
+  const createSocket = () => {
+    return {
+      on: sandbox.spy(),
+      send: sandbox.spy()
+    }
+  }
+
   socketTest.test('initialize should', initializeTest => {
+    initializeTest.test('respond with connect message', test => {
+      const socket = createSocket()
+
+      WebSocket.initialize(socket, socketManager)
+      const sendArgs = JSON.parse(socket.send.firstCall.args[0])
+
+      test.equal(sendArgs.id, null)
+      test.equal(sendArgs.jsonrpc, '2.0')
+      test.equal(sendArgs.method, 'connect')
+      test.end()
+    })
+
     initializeTest.test('listen for incoming messages on socket', test => {
-      const socket = {
-        on: sandbox.spy()
-      }
+      const socket = createSocket()
 
       WebSocket.initialize(socket, socketManager)
 

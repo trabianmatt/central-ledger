@@ -1,6 +1,7 @@
 'use strict'
 
 const WS = require('ws')
+const Url = require('url')
 const Uuid = require('uuid4')
 const Events = require('../lib/events')
 const SocketManager = require('./socket-manager')
@@ -24,7 +25,8 @@ const getAccounts = (transfer) => {
 const wireConnection = (webSocketServer) => {
   webSocketServer.on('connection', (ws) => {
     const url = ws.upgradeReq.url
-    if (url === '/websocket') {
+    const path = Url.parse(url).pathname
+    if (path === '/websocket') {
       WebSocket.initialize(ws, manager)
     } else {
       AccountTransfers.initialize(ws, url, manager)

@@ -3,6 +3,8 @@
 const Validator = require('./validator')
 
 const initialize = (socket, socketManager) => {
+  socket.send(JSON.stringify({ id: null, jsonrpc: '2.0', method: 'connect' }))
+
   socket.on('message', data => {
     Validator.validateSubscriptionRequest(data, (err, result) => {
       if (err) {
