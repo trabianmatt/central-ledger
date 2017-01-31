@@ -10,7 +10,7 @@ exports.getTransfersByState = (transferState) => {
 }
 
 exports.findExpired = (expirationDate) => {
-  let expiresAt = (expirationDate || Moment.utc()).toISOString()
+  const expiresAt = (expirationDate || Moment.utc()).toISOString()
   return Db.connect().then(db => db.transfers.findAsync({ state: TransferState.PREPARED, 'expiresAt <': expiresAt }))
 }
 

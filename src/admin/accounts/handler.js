@@ -6,8 +6,8 @@ const UrlParser = require('../../lib/urlparser')
 function entityItem ({name, createdDate}) {
   const link = UrlParser.toAccountUri(name)
   return {
-    id: link,
     name,
+    id: link,
     created: createdDate,
     is_disabled: false,
     '_links': {

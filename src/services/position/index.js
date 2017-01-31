@@ -7,16 +7,16 @@ const PositionCalculator = require('./position-calculator')
 const Account = require('../../domain/account')
 const SettleableTransfersReadmodel = require('../../models/settleable-transfers-read-model')
 
-const buildEmptyPosition = () => {
-  return buildPosition(new Decimal('0'), new Decimal('0'), new Decimal('0'))
-}
-
 const buildPosition = (payments, receipts, net) => {
   return {
     payments: payments,
     receipts: receipts,
     net: net
   }
+}
+
+const buildEmptyPosition = () => {
+  return buildPosition(new Decimal('0'), new Decimal('0'), new Decimal('0'))
 }
 
 const buildResponse = (positionMap) => {
