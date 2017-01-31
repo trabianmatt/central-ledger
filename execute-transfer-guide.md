@@ -14,14 +14,15 @@ The Central Ledger is a system to record transfers between DFSPs, and to calcula
 To get started, you'll need to create two accounts, one to credit to and one to debit from.  
 
 ### Create account **dfsp1**
-Start off by creating an account with the name **dfsp1**. Simply provide the account's name and make a call to the create account endpoint. More detail about the response and errors can be found in the [endpoint documentation.](central-ledger-documentation.md#create-account)
+Start off by creating an account with the name **dfsp1**. Simply provide the account's name and password then make a call to the create account endpoint. More detail about the response and errors can be found in the [endpoint documentation.](central-ledger-documentation.md#create-account)
 
 #### Request
 ```
 POST http://central-ledger/accounts
 Content-Type: application/json
 {
-  "name": "dfsp1"
+  "name": "dfsp1",
+  "password": "dfsp1_password"
 }
 ```
 
@@ -34,23 +35,20 @@ HTTP/1.1 201 Created
   "created": "2017-01-03T22:29:46.068Z",
   "balance": "0",
   "is_disabled": false,
-  "ledger": "http://central-ledger",
-  "credentials": {
-    "key": "key",
-    "secret": "secret"
-  }
+  "ledger": "http://central-ledger"
 }
 ```
 
 ### Create account **dfsp2**
-Next, create an account with the name **dfsp2**. Like before, provide the account's name and make a call to the create account endpoint.
+Next, create an account with the name **dfsp2**. Like before, provide the account's name and password then make a call to the create account endpoint.
 
 #### Request
 ```
 POST http://central-ledger/accounts HTTP/1.1
 Content-Type: application/json
 {
-  "name": "dfsp2"
+  "name": "dfsp2",
+  "password": "dfsp2_password"
 }
 ```
 
@@ -63,11 +61,7 @@ HTTP/1.1 201 Created
   "created": "2017-01-03T22:30:46.068Z",
   "balance": "0",
   "is_disabled": false,
-  "ledger": "http://central-ledger",
-  "credentials": {
-    "key": "key",
-    "secret": "secret"
-  }
+  "ledger": "http://central-ledger"
 }
 ```
 

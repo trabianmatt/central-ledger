@@ -55,7 +55,8 @@ The create account endpoint will create an account in the ledger.
 POST http://central-ledger/accounts HTTP/1.1
 Content-Type: application/json
 {
-  "name": "dfsp1"
+  "name": "dfsp1",
+  "password": "dfsp1_password"
 }
 ```
 
@@ -69,11 +70,7 @@ Content-Type: application/json
   "created": "2017-01-03T19:50:39.744Z",
   "balance": "0",
   "is_disabled": false,
-  "ledger": "http://central-ledger",
-  "credentials": {
-    "key": "yhmSOygceC3-vE5aWk6URqcnkDiQOBEJ-oE8HTe8nL75BJfhANg-KOt6RmkJ7aqU1YB20dUc7msheG9wYPAzDKM11278rlaUoxg",
-    "secret": "tV4mgoOf-vHbOU-oyzKesadtI7YsvFZucIOqoRfvjoqQ4MMJvM3xtHNXtRNd8s9ApSwNaW3_u7lvnyg62zhIUipHucL5_lZU_tY"
-  }
+  "ledger": "http://central-ledger"
 }
 ```
 
@@ -632,6 +629,7 @@ Some fields are Read-only, meaning they are set by the API and cannot be modifie
 | ---- | ---- | ----------- |
 | id | URI | *Read-only* Resource identifier |
 | name | String | Unique name of the account |
+| password | String | Password for the account |
 | balance | String | *Optional, Read-only* Balance as decimal |
 | is_disabled | Boolean | *Optional, Read-only* Admin users may disable/enable an account |
 | ledger | URI | *Optional, Read-only* A link to the account's ledger |
