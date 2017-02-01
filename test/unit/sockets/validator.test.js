@@ -134,7 +134,7 @@ Test('subscription validator', validatorTest => {
       const account = {}
       AccountService.exists.returns(P.resolve(account))
       const accounts = ['http://ledger1/accounts/test1', 'http://ledger1/accounts/test2']
-      const request = JSON.stringify({ id: 1, jsonrpc: '2.0', method: 'subscribe_account', params: { accounts: accounts } })
+      const request = JSON.stringify({ id: 1, jsonrpc: '2.0', method: 'subscribe_account', params: { accounts: accounts, eventType: '*' } })
       Validator.validateSubscriptionRequest(request, (err, result) => {
         test.notOk(err)
         test.equal(result.id, 1)

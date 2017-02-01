@@ -1,7 +1,6 @@
 'use strict'
 
 const Moment = require('moment')
-const CryptoConditions = require('../../crypto-conditions')
 const TransferState = require('../../domain/transfer/state')
 
 class Transfer {
@@ -12,8 +11,6 @@ class Transfer {
       execution_condition,
       expires_at
     }) {
-    CryptoConditions.validateCondition(execution_condition)
-
     return this.$emitDomainEvent('TransferPrepared', {
       ledger,
       debits,
@@ -42,8 +39,19 @@ class Transfer {
     this.credits = event.payload.credits
     this.execution_condition = event.payload.execution_condition
     this.expires_at = event.payload.expires_at
-    this.state = TransferState.PREPARED
-    this.timeline = { prepared_at: Moment(event.timestamp).toISOString() }
+    const time = Moment(event.timestamp).toISOString()
+    const timeline = {
+      prepared_at: time
+    }
+
+    let state = TransferState.PREPARED
+    const executionCondition = event.payload.execution_condition
+    if (!executionCondition) {
+      state = TransferState.EXECUTED
+      timeline.executed_at = time
+    }
+    this.state = state
+    this.timeline = timeline
     return this
   }
 

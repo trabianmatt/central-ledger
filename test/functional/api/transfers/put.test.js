@@ -37,6 +37,36 @@ Test('PUT /transfers', putTest => {
       })
   })
 
+  putTest.test('should prepare and execute unconditional transfer', test => {
+    const account1Name = Fixtures.generateAccountName()
+    const account2Name = Fixtures.generateAccountName()
+    const transferId = Fixtures.generateTransferId()
+    const transfer = Fixtures.buildUnconditionalTransfer(transferId, Fixtures.buildDebitOrCredit(account1Name, '50', { interledger: 'blah', path: 'blah' }), Fixtures.buildDebitOrCredit(account2Name, '50', { interledger: 'blah', path: 'blah' }))
+
+    Base.createAccount(account1Name)
+      .then(() => Base.createAccount(account2Name))
+      .then(() => {
+        Base.prepareTransfer(transferId, transfer)
+          .expect(201)
+          .expect('Content-Type', /json/)
+          .then(res => {
+            test.equal(res.body.id, transfer.id)
+            test.equal(res.body.ledger, transfer.ledger)
+            test.equal(res.body.debits[0].account, transfer.debits[0].account)
+            test.equal(res.body.debits[0].amount, parseInt(transfer.debits[0].amount))
+            test.equal(res.body.credits[0].account, transfer.credits[0].account)
+            test.equal(res.body.credits[0].amount, parseInt(transfer.credits[0].amount))
+            test.equal(res.body.hasOwnProperty('execution_condition'), false)
+            test.equal(res.body.hasOwnProperty('expires_at'), false)
+            test.equal(res.body.state, TransferState.EXECUTED)
+            test.ok(res.body.timeline.prepared_at)
+            test.ok(res.body.timeline.executed_at)
+            test.equal(res.body.timeline.hasOwnProperty('rejected_at'), false)
+            test.end()
+          })
+      })
+  })
+
   putTest.test('should return transfer details when preparing existing transfer', test => {
     let account1Name = Fixtures.generateAccountName()
     let account2Name = Fixtures.generateAccountName()

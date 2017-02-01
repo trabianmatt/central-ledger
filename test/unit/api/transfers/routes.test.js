@@ -8,7 +8,7 @@ Test('return error if required field missing on prepare', function (assert) {
 
   Base.setup().then(server => {
     server.inject(req, function (res) {
-      Base.assertBadRequestError(assert, res, [{ message: 'id is required', params: { key: 'id' } }, { message: 'ledger is required', params: { key: 'ledger' } }, { message: 'debits is required', params: { key: 'debits' } }, { message: 'credits is required', params: { key: 'credits' } }, { message: 'execution_condition is required', params: { key: 'execution_condition' } }, { message: 'expires_at is required', params: { key: 'expires_at' } }])
+      Base.assertBadRequestError(assert, res, [{ message: 'id is required', params: { key: 'id' } }, { message: 'ledger is required', params: { key: 'ledger' } }, { message: 'debits is required', params: { key: 'debits' } }, { message: 'credits is required', params: { key: 'credits' } }])
       assert.end()
     })
   })

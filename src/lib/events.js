@@ -1,7 +1,7 @@
 'use strict'
 
 const Events = require('events')
-const TransferTranslator = require('../adapters/transfer-translator')
+const TransferTranslator = require('../domain/transfer/translator')
 const ledgerEmitter = new Events()
 
 const transferRejected = 'transferRejected'

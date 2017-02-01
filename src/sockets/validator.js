@@ -12,7 +12,7 @@ const requestSchema = Joi.object().keys({
   method: Joi.string().valid('subscribe_account').required(),
   params: Joi.object({
     accounts: Joi.array().items(Joi.string().uri()).required()
-  }).required()
+  }).unknown().required()
 })
 
 class InvalidSubscriptionRequestError extends ValidationError {

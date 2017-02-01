@@ -2,11 +2,12 @@
 
 const P = require('bluebird')
 const Decimal = require('decimal.js')
+const Moment = require('moment')
 const Config = require('../../lib/config')
 const UrlParser = require('../../lib/urlparser')
 const Account = require('../../domain/account')
 const ValidationError = require('../../errors/validation-error')
-const Moment = require('moment')
+const CryptoConditions = require('../../crypto-conditions')
 
 const allowedScale = Config.AMOUNT.SCALE
 const allowedPrecision = Config.AMOUNT.PRECISION
@@ -30,6 +31,20 @@ const validateEntry = (entry) => {
   return { accountName, decimalAmount }
 }
 
+const validateConditionalTransfer = (transfer) => {
+  const executionCondition = transfer.execution_condition
+  if (!executionCondition) return
+  CryptoConditions.validateCondition(executionCondition)
+  if (transfer.expires_at) {
+    const expiresAt = Moment(transfer.expires_at)
+    if (expiresAt.isBefore(Moment.utc())) {
+      throw new ValidationError(`expires_at date: ${expiresAt.toISOString()} has already expired.`)
+    }
+  } else {
+    throw new ValidationError('expires_at: required for conditional transfer')
+  }
+}
+
 exports.validate = (transfer, transferId) => {
   return P.resolve().then(() => {
     if (!transfer) {
@@ -42,10 +57,8 @@ exports.validate = (transfer, transferId) => {
     if (transfer.ledger !== Config.HOSTNAME) {
       throw new ValidationError('transfer.ledger is not valid for this ledger')
     }
-    const expiresAt = Moment(transfer.expires_at)
-    if (expiresAt.isBefore(Moment.utc())) {
-      throw new ValidationError(`expires_at date: ${expiresAt.toISOString()} has already expired.`)
-    }
+
+    validateConditionalTransfer(transfer)
 
     const credit = validateEntry(transfer.credits[0])
     const debit = validateEntry(transfer.debits[0])

@@ -4,9 +4,9 @@ const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const P = require('bluebird')
 const Uuid = require('uuid4')
-const Eventric = require('../../../../src/eventric')
-const Transfer = require('../../../../src/commands/transfer')
-const RejectionType = require('../../../../src/domain/transfer/rejection-type')
+const Eventric = require('../../../../../src/eventric')
+const Transfer = require('../../../../../src/domain/transfer/commands')
+const RejectionType = require('../../../../../src/domain/transfer/rejection-type')
 
 Test('Eventric Transfer index test', indexTest => {
   let sandbox

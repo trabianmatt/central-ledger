@@ -2,7 +2,7 @@
 
 const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
-const TransferTranslator = require('../../../src/adapters/transfer-translator')
+const TransferTranslator = require('../../../src/domain/transfer/translator')
 const EventsPath = '../../../src/lib/events'
 
 Test('events', eventTest => {

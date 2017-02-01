@@ -1,7 +1,7 @@
 'use strict'
 
-const Eventric = require('../../eventric')
-const RejectionType = require('../../domain/transfer/rejection-type')
+const Eventric = require('../../../eventric')
+const RejectionType = require('../rejection-type')
 
 exports.prepare = (transfer) => {
   return Eventric.getContext().then(ctx => ctx.command('PrepareTransfer', transfer))

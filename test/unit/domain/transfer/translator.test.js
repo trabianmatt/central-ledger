@@ -1,8 +1,10 @@
 'use strict'
 
 const Test = require('tapes')(require('tape'))
-const TransferTranslator = require('../../../src/adapters/transfer-translator')
+const TransferTranslator = require('../../../../src/domain/transfer/translator')
+
 const executionCondition = 'ni:///sha-256;47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU?fpt=preimage-sha-256&cost=0'
+
 Test('TransferTranslator', transferTranslatorTest => {
   transferTranslatorTest.test('toTransfer should', function (toTransferTest) {
     toTransferTest.test('translate an argument containing a "id" field', function (t) {

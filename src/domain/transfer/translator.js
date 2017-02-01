@@ -1,6 +1,6 @@
 'use strict'
 
-const UrlParser = require('../lib/urlparser')
+const UrlParser = require('../../lib/urlparser')
 
 const removeNullOrUndefinedTimelineProperties = (timeline) => {
   var newTimeline = {}

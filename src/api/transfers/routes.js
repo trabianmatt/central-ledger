@@ -31,8 +31,8 @@ module.exports = [{
           memo: Joi.object().optional().unknown().description('Additional information related to the credit'),
           authorized: Joi.boolean().optional().description('Indicates whether debit has been authorized by account holder')
         })).required().description('Credits of the transfer'),
-        execution_condition: Joi.string().trim().max(65535).required().description('Execution condition of transfer'),
-        expires_at: Joi.string().isoDate().required().description('When the transfer expires')
+        execution_condition: Joi.string().trim().max(65535).optional().description('Execution condition of transfer'),
+        expires_at: Joi.string().isoDate().optional().description('When the transfer expires')
       }
     }
   }

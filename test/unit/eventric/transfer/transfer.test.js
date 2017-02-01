@@ -5,27 +5,11 @@ const Test = require('tapes')(require('tape'))
 const Uuid = require('uuid4')
 const TransferState = require('../../../../src/domain/transfer/state')
 const Transfer = require('../../../../src/eventric/transfer/transfer')
-const CryptoConditions = require('../../../../src/crypto-conditions')
 const executionCondition = 'ni:///sha-256;47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU?fpt=preimage-sha-256&cost=0'
 
 Test('transfer', transferTest => {
-  let sandbox
-
-  transferTest.beforeEach(t => {
-    sandbox = Sinon.sandbox.create()
-    sandbox.stub(CryptoConditions, 'validateCondition')
-    t.end()
-  })
-
-  transferTest.afterEach(t => {
-    sandbox.restore()
-    t.end()
-  })
-
   transferTest.test('create should', createTransferTest => {
     createTransferTest.test('emit TransferPrepared event', assert => {
-      CryptoConditions.validateCondition.returns(true)
-
       let transfer = new Transfer()
 
       let emitDomainEvent = Sinon.stub()
@@ -54,35 +38,6 @@ Test('transfer', transferTest => {
       let emitDomainEventArgs = emitDomainEvent.firstCall.args
       assert.equal(emitDomainEventArgs[0], 'TransferPrepared')
       assert.deepEqual(emitDomainEventArgs[1], payload)
-      assert.end()
-    })
-
-    createTransferTest.test('throw an exception if execution condition validation fails', assert => {
-      CryptoConditions.validateCondition.throws()
-
-      let transfer = new Transfer()
-
-      let payload = {
-        ledger: 'http://usd-ledger.example/USD',
-        debits: [
-          {
-            account: 'http://usd-ledger.example/USD/accounts/alice',
-            amount: '50'
-          }
-        ],
-        credits: [
-          {
-            account: 'http://usd-ledger.example/USD/accounts/bob',
-            amount: '50'
-          }
-        ],
-        execution_condition: executionCondition,
-        expires_at: '2015-06-16T00:00:01.000Z'
-      }
-
-      assert.throws(
-        () => transfer.create(payload)
-      )
       assert.end()
     })
 
@@ -169,6 +124,32 @@ Test('transfer', transferTest => {
       t.equal(transfer.expires_at, 'expires_at')
       t.equal(transfer.state, TransferState.PREPARED)
       t.deepEquals(transfer.timeline, { prepared_at: '2016-11-29T23:09:36.239Z' })
+      t.end()
+    })
+
+    handleTransferPreparedTest.test('set state to EXECUTED if unconditional transfer', t => {
+      let transfer = new Transfer()
+      let transferId = Uuid()
+      let event = {
+        aggregate: {
+          id: transferId
+        },
+        payload: {
+          ledger: 'ledger',
+          debits: 'debits',
+          credits: 'credits'
+        },
+        timestamp: 1480460976239
+      }
+      transfer.handleTransferPrepared(event)
+      t.equal(transfer.id, transferId)
+      t.equal(transfer.ledger, 'ledger')
+      t.equal(transfer.debits, 'debits')
+      t.equal(transfer.credits, 'credits')
+      t.notOk(transfer.execution_condition)
+      t.notOk(transfer.expires_at)
+      t.equal(transfer.state, TransferState.EXECUTED)
+      t.deepEquals(transfer.timeline, { prepared_at: '2016-11-29T23:09:36.239Z', executed_at: '2016-11-29T23:09:36.239Z' })
       t.end()
     })
 

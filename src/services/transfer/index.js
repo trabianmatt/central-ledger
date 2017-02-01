@@ -8,7 +8,7 @@ const ReadModel = require('../../models/transfers-read-model')
 const SettleableTransfersReadModel = require('../../models/settleable-transfers-read-model')
 const SettlementsModel = require('../../models/settlements')
 const Account = require('../../domain/account')
-const Commands = require('../../commands/transfer')
+const Commands = require('../../domain/transfer/commands')
 const UrlParser = require('../../lib/urlparser')
 
 exports.rejectExpired = () => {

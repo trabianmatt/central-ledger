@@ -10,6 +10,7 @@ const UrlParser = require('../../../../src/lib/urlparser')
 const Account = require('../../../../src/domain/account')
 const Validator = require('../../../../src/api/transfers/validator')
 const ValidationError = require('../../../../src/errors/validation-error')
+const CryptoConditions = require('../../../../src/crypto-conditions')
 
 let assertValidationError = (promise, assert, message) => {
   promise.then(a => {
@@ -37,7 +38,7 @@ Test('transfer validator', (test) => {
   let originalHostName
   let sandbox
 
-  let goodTransfer = function () {
+  const goodTransfer = () => {
     transferId = Uuid()
     const account1Name = 'some_account_name'
     const account2Name = 'other_account_name'
@@ -68,6 +69,7 @@ Test('transfer validator', (test) => {
           amount: '50.00'
         }
       ],
+      execution_condition: 'execution condition',
       expires_at: expiredAt.toISOString()
     }
   }
@@ -78,6 +80,8 @@ Test('transfer validator', (test) => {
     sandbox.stub(UrlParser, 'idFromTransferUri')
     sandbox.stub(Account, 'getByName')
     sandbox.stub(Moment, 'utc')
+    sandbox.stub(CryptoConditions, 'validateCondition')
+    CryptoConditions.validateCondition.returns(true)
     Moment.utc.returns(expiredAt.add(1, 'hour'))
     originalHostName = Config.HOSTNAME
     originalPrecision = Config.AMOUNT.PRECISION
@@ -178,6 +182,27 @@ Test('transfer validator', (test) => {
     assertValidationError(Validator.validate(transfer, transferId), assert, `Amount ${badScaleAmount} exceeds allowed scale of ${allowedScale}`)
   })
 
+  test.test('reject if transfer.execution_condition is invalid', assert => {
+    const condition = 'condition'
+    const errorMessage = 'error message'
+    const transfer = goodTransfer()
+    CryptoConditions.validateCondition.withArgs(condition).throws(new ValidationError(errorMessage))
+
+    transfer.execution_condition = condition
+    assertValidationError(Validator.validate(transfer, transferId), assert, errorMessage)
+  })
+
+  test.test('reject if expires_at is null when execution_condition populated', assert => {
+    const condition = 'condition'
+    const transfer = goodTransfer()
+    CryptoConditions.validateCondition.returns(true)
+
+    transfer.execution_condition = condition
+    transfer.expires_at = null
+
+    assertValidationError(Validator.validate(transfer, transferId), assert, 'expires_at: required for conditional transfer')
+  })
+
   test.test('reject if transfer.expires_at has already passed', assert => {
     let transfer = goodTransfer()
     transfer.expires_at = Moment(expiredAt).subtract(1, 'year').toISOString()
@@ -186,6 +211,17 @@ Test('transfer validator', (test) => {
 
   test.test('return transfer if all checks pass', assert => {
     let transfer = goodTransfer()
+    Validator.validate(transfer, transferId)
+    .then(t => {
+      assert.ok(Account.getByName.calledTwice)
+      assert.equal(t, transfer)
+      assert.end()
+    })
+  })
+
+  test.test('return unconditional transfer if all checks pass', assert => {
+    const transfer = goodTransfer()
+    transfer.execution_condition = null
     Validator.validate(transfer, transferId)
     .then(t => {
       assert.ok(Account.getByName.calledTwice)

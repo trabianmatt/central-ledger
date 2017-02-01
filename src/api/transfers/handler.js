@@ -6,7 +6,7 @@ const Model = require('./model')
 const TransfersReadModel = require('../../models/transfers-read-model')
 const Validator = require('./validator')
 const TransferState = require('../../domain/transfer/state')
-const TransferTranslator = require('../../adapters/transfer-translator')
+const TransferTranslator = require('../../domain/transfer/translator')
 
 const buildGetTransferResponse = (record) => {
   if (!record) {

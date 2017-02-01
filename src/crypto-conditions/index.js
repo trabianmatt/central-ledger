@@ -3,7 +3,7 @@
 const FiveBellsCondition = require('five-bells-condition')
 const ValidationError = require('../errors/validation-error')
 
-function validateCondition (conditionUri) {
+const validateCondition = (conditionUri) => {
   try {
     return FiveBellsCondition.validateCondition(conditionUri)
   } catch (error) {
@@ -11,7 +11,7 @@ function validateCondition (conditionUri) {
   }
 }
 
-function validateFulfillment (fulfillment, condition) {
+const validateFulfillment = (fulfillment, condition) => {
   try {
     return FiveBellsCondition.validateFulfillment(fulfillment, condition)
   } catch (error) {

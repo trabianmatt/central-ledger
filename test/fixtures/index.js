@@ -3,18 +3,18 @@
 const Uuid = require('uuid4')
 const Moment = require('moment')
 
-let hostname = 'central-ledger'
+const hostname = 'central-ledger'
 const executionCondition = 'ni:///sha-256;47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU?fpt=preimage-sha-256&cost=0'
 
-function generateTransferId () {
+const generateTransferId = () => {
   return Uuid()
 }
 
-function generateAccountName () {
+const generateAccountName = () => {
   return `dfsp${Uuid().replace(/-/g, '')}`
 }
 
-function buildDebitOrCredit (accountName, amount, memo) {
+const buildDebitOrCredit = (accountName, amount, memo) => {
   return {
     account: `http://${hostname}/accounts/${accountName}`,
     amount: amount,
@@ -23,13 +23,13 @@ function buildDebitOrCredit (accountName, amount, memo) {
   }
 }
 
-let futureDate = () => {
+const futureDate = () => {
   let d = new Date()
   d.setTime(d.getTime() + 86400000)
   return d
 }
 
-function buildTransfer (transferId, debit, credit, expiresAt) {
+const buildTransfer = (transferId, debit, credit, expiresAt) => {
   expiresAt = (expiresAt || futureDate()).toISOString()
   return {
     id: `http://${hostname}/transfers/${transferId}`,
@@ -41,7 +41,16 @@ function buildTransfer (transferId, debit, credit, expiresAt) {
   }
 }
 
-function buildTransferPreparedEvent (transferId, debit, credit, expiresAt) {
+const buildUnconditionalTransfer = (transferId, debit, credit) => {
+  return {
+    id: `http://${hostname}/transfers/${transferId}`,
+    ledger: `http://${hostname}`,
+    debits: [debit],
+    credits: [credit]
+  }
+}
+
+const buildTransferPreparedEvent = (transferId, debit, credit, expiresAt) => {
   expiresAt = (expiresAt || futureDate()).toISOString()
   return {
     id: 1,
@@ -62,7 +71,7 @@ function buildTransferPreparedEvent (transferId, debit, credit, expiresAt) {
   }
 }
 
-function buildTransferExecutedEvent (transferId, debit, credit, expiresAt) {
+const buildTransferExecutedEvent = (transferId, debit, credit, expiresAt) => {
   expiresAt = (expiresAt || futureDate()).toISOString()
   return {
     id: 2,
@@ -84,7 +93,7 @@ function buildTransferExecutedEvent (transferId, debit, credit, expiresAt) {
   }
 }
 
-function buildTransferRejectedEvent (transferId, rejectionReason) {
+const buildTransferRejectedEvent = (transferId, rejectionReason) => {
   return {
     id: 2,
     name: 'TransferRejected',
@@ -100,7 +109,7 @@ function buildTransferRejectedEvent (transferId, rejectionReason) {
   }
 }
 
-function buildReadModelTransfer (transferId, debit, credit, state, expiresAt, preparedDate, rejectionReason) {
+const buildReadModelTransfer = (transferId, debit, credit, state, expiresAt, preparedDate, rejectionReason) => {
   state = state || 'prepared'
   expiresAt = (expiresAt || futureDate()).toISOString()
   preparedDate = (preparedDate || new Date()).toISOString()
@@ -121,17 +130,17 @@ function buildReadModelTransfer (transferId, debit, credit, state, expiresAt, pr
   }
 }
 
-function findAccountPositions (positions, accountName) {
+const findAccountPositions = (positions, accountName) => {
   return positions.find(function (p) {
     return p.account === buildAccountUrl(accountName)
   })
 }
 
-function buildAccountUrl (accountName) {
+const buildAccountUrl = (accountName) => {
   return `http://${hostname}/accounts/${accountName}`
 }
 
-function buildAccountPosition (accountName, payments, receipts) {
+const buildAccountPosition = (accountName, payments, receipts) => {
   return {
     account: buildAccountUrl(accountName),
     net: (receipts - payments).toString(),
@@ -140,7 +149,7 @@ function buildAccountPosition (accountName, payments, receipts) {
   }
 }
 
-function getMomentToExpire (timeToPrepareTransfer = 2) {
+const getMomentToExpire = (timeToPrepareTransfer = 2) => {
   return Moment.utc().add(timeToPrepareTransfer, 'seconds')
 }
 
@@ -149,6 +158,7 @@ module.exports = {
   buildAccountPosition,
   buildDebitOrCredit,
   buildTransfer,
+  buildUnconditionalTransfer,
   buildTransferPreparedEvent,
   buildTransferExecutedEvent,
   buildTransferRejectedEvent,

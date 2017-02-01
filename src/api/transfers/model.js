@@ -2,7 +2,7 @@
 
 const Events = require('../../lib/events')
 const UrlParser = require('../../lib/urlparser')
-const Commands = require('../../commands/transfer')
+const Commands = require('../../domain/transfer/commands')
 const ExpiredTransferError = require('../../errors/expired-transfer-error')
 const UnpreparedTransferError = require('../../errors/unprepared-transfer-error')
 
