@@ -13,6 +13,7 @@ Test('return metadata', function (assert) {
       assert.equal(res.body.currency_symbol, null)
       assert.equal(res.body.precision, 10)
       assert.equal(res.body.scale, 2)
+      assert.deepEqual(res.body.connectors, [])
       assert.equal(Object.keys(res.body.urls).length, 10)
       assert.equal(res.body.urls.health, `http://${Fixtures.hostname}/health`)
       assert.equal(res.body.urls.account, `http://${Fixtures.hostname}/accounts/:name`)

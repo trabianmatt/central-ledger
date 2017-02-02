@@ -87,6 +87,7 @@ Test('metadata handler', (handlerTest) => {
         t.equal(response.precision, precision)
         t.equal(response.scale, scale)
         t.equal(response.urls['websocket'], `ws://${host}/websocket`)
+        t.deepEqual(response.connectors, [])
         return { code: statusCode => { t.end() } }
       }
 

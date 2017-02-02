@@ -27,6 +27,7 @@ exports.metadata = (request, reply) => {
     ledger: Config.HOSTNAME,
     urls: extractUrls(request),
     precision: Config.AMOUNT.PRECISION,
-    scale: Config.AMOUNT.SCALE
+    scale: Config.AMOUNT.SCALE,
+    connectors: []
   }).code(200)
 }
