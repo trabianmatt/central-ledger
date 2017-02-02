@@ -18,6 +18,7 @@
   },
   "scripts": {
     "start": "node src/server.js",
+    "ledger-test": "CLEDG_HOSTNAME=http://localhost:3000 CLEDG_EXPIRES_TIMEOUT=5000 npm start",
     "dev": "npm run docker:stop && docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d",
     "test": "npm run test:unit | faucet",
     "pretest": "standard",

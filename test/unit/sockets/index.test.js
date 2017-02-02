@@ -10,11 +10,26 @@ const Events = require('../../../src/lib/events')
 const WebSocket = require('../../../src/sockets/websocket')
 const AccountTransfers = require('../../../src/sockets/account-transfers')
 
+const assertEvent = (assert, message, event, resource, relatedResources) => {
+  assert.equal(message.jsonrpc, '2.0')
+  assert.equal(message.id, null)
+  assert.equal(message.method, 'notify')
+  const params = message.params
+  assert.equal(params.event, event)
+  assert.ok(params.id)
+  assert.deepEqual(params.resource, resource)
+  if (relatedResources) {
+    assert.deepEqual(params.related_resources, relatedResources)
+  } else {
+    assert.equal(params.hasOwnProperty('related_resources'), false)
+  }
+}
+
 Test('Socket Module', moduleTest => {
   let sandbox
   let socketManager
 
-  let mockServer = (listener = {}, serverTag = 'api') => {
+  const mockServer = (listener = {}, serverTag = 'api') => {
     const server = {
       select: sandbox.stub()
     }
@@ -145,8 +160,13 @@ Test('Socket Module', moduleTest => {
       const message = { resource: transfer }
       Events.onTransferPrepared.yields(message)
       Index.register(mockServer(), {}, () => {
-        test.ok(socketManager.send.calledWith(creditAccount, message))
-        test.ok(socketManager.send.calledWith(debitAccount, message))
+        const creditAccountSendArgs = socketManager.send.firstCall.args
+        test.equal(creditAccountSendArgs[0], creditAccount)
+        assertEvent(test, creditAccountSendArgs[1], 'transfer.create', transfer)
+
+        const debitAccountSendArgs = socketManager.send.secondCall.args
+        test.equal(debitAccountSendArgs[0], debitAccount)
+        assertEvent(test, debitAccountSendArgs[1], 'transfer.create', transfer)
         test.end()
       })
     })
@@ -171,11 +191,17 @@ Test('Socket Module', moduleTest => {
           { account: debitAccount }
         ]
       }
-      const message = { resource: transfer }
+      const relatedResources = { execution_condition_fulfillment: 'aaaa' }
+      const message = { resource: transfer, related_resources: relatedResources }
       Events.onTransferExecuted.yields(message)
       Index.register(mockServer(), {}, () => {
-        test.ok(socketManager.send.calledWith(creditAccount, message))
-        test.ok(socketManager.send.calledWith(debitAccount, message))
+        const creditAccountSendArgs = socketManager.send.firstCall.args
+        test.equal(creditAccountSendArgs[0], creditAccount)
+        assertEvent(test, creditAccountSendArgs[1], 'transfer.update', transfer, relatedResources)
+
+        const debitAccountSendArgs = socketManager.send.secondCall.args
+        test.equal(debitAccountSendArgs[0], debitAccount)
+        assertEvent(test, debitAccountSendArgs[1], 'transfer.update', transfer, relatedResources)
         test.end()
       })
     })
@@ -203,8 +229,13 @@ Test('Socket Module', moduleTest => {
       const message = { resource: transfer }
       Events.onTransferRejected.yields(message)
       Index.register(mockServer(), {}, () => {
-        test.ok(socketManager.send.calledWith(creditAccount, message))
-        test.ok(socketManager.send.calledWith(debitAccount, message))
+        const creditAccountSendArgs = socketManager.send.firstCall.args
+        test.equal(creditAccountSendArgs[0], creditAccount)
+        assertEvent(test, creditAccountSendArgs[1], 'transfer.update', transfer)
+
+        const debitAccountSendArgs = socketManager.send.secondCall.args
+        test.equal(debitAccountSendArgs[0], debitAccount)
+        assertEvent(test, debitAccountSendArgs[1], 'transfer.update', transfer)
         test.end()
       })
     })
@@ -222,12 +253,7 @@ Test('Socket Module', moduleTest => {
       Index.register(mockServer(), {}, () => {
         const args = socketManager.send.firstCall.args
         test.equal(args[0], toAccount)
-        test.equal(args[1].jsonrpc, '2.0')
-        test.equal(args[1].id, null)
-        test.equal(args[1].method, 'notify')
-        test.equal(args[1].params.event, 'message.send')
-        test.ok(args[1].params.id)
-        test.equal(args[1].params.resource, message)
+        assertEvent(test, args[1], 'message.send', message)
         test.end()
       })
     })

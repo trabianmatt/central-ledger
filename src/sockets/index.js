@@ -34,20 +34,27 @@ const wireConnection = (webSocketServer) => {
   })
 }
 
-const transferHandler = (msg) => {
-  getAccounts(msg.resource).forEach(account => manager.send(account, msg))
+const transferHandler = (event) => {
+  return (msg) => {
+    const resource = formatResource(event, msg.resource, msg.related_resources)
+    getAccounts(msg.resource).forEach(account => manager.send(account, resource))
+  }
 }
 
-const formatResource = (event, resource) => {
+const formatResource = (event, resource, relatedResources) => {
+  const params = {
+    event: event,
+    id: Uuid(),
+    resource: resource
+  }
+  if (relatedResources) {
+    params.related_resources = relatedResources
+  }
   return {
     jsonrpc: '2.0',
     id: null,
     method: 'notify',
-    params: {
-      event: event,
-      id: Uuid(),
-      resource: resource
-    }
+    params
   }
 }
 
@@ -57,9 +64,9 @@ const messageHandler = (message) => {
 }
 
 const wireEvents = () => {
-  Events.onTransferPrepared(transferHandler)
-  Events.onTransferExecuted(transferHandler)
-  Events.onTransferRejected(transferHandler)
+  Events.onTransferPrepared(transferHandler('transfer.create'))
+  Events.onTransferExecuted(transferHandler('transfer.update'))
+  Events.onTransferRejected(transferHandler('transfer.update'))
   Events.onMessageSent(messageHandler)
 }
 
