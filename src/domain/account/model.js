@@ -18,6 +18,15 @@ exports.getAll = () => {
   return Db.connect().then(db => db.accounts.findAsync({}, { order: 'name' }))
 }
 
+exports.update = (account, isDisabled) => {
+  return Db.connect().then(db => db.accounts.saveAsync(
+    {
+      accountId: account.accountId,
+      isDisabled: isDisabled
+    }
+  ))
+}
+
 exports.create = (account) => {
   return Db.connect()
     .then(db => {

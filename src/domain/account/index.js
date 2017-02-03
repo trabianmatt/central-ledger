@@ -61,6 +61,12 @@ const accountExists = (account) => {
   throw new Error('Account does not exist')
 }
 
+const update = (name, payload) => {
+  return Model.getByName(name).then(account => {
+    return Model.update(account, payload.is_disabled)
+  })
+}
+
 const retrieveUserCredentials = (account) => {
   return Model.retrieveUserCredentials(account)
 }
@@ -88,5 +94,6 @@ module.exports = {
   getAll,
   getById,
   getByName,
-  verify
+  verify,
+  update
 }

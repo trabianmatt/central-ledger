@@ -35,6 +35,7 @@
     "migrate": "db-migrate up $npm_package_config_db",
     "migrate:reset": "db-migrate reset $npm_package_config_db",
     "migrate:create": "db-migrate create $npm_package_config_db",
+    "migrate:down": "db-migrate down $npm_package_config_db",
     "docker:stop": "docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.functional.yml stop",
     "docker:rm": "docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.functional.yml rm -f -v",
     "docker:clean": "docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.functional.yml down --rmi local"

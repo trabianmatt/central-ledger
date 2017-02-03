@@ -17,6 +17,7 @@ Test('accounts handler', handlerTest => {
     originalHostName = Config.HOSTNAME
     Config.HOSTNAME = hostname
     sandbox.stub(Account, 'getAll')
+    sandbox.stub(Account, 'update')
     t.end()
   })
 
@@ -30,11 +31,13 @@ Test('accounts handler', handlerTest => {
     getAllTest.test('get all accounts and format list', test => {
       const account1 = {
         name: 'account1',
-        createdDate: new Date()
+        createdDate: new Date(),
+        isDisabled: false
       }
       const account2 = {
         name: 'account2',
-        createdDate: new Date()
+        createdDate: new Date(),
+        isDisabled: false
       }
       const accounts = [account1, account2]
 
@@ -72,6 +75,53 @@ Test('accounts handler', handlerTest => {
     })
 
     getAllTest.end()
+  })
+
+  handlerTest.test('updateAccount should', updateAccountTest => {
+    updateAccountTest.test('update an account to disabled', test => {
+      const account = {
+        name: 'account1',
+        id: `${hostname}/accounts/account1`,
+        isDisabled: true,
+        createdDate: new Date()
+      }
+
+      Account.update.returns(P.resolve(account))
+
+      const reply = response => {
+        test.equal(response.name, account.name)
+        test.equal(response.id, `${hostname}/accounts/${account.name}`)
+        test.equal(response.is_disabled, account.isDisabled)
+        test.equal(response.created, account.createdDate)
+        test.end()
+      }
+
+      const request = {
+        payload: {is_disabled: false},
+        params: { name: 'name' }
+      }
+
+      Handler.update(request, reply)
+    })
+
+    updateAccountTest.test('reply with error if Account services throws', test => {
+      const error = new Error()
+      Account.update.returns(P.reject(error))
+
+      const request = {
+        payload: {is_disabled: false},
+        params: { name: 'name' }
+      }
+
+      const reply = (e) => {
+        test.equal(e, error)
+        test.end()
+      }
+
+      Handler.update(request, reply)
+    })
+
+    updateAccountTest.end()
   })
 
   handlerTest.end()

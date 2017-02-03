@@ -19,6 +19,7 @@ Test('accounts model', function (modelTest) {
           assert.equal(account.name, accountName)
           assert.ok(account.createdDate)
           assert.ok(account.accountId)
+          assert.equal(account.isDisabled, false)
           assert.end()
         })
     })
@@ -36,6 +37,7 @@ Test('accounts model', function (modelTest) {
               assert.notEqual(found, account)
               assert.equal(found.name, account.name)
               assert.deepEqual(found.createdDate, account.createdDate)
+              assert.equal(found.isDisabled, false)
               assert.end()
             })
         })
@@ -54,6 +56,7 @@ Test('accounts model', function (modelTest) {
               assert.notEqual(found, account)
               assert.equal(found.accountId, account.accountId)
               assert.deepEqual(found.createdDate, account.createdDate)
+              assert.equal(found.isDisabled, false)
               assert.end()
             })
         })
@@ -78,6 +81,26 @@ Test('accounts model', function (modelTest) {
     })
 
     getAllTest.end()
+  })
+
+  modelTest.test('update should', function (updateTest) {
+    updateTest.test('update account isDisabled field', function (assert) {
+      const accountName = Fixtures.generateAccountName()
+      const isDisabled = true
+      createAccount(accountName)
+        .then((account) => {
+          Model.update(account, isDisabled)
+            .then((updated) => {
+              assert.notEqual(updated, account)
+              assert.equal(updated.name, account.name)
+              assert.deepEqual(updated.createdDate, account.createdDate)
+              assert.equal(updated.isDisabled, isDisabled)
+              assert.end()
+            })
+        })
+    })
+
+    updateTest.end()
   })
 
   modelTest.test('retrieveUserCredentials should', function (retrieveUserCredentialsTest) {

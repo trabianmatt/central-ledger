@@ -177,6 +177,74 @@ Test('accounts model', function (modelTest) {
     getByNameTest.end()
   })
 
+  modelTest.test('update should', function (updateTest) {
+    updateTest.test('return exception if db.connect throws', function (assert) {
+      let error = new Error()
+      const id = 1
+      const account = { accountId: id }
+      const isDisabled = false
+      sandbox.stub(Db, 'connect').returns(P.reject(error))
+
+      Model.update(account, isDisabled)
+        .then(() => {
+          assert.fail('Should have thrown error')
+        })
+        .catch(err => {
+          assert.equal(err, error)
+          assert.end()
+        })
+    })
+
+    updateTest.test('return exception if db.saveAsync throws', function (assert) {
+      let error = new Error()
+      const id = 1
+      const account = { accountId: id }
+      const isDisabled = false
+      let saveAsync = function () { return P.reject(error) }
+      setupAccountsDb({ saveAsync: saveAsync })
+
+      Model.update(account, isDisabled)
+        .then(() => {
+          assert.fail('Should have thrown error')
+        })
+        .catch(err => {
+          assert.equal(err, error)
+          assert.end()
+        })
+    })
+
+    updateTest.test('update an account', function (assert) {
+      let name = 'dfsp1'
+      const isDisabled = true
+      const id = 1
+      let account = {
+        accountId: id,
+        name: name,
+        isDisabled: false
+      }
+      let updatedAccount = {
+        accountId: id,
+        name: name,
+        isDisabled: isDisabled
+      }
+      let saveAsync = Sinon.stub().returns(P.resolve(updatedAccount))
+      setupAccountsDb({ saveAsync: saveAsync })
+
+      Model.update(account, isDisabled)
+        .then(r => {
+          assert.equal(r, updatedAccount)
+          assert.equal(saveAsync.firstCall.args[0].accountId, account.accountId)
+          assert.equal(saveAsync.firstCall.args[0].isDisabled, isDisabled)
+          assert.end()
+        })
+        .catch(err => {
+          assert.fail(err)
+        })
+    })
+
+    updateTest.end()
+  })
+
   modelTest.test('create should', function (createTest) {
     createTest.test('save payload as new object', function (assert) {
       let name = 'dfsp1'

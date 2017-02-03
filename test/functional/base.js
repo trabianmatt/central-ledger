@@ -42,6 +42,10 @@ function getAccount (accountName) {
   return getApi(`/accounts/${accountName}`)
 }
 
+function updateAccount (accountName, isDisabled) {
+  return putAdmin(`/accounts/${accountName}`, { is_disabled: isDisabled })
+}
+
 function getTransfer (transferId) {
   return getApi(`/transfers/${transferId}`)
 }
@@ -76,5 +80,6 @@ module.exports = {
   prepareTransfer,
   putApi,
   putAdmin,
-  rejectTransfer
+  rejectTransfer,
+  updateAccount
 }

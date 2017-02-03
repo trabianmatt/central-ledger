@@ -122,6 +122,36 @@ Test('Account service', serviceTest => {
     getByNameTest.end()
   })
 
+  serviceTest.test('update should', updateTest => {
+    updateTest.test('update from Model', test => {
+      const isDisabled = false
+      const name = '12345'
+      const id = 1
+      const account = {
+        accountId: id,
+        isDisabled: true
+      }
+      const updatedAccount = {
+        accountId: id,
+        isDisabled: isDisabled
+      }
+      const payload = {
+        name: name,
+        is_disabled: isDisabled
+      }
+      Model.getByName.withArgs(name).returns(P.resolve(account))
+      Model.update.withArgs(account, isDisabled).returns(P.resolve(updatedAccount))
+      AccountService.update(name, payload)
+      .then(result => {
+        test.equal(result.accountId, account.accountId)
+        test.equal(result.isDisabled, isDisabled)
+        test.end()
+      })
+    })
+
+    updateTest.end()
+  })
+
   serviceTest.test('verify should', verifyTest => {
     verifyTest.test('return false if account not found', test => {
       Model.getByName.returns(P.resolve(null))

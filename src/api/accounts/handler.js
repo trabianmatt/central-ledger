@@ -13,7 +13,7 @@ const buildResponse = (account, { net = '0' } = {}) => {
     name: account.name,
     created: account.createdDate,
     balance: net,
-    is_disabled: false,
+    is_disabled: account.isDisabled,
     ledger: Config.HOSTNAME
   }
   if (account.credentials) {
