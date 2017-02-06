@@ -11,6 +11,10 @@ const generateTransferId = () => {
 }
 
 const generateAccountName = () => {
+  return generateRandomName()
+}
+
+const generateRandomName = () => {
   return `dfsp${Uuid().replace(/-/g, '')}`
 }
 
@@ -164,6 +168,7 @@ module.exports = {
   buildTransferRejectedEvent,
   buildReadModelTransfer,
   findAccountPositions,
+  generateRandomName,
   generateAccountName,
   generateTransferId,
   getMomentToExpire

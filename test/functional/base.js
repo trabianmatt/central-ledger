@@ -66,9 +66,14 @@ function rejectTransfer (transferId, reason) {
   return putApi(`/transfers/${transferId}/rejection`, reason, 'text/plain')
 }
 
+function createCharge (payload) {
+  return postAdmin('/charges', payload)
+}
+
 module.exports = {
   basicAuth,
   createAccount,
+  createCharge,
   fulfillTransfer,
   getTransfer,
   getFulfillment,
