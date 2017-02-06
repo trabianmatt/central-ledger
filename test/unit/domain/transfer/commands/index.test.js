@@ -5,8 +5,7 @@ const Sinon = require('sinon')
 const P = require('bluebird')
 const Uuid = require('uuid4')
 const Eventric = require('../../../../../src/eventric')
-const Transfer = require('../../../../../src/domain/transfer/commands')
-const RejectionType = require('../../../../../src/domain/transfer/rejection-type')
+const TransferCommands = require('../../../../../src/domain/transfer/commands')
 
 Test('Eventric Transfer index test', indexTest => {
   let sandbox
@@ -31,7 +30,7 @@ Test('Eventric Transfer index test', indexTest => {
 
       let payload = {}
 
-      Transfer.prepare(payload)
+      TransferCommands.prepare(payload)
       .then(tfr => {
         t.ok(command.calledWith('PrepareTransfer', payload))
         t.equal(tfr, expected)
@@ -50,7 +49,7 @@ Test('Eventric Transfer index test', indexTest => {
       Eventric.getContext.returns(P.resolve({ command: command }))
 
       let payload = {}
-      Transfer.fulfill(payload)
+      TransferCommands.fulfill(payload)
       .then(result => {
         t.ok(command.calledWith('FulfillTransfer', payload))
         t.equal(result, expected)
@@ -68,26 +67,9 @@ Test('Eventric Transfer index test', indexTest => {
       Eventric.getContext.returns(P.resolve({ command: command }))
 
       let rejection = { id: Uuid(), rejection_reason: 'another excuse' }
-      Transfer.reject(rejection)
+      TransferCommands.reject(rejection)
       .then(result => {
         t.ok(command.calledWith('RejectTransfer', Sinon.match({ id: rejection.id, rejection_reason: rejection.rejection_reason })))
-        t.equal(result, expected)
-        t.end()
-      })
-    })
-    rejectTest.end()
-  })
-
-  indexTest.test('expire should', rejectTest => {
-    rejectTest.test('execute reject command type EXPIRED on context', t => {
-      let command = sandbox.stub()
-      let expected = {}
-      command.returns(expected)
-      Eventric.getContext.returns(P.resolve({ command: command }))
-      let transferId = Uuid()
-      Transfer.expire(transferId)
-      .then(result => {
-        t.ok(command.calledWith('RejectTransfer', Sinon.match({ id: transferId, rejection_reason: RejectionType.EXPIRED })))
         t.equal(result, expected)
         t.end()
       })
@@ -102,7 +84,7 @@ Test('Eventric Transfer index test', indexTest => {
       command.returns(expected)
       Eventric.getContext.returns(P.resolve({ command: command }))
       let payload = {id: Uuid(), settlement_id: Uuid()}
-      Transfer.settle(payload)
+      TransferCommands.settle(payload)
       .then(result => {
         t.ok(command.calledWith('SettleTransfer', Sinon.match(payload)))
         t.equal(result, expected)

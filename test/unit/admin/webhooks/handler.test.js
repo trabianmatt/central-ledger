@@ -4,7 +4,7 @@ const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const Uuid = require('uuid4')
 const P = require('bluebird')
-const TransferService = require('../../../../src/services/transfer')
+const TransferService = require('../../../../src/domain/transfer')
 const TokenService = require('../../../../src/domain/token')
 const Handler = require('../../../../src/admin/webhooks/handler')
 

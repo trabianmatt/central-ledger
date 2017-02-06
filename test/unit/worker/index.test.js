@@ -6,7 +6,7 @@ const Sinon = require('sinon')
 const P = require('bluebird')
 const Logger = require('@leveloneproject/central-services-shared').Logger
 const Config = require(`${src}/lib/config`)
-const TransferService = require(`${src}/services/transfer`)
+const TransferService = require(`${src}/domain/transfer`)
 const TokenService = require(`${src}/domain/token`)
 const Worker = require(`${src}/worker`)
 

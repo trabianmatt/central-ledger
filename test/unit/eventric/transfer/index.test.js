@@ -6,7 +6,7 @@ const Transfer = require('../../../../src/eventric/transfer')
 const TransferEvents = require('../../../../src/eventric/transfer/events')
 const Aggregate = require('../../../../src/eventric/transfer/transfer')
 const Commands = require('../../../../src/eventric/transfer/commands')
-const TransfersProjection = require('../../../../src/eventric/transfer/transfers-projection')
+const TransfersProjection = require('../../../../src/domain/transfer/projection')
 const SettleableTransfersProjection = require('../../../../src/eventric/transfer/settleable-transfers-projection')
 
 Test('Index should', initializeTest => {

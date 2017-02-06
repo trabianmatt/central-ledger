@@ -5,7 +5,7 @@ const Sinon = require('sinon')
 const Test = require('tapes')(require('tape'))
 const P = require('bluebird')
 const Handler = require(`${src}/api/positions/handler`)
-const PositionService = require(`${src}/services/position`)
+const PositionService = require(`${src}/domain/position`)
 
 Test('positions handler', (handlerTest) => {
   let sandbox

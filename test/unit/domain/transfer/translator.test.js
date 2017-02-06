@@ -1,6 +1,8 @@
 'use strict'
 
-const Test = require('tapes')(require('tape'))
+const Test = require('tape')
+const Uuid = require('uuid4')
+const UrlParser = require('../../../../src/lib/urlparser')
 const TransferTranslator = require('../../../../src/domain/transfer/translator')
 
 const executionCondition = 'ni:///sha-256;47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU?fpt=preimage-sha-256&cost=0'
@@ -8,8 +10,8 @@ const executionCondition = 'ni:///sha-256;47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3
 Test('TransferTranslator', transferTranslatorTest => {
   transferTranslatorTest.test('toTransfer should', function (toTransferTest) {
     toTransferTest.test('translate an argument containing a "id" field', function (t) {
-      let from = {
-        'id': 'http://central-ledger/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613209',
+      const from = {
+        'id': '3a2a1d9e-8640-4d2d-b06c-84f2cd613209',
         'ledger': 'http://central-ledger',
         'credits': [
           {
@@ -34,7 +36,7 @@ Test('TransferTranslator', transferTranslatorTest => {
         rejection_reason: 'some reason'
       }
 
-      let expected = {
+      const expected = {
         id: 'http://central-ledger/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613209',
         ledger: 'http://central-ledger',
         credits: [
@@ -61,6 +63,16 @@ Test('TransferTranslator', transferTranslatorTest => {
       let actual = TransferTranslator.toTransfer(from)
       t.deepEquals(expected, actual)
       t.end()
+    })
+
+    toTransferTest.test('not include properties that start with $', test => {
+      const from = {
+        '$id': 'bad-id',
+        'id': 'good-id'
+      }
+      const actual = TransferTranslator.toTransfer(from)
+      test.deepEquals(actual, { id: `http://central-ledger/transfers/${from.id}`, timeline: {} })
+      test.end()
     })
 
     toTransferTest.test('translate an argument containing a "transferUuid" field', function (t) {
@@ -125,5 +137,18 @@ Test('TransferTranslator', transferTranslatorTest => {
     toTransferTest.end()
   })
 
+  transferTranslatorTest.test('fromPayload should', fromPayloadTest => {
+    fromPayloadTest.test('convert it from uri to UUID', test => {
+      const id = Uuid()
+      const transferUri = UrlParser.toTransferUri(id)
+      test.notEqual(id, transferUri)
+      const payload = { id: transferUri }
+      const result = TransferTranslator.fromPayload(payload)
+      test.equal(result.id, id.toString())
+      test.end()
+    })
+
+    fromPayloadTest.end()
+  })
   transferTranslatorTest.end()
 })

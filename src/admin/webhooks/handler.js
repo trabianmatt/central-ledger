@@ -1,6 +1,6 @@
 'use strict'
 
-const TransferService = require('../../services/transfer')
+const TransferService = require('../../domain/transfer')
 const TokenService = require('../../domain/token')
 
 exports.rejectExpired = function (request, reply) {

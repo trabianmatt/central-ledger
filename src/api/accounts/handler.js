@@ -3,7 +3,7 @@
 const Account = require('../../domain/account')
 const Config = require('../../lib/config')
 const UrlParser = require('../../lib/urlparser')
-const PositionService = require('../../services/position')
+const PositionService = require('../../domain/position')
 const NotFoundError = require('@leveloneproject/central-services-shared').NotFoundError
 const RecordExistsError = require('../../errors/record-exists-error')
 

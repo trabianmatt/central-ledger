@@ -1,11 +1,11 @@
 'use strict'
 
-const src = '../../../src'
+const src = '../../../../src'
 const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const P = require('bluebird')
 const Config = require(`${src}/lib/config`)
-const Service = require(`${src}/services/position`)
+const Service = require(`${src}/domain/position`)
 const Account = require(`${src}/domain/account`)
 const SettleableTransfersReadModel = require(`${src}/models/settleable-transfers-read-model`)
 

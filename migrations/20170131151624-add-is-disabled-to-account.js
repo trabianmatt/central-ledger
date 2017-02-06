@@ -22,8 +22,9 @@ exports.up = function(db) {
   var filePath = path.join(__dirname, 'sqls', '20170131151624-add-is-disabled-to-account-up.sql');
   return new Promise( function( resolve, reject ) {
     fs.readFile(filePath, {encoding: 'utf-8'}, function(err,data){
-      if (err) return reject(err);
-      console.log('received data: ' + data);
+      if (err) {
+        return reject(err);
+      }
 
       resolve(data);
     });
@@ -37,8 +38,9 @@ exports.down = function(db) {
   var filePath = path.join(__dirname, 'sqls', '20170131151624-add-is-disabled-to-account-down.sql');
   return new Promise( function( resolve, reject ) {
     fs.readFile(filePath, {encoding: 'utf-8'}, function(err,data){
-      if (err) return reject(err);
-      console.log('received data: ' + data);
+      if (err) {
+        return reject(err);
+      }
 
       resolve(data);
     });

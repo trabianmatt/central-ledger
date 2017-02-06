@@ -1,7 +1,6 @@
 'use strict'
 
 const Events = require('events')
-const TransferTranslator = require('../domain/transfer/translator')
 const ledgerEmitter = new Events()
 
 const transferRejected = 'transferRejected'
@@ -34,18 +33,18 @@ module.exports = {
   },
   emitTransferPrepared: (transfer) => {
     publish(transferPrepared, {
-      resource: TransferTranslator.toTransfer(transfer)
+      resource: transfer
     })
   },
   emitTransferExecuted: (resource, relatedResources) => {
     publish(transferExecuted, {
-      resource: TransferTranslator.toTransfer(resource),
+      resource: resource,
       related_resources: relatedResources
     })
   },
   emitTransferRejected: (resource, relatedResources) => {
     publish(transferRejected, {
-      resource: TransferTranslator.toTransfer(resource),
+      resource: resource,
       related_resources: relatedResources
     })
   },

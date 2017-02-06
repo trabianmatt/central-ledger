@@ -1,6 +1,6 @@
 'use strict'
 
-const src = '../../../src'
+const src = '../../../../../src'
 const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const P = require('bluebird')
@@ -8,7 +8,7 @@ const Moment = require('moment')
 const Uuid = require('uuid4')
 const Db = require(`${src}/db`)
 const UrlParser = require(`${src}/lib/urlparser`)
-const TransfersReadModel = require(`${src}/models/transfers-read-model`)
+const TransfersReadModel = require(`${src}/domain/transfer/models/transfers-read-model`)
 const TransferState = require(`${src}/domain/transfer/state`)
 
 function setupTransfersDb (transfers) {
@@ -168,25 +168,6 @@ Test('transfer model', function (modelTest) {
     })
 
     getByIdTest.end()
-  })
-
-  modelTest.test('getTransfersByState should', getByStateTest => {
-    getByStateTest.test('find transfers by state', test => {
-      let transfers = [{ transferUuid: Uuid() }, { transferUuid: Uuid() }]
-      let getTransfersByStateAsync = sandbox.stub().returns(Promise.resolve(transfers))
-
-      let db = { getTransfersByStateAsync: getTransfersByStateAsync }
-      Db.connect.returns(P.resolve(db))
-
-      TransfersReadModel.getTransfersByState(TransferState.EXECUTED)
-        .then(found => {
-          let getTransfersByStateAsyncArg = getTransfersByStateAsync.firstCall.args[0]
-          test.equal(getTransfersByStateAsyncArg, TransferState.EXECUTED)
-          test.deepEqual(found, transfers)
-          test.end()
-        })
-    })
-    getByStateTest.end()
   })
 
   modelTest.test('findExpired should', findExpiredTest => {

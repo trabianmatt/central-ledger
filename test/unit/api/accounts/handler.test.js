@@ -6,7 +6,7 @@ const P = require('bluebird')
 const Config = require('../../../../src/lib/config')
 const Handler = require('../../../../src/api/accounts/handler')
 const Account = require('../../../../src/domain/account')
-const PositionService = require('../../../../src/services/position')
+const PositionService = require('../../../../src/domain/position')
 const NotFoundError = require('@leveloneproject/central-services-shared').NotFoundError
 const RecordExistsError = require('../../../../src/errors/record-exists-error')
 

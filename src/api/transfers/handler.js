@@ -2,9 +2,8 @@
 
 const NotFoundError = require('@leveloneproject/central-services-shared').NotFoundError
 
-const Model = require('./model')
-const TransfersReadModel = require('../../models/transfers-read-model')
 const Validator = require('./validator')
+const TransferService = require('../../domain/transfer')
 const TransferState = require('../../domain/transfer/state')
 const TransferTranslator = require('../../domain/transfer/translator')
 
@@ -17,8 +16,8 @@ const buildGetTransferResponse = (record) => {
 
 exports.prepareTransfer = function (request, reply) {
   return Validator.validate(request.payload, request.params.id)
-    .then(Model.prepare)
-    .then(transfer => reply(TransferTranslator.toTransfer(transfer)).code((transfer.existing === true) ? 200 : 201))
+    .then(TransferService.prepare)
+    .then(result => reply(result.transfer).code((result.existing === true) ? 200 : 201))
     .catch(e => reply(e))
 }
 
@@ -28,8 +27,8 @@ exports.fulfillTransfer = function (request, reply) {
     fulfillment: request.payload
   }
 
-  return Model.fulfill(fulfillment)
-    .then(transfer => reply(TransferTranslator.toTransfer(transfer)).code(200))
+  return TransferService.fulfill(fulfillment)
+    .then(transfer => reply(transfer).code(200))
     .catch(e => reply(e))
 }
 
@@ -39,20 +38,20 @@ exports.rejectTransfer = function (request, reply) {
     rejection_reason: request.payload
   }
 
-  return Model.reject(rejection)
-  .then(transfer => reply(TransferTranslator.toTransfer(transfer)).code(200))
+  return TransferService.reject(rejection)
+  .then(transfer => reply(transfer).code(200))
   .catch(e => reply(e))
 }
 
 exports.getTransferById = function (request, reply) {
-  return TransfersReadModel.getById(request.params.id)
+  return TransferService.getById(request.params.id)
     .then(buildGetTransferResponse)
     .then(result => reply(result))
     .catch(e => reply(e))
 }
 
 exports.getTransferFulfillment = function (request, reply) {
-  return TransfersReadModel.getById(request.params.id)
+  return TransferService.getById(request.params.id)
     .then((transfer) => {
       if (!transfer || transfer.state !== TransferState.EXECUTED) {
         throw new NotFoundError('The requested resource could not be found.')

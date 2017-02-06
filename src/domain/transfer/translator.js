@@ -1,32 +1,13 @@
 'use strict'
 
 const UrlParser = require('../../lib/urlparser')
+const Util = require('../../lib/util')
 
-const removeNullOrUndefinedTimelineProperties = (timeline) => {
-  var newTimeline = {}
-  if (timeline.prepared_at) {
-    newTimeline.prepared_at = timeline.prepared_at
-  }
-  if (timeline.executed_at) {
-    newTimeline.executed_at = timeline.executed_at
-  }
-  if (timeline.rejected_at) {
-    newTimeline.rejected_at = timeline.rejected_at
-  }
-  return newTimeline
+const eventricProperty = (value, key) => {
+  return key.startsWith('$')
 }
 
-const fromTransferAggregate = (t) => ({
-  id: t.id,
-  ledger: t.ledger,
-  debits: t.debits,
-  credits: t.credits,
-  execution_condition: t.execution_condition,
-  expires_at: t.expires_at,
-  state: t.state,
-  timeline: removeNullOrUndefinedTimelineProperties(t.timeline),
-  rejection_reason: t.rejection_reason
-})
+const fromTransferAggregate = (t) => Util.merge(Util.omitBy(t, eventricProperty), { id: UrlParser.toTransferUri(t.id), timeline: Util.omitNil(t.timeline) })
 
 const fromTransferReadModel = (t) => ({
   id: UrlParser.toTransferUri(t.transferUuid),
@@ -44,7 +25,7 @@ const fromTransferReadModel = (t) => ({
   execution_condition: t.executionCondition,
   expires_at: t.expiresAt,
   state: t.state,
-  timeline: removeNullOrUndefinedTimelineProperties({
+  timeline: Util.omitNil({
     prepared_at: t.preparedDate,
     executed_at: t.executedDate,
     rejected_at: t.rejectedDate
@@ -52,11 +33,18 @@ const fromTransferReadModel = (t) => ({
   rejection_reason: t.rejectionReason
 })
 
-exports.toTransfer = (t) => {
+const toTransfer = (t) => {
   if (t.id) {
     return fromTransferAggregate(t)
   } else if (t.transferUuid) {
     return fromTransferReadModel(t)
   } else throw new Error(`Unable to translate to transfer: ${t}`)
+}
+
+const fromPayload = (payload) => Util.merge(payload, { id: UrlParser.idFromTransferUri(payload.id) })
+
+module.exports = {
+  toTransfer,
+  fromPayload
 }
 

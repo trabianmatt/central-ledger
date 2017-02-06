@@ -1,6 +1,6 @@
 'use strict'
 
-const PositionService = require('../../services/position')
+const PositionService = require('../../domain/position')
 
 exports.perform = (request, reply) => {
   PositionService.calculateForAllAccounts()

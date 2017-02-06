@@ -1,15 +1,15 @@
 'use strict'
 
-const src = '../../../src'
+const src = '../../../../../src'
 const _ = require('lodash')
 const P = require('bluebird')
 const Test = require('tape')
 const Moment = require('moment')
 const Db = require(`${src}/db`)
 const Account = require(`${src}/domain/account`)
-const ReadModel = require(`${src}/models/transfers-read-model`)
-const Fixtures = require('../../fixtures')
-const TransferState = require('../../../src/domain/transfer/state')
+const ReadModel = require(`${src}/domain/transfer/models/transfers-read-model`)
+const Fixtures = require('../../../../fixtures')
+const TransferState = require('../../../../../src/domain/transfer/state')
 
 let pastDate = () => {
   let d = new Date()
@@ -126,40 +126,6 @@ Test('transfers read model', function (modelTest) {
     })
 
     getByIdTest.end()
-  })
-
-  modelTest.test('getTransfersByState should', function (getByStateTest) {
-    getByStateTest.test('retrieve executed transfers with set account fields', function (assert) {
-      ReadModel.truncateTransfers()
-        .then(() => {
-          let debitAccountName = Fixtures.generateAccountName()
-          let creditAccountName = Fixtures.generateAccountName()
-
-          createAccounts([debitAccountName, creditAccountName])
-            .then(accountMap => {
-              let transfer = Fixtures.buildReadModelTransfer(Fixtures.generateTransferId(), buildReadModelDebitOrCredit(debitAccountName, '50', accountMap), buildReadModelDebitOrCredit(creditAccountName, '50', accountMap), TransferState.EXECUTED)
-              let otherTransfer = Fixtures.buildReadModelTransfer(Fixtures.generateTransferId(), buildReadModelDebitOrCredit(debitAccountName, '20', accountMap), buildReadModelDebitOrCredit(creditAccountName, '20', accountMap), TransferState.PREPARED)
-              ReadModel.saveTransfer(transfer)
-                .then(() => {
-                  ReadModel.saveTransfer(otherTransfer)
-                    .then(() => {
-                      ReadModel.getTransfersByState(TransferState.EXECUTED)
-                        .then(found => {
-                          assert.equal(found.length, 1)
-                          assert.equal(found[0].transferUuid, transfer.transferUuid)
-                          assert.equal(found[0].creditAccountId, accountMap[creditAccountName])
-                          assert.equal(found[0].creditAccountName, creditAccountName)
-                          assert.equal(found[0].debitAccountId, accountMap[debitAccountName])
-                          assert.equal(found[0].debitAccountName, debitAccountName)
-                          assert.end()
-                        })
-                    })
-                })
-            })
-        })
-    })
-
-    getByStateTest.end()
   })
 
   modelTest.test('findExpired should', expiredTest => {

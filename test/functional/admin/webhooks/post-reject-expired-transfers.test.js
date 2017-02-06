@@ -22,7 +22,7 @@ Test('POST /webhooks/reject-expired-transfers', rejectTest => {
           .expect(200)
           .expect('Content-Type', /json/)
           .then(res => {
-            test.deepEqual(res.body, [transferId])
+            test.deepEqual(res.body, [transfer.id])
             test.end()
           })
       })

@@ -3,7 +3,7 @@
 const Events = require('./events')
 const Aggregate = require('./transfer')
 const Commands = require('./commands')
-const TransfersProjection = require('./transfers-projection')
+const TransfersProjection = require('../../domain/transfer/projection')
 const SettleableTransfersProjection = require('./settleable-transfers-projection')
 
 exports.setupContext = (context) => {

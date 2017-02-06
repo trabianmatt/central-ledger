@@ -4,7 +4,7 @@ const src = '../../../../src'
 const _ = require('lodash')
 const P = require('bluebird')
 const Test = require('tape')
-const Model = require(`${src}/api/transfers/model`)
+const TransferService = require(`${src}/domain/transfer`)
 const Account = require(`${src}/domain/account`)
 const Fixtures = require('../../../fixtures')
 
@@ -12,7 +12,7 @@ function createAccounts (accountNames) {
   return P.all(accountNames.map(name => Account.create({ name: name, password: '1234' }))).then(accounts => _.reduce(accounts, (m, acct) => _.set(m, acct.name, acct.accountId), {}))
 }
 
-Test('transfer model', function (modelTest) {
+Test('transfer service', function (modelTest) {
   modelTest.test('prepare should', function (prepareTest) {
     prepareTest.test('prepare a transfer', function (assert) {
       let debitAccountName = Fixtures.generateAccountName()
@@ -22,8 +22,9 @@ Test('transfer model', function (modelTest) {
 
       createAccounts([debitAccountName, creditAccountName])
         .then(accountMap => {
-          Model.prepare(transfer)
-            .then(prepared => {
+          TransferService.prepare(transfer)
+            .then(result => {
+              const prepared = result.transfer
               assert.equal(prepared.id, transfer.id)
               assert.equal(prepared.ledger, transfer.ledger)
               assert.equal(prepared.debits[0].account, transfer.debits[0].account)
@@ -52,8 +53,8 @@ Test('transfer model', function (modelTest) {
 
       createAccounts([debitAccountName, creditAccountName])
         .then(accountMap => {
-          Model.prepare(transfer)
-            .then(prepared => Model.fulfill({ id: transferId, fulfillment: fulfillment }))
+          TransferService.prepare(transfer)
+            .then(prepared => TransferService.fulfill({ id: transferId, fulfillment: fulfillment }))
             .then(fulfilled => {
               assert.equal(fulfilled.id, transfer.id)
               assert.equal(fulfilled.ledger, transfer.ledger)
@@ -83,8 +84,8 @@ Test('transfer model', function (modelTest) {
 
       createAccounts([debitAccountName, creditAccountName])
         .then(accountMap => {
-          Model.prepare(transfer)
-            .then(prepared => Model.reject({ id: transferId, rejection_reason: rejectionReason }))
+          TransferService.prepare(transfer)
+            .then(prepared => TransferService.reject({ id: transferId, rejection_reason: rejectionReason }))
             .then(rejected => {
               assert.equal(rejected.id, transfer.id)
               assert.equal(rejected.ledger, transfer.ledger)
