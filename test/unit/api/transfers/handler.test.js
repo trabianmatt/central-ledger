@@ -284,9 +284,9 @@ Test('transfer handler', handlerTest => {
       }
 
       const rejectReason = 'error reason'
-
+      const transferId = '3a2a1d9e-8640-4d2d-b06c-84f2cd613204'
       const request = {
-        params: { id: '3a2a1d9e-8640-4d2d-b06c-84f2cd613204' },
+        params: { id: transferId },
         payload: rejectReason
       }
 
@@ -294,6 +294,7 @@ Test('transfer handler', handlerTest => {
 
       const reply = response => {
         test.equal(response.id, transfer.id)
+        test.ok(TransferService.reject.calledWith(Sinon.match({ id: transferId, rejection_reason: 'cancelled', message: rejectReason })))
         return {
           code: statusCode => {
             test.equal(statusCode, 200)

@@ -1,5 +1,6 @@
 'use strict'
 
 module.exports = {
-  EXPIRED: 'Expired'
+  EXPIRED: 'expired',
+  CANCELLED: 'cancelled'
 }

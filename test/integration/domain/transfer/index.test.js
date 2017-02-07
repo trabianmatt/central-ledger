@@ -7,6 +7,7 @@ const Test = require('tape')
 const TransferService = require(`${src}/domain/transfer`)
 const Account = require(`${src}/domain/account`)
 const Fixtures = require('../../../fixtures')
+const amount = '50.00'
 
 function createAccounts (accountNames) {
   return P.all(accountNames.map(name => Account.create({ name: name, password: '1234' }))).then(accounts => _.reduce(accounts, (m, acct) => _.set(m, acct.name, acct.accountId), {}))
@@ -18,7 +19,7 @@ Test('transfer service', function (modelTest) {
       let debitAccountName = Fixtures.generateAccountName()
       let creditAccountName = Fixtures.generateAccountName()
 
-      let transfer = Fixtures.buildTransfer(Fixtures.generateTransferId(), Fixtures.buildDebitOrCredit(debitAccountName, '50', { interledger: 'blah', path: 'blah' }), Fixtures.buildDebitOrCredit(creditAccountName, '50', { interledger: 'blah', path: 'blah' }))
+      let transfer = Fixtures.buildTransfer(Fixtures.generateTransferId(), Fixtures.buildDebitOrCredit(debitAccountName, amount, { interledger: 'blah', path: 'blah' }), Fixtures.buildDebitOrCredit(creditAccountName, amount, { interledger: 'blah', path: 'blah' }))
 
       createAccounts([debitAccountName, creditAccountName])
         .then(accountMap => {
@@ -49,7 +50,7 @@ Test('transfer service', function (modelTest) {
       let creditAccountName = Fixtures.generateAccountName()
 
       let transferId = Fixtures.generateTransferId()
-      let transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(debitAccountName, '50'), Fixtures.buildDebitOrCredit(creditAccountName, '50'))
+      let transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(debitAccountName, amount), Fixtures.buildDebitOrCredit(creditAccountName, amount))
 
       createAccounts([debitAccountName, creditAccountName])
         .then(accountMap => {
@@ -80,7 +81,7 @@ Test('transfer service', function (modelTest) {
       let creditAccountName = Fixtures.generateAccountName()
 
       let transferId = Fixtures.generateTransferId()
-      let transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(debitAccountName, '50'), Fixtures.buildDebitOrCredit(creditAccountName, '50'))
+      let transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(debitAccountName, amount), Fixtures.buildDebitOrCredit(creditAccountName, amount))
 
       createAccounts([debitAccountName, creditAccountName])
         .then(accountMap => {

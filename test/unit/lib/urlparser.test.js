@@ -23,8 +23,8 @@ Test('nameFromAccountUri', nameFromAccountUriTest => {
   })
 
   nameFromAccountUriTest.test('return name if url matches pattern', t => {
-    let hostName = Config.HOSTNAME
-    let accountName = 'account1'
+    const hostName = Config.HOSTNAME
+    const accountName = 'account1'
     UrlParser.nameFromAccountUri(`${hostName}/accounts/${accountName}`, (err, name) => {
       t.notOk(err)
       t.equal(name, accountName)
@@ -33,15 +33,15 @@ Test('nameFromAccountUri', nameFromAccountUriTest => {
   })
 
   nameFromAccountUriTest.test('return value if no callback provided', t => {
-    let hostName = Config.HOSTNAME
-    let accountName = 'account1'
-    let result = UrlParser.nameFromAccountUri(`${hostName}/accounts/${accountName}`)
+    const hostName = Config.HOSTNAME
+    const accountName = 'account1'
+    const result = UrlParser.nameFromAccountUri(`${hostName}/accounts/${accountName}`)
     t.equal(result, accountName)
     t.end()
   })
 
   nameFromAccountUriTest.test('return null if no callback provided', t => {
-    let result = UrlParser.nameFromAccountUri('not match')
+    const result = UrlParser.nameFromAccountUri('not match')
     t.equal(result, null)
     t.end()
   })
@@ -59,7 +59,7 @@ Test('accountNameFromTransfersRoute', accountNameFromTransfersRouteTest => {
   })
 
   accountNameFromTransfersRouteTest.test('return name if url matches pattern', t => {
-    let accountName = 'account1'
+    const accountName = 'account1'
     UrlParser.accountNameFromTransfersRoute(`/accounts/${accountName}/transfers`)
     .then(name => {
       t.equal(name, accountName)
@@ -88,8 +88,8 @@ Test('idFromTransferUri', idFromTransferUriTest => {
   })
 
   idFromTransferUriTest.test('id if uri contains hostname and uuid', t => {
-    let hostname = Config.HOSTNAME
-    let transferId = Uuid()
+    const hostname = Config.HOSTNAME
+    const transferId = Uuid()
     UrlParser.idFromTransferUri(`${hostname}/transfers/${transferId}`, (err, id) => {
       t.equal(err, null)
       t.equal(id, transferId)
@@ -98,15 +98,15 @@ Test('idFromTransferUri', idFromTransferUriTest => {
   })
 
   idFromTransferUriTest.test('return id if no callback provided', t => {
-    let hostname = Config.HOSTNAME
-    let transferId = Uuid()
-    let result = UrlParser.idFromTransferUri(`${hostname}/transfers/${transferId}`)
+    const hostname = Config.HOSTNAME
+    const transferId = Uuid()
+    const result = UrlParser.idFromTransferUri(`${hostname}/transfers/${transferId}`)
     t.equal(result, transferId)
     t.end()
   })
 
   idFromTransferUriTest.test('return null if no callback provided', t => {
-    let result = UrlParser.idFromTransferUri('no match')
+    const result = UrlParser.idFromTransferUri('no match')
     t.equal(result, null)
     t.end()
   })
@@ -116,20 +116,34 @@ Test('idFromTransferUri', idFromTransferUriTest => {
 
 Test('toTransferUri', toTransferUriTest => {
   toTransferUriTest.test('return path', t => {
-    let hostName = Config.HOSTNAME
-    let id = Uuid()
+    const hostName = Config.HOSTNAME
+    const id = Uuid()
     t.equal(UrlParser.toTransferUri(id), hostName + '/transfers/' + id)
     t.end()
+  })
+
+  toTransferUriTest.test('return value if already transfer uri', test => {
+    const hostName = Config.HOSTNAME
+    const id = `${hostName}/transfers/${Uuid()}`
+    test.equal(UrlParser.toTransferUri(id), id)
+    test.end()
   })
   toTransferUriTest.end()
 })
 
 Test('toAccountUri', toAccountUriTest => {
   toAccountUriTest.test('return path', t => {
-    let hostName = Config.HOSTNAME
-    let name = 'account-name'
+    const hostName = Config.HOSTNAME
+    const name = 'account-name'
     t.equal(UrlParser.toAccountUri(name), hostName + '/accounts/' + name)
     t.end()
+  })
+
+  toAccountUriTest.test('return value if already account uri', test => {
+    const hostName = Config.HOSTNAME
+    const name = `${hostName}/accounts/account-name`
+    test.equal(UrlParser.toAccountUri(name), name)
+    test.end()
   })
   toAccountUriTest.end()
 })

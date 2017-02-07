@@ -2,6 +2,7 @@
 
 const Moment = require('moment')
 const TransferState = require('../../domain/transfer/state')
+const TransferRejectionType = require('../../domain/transfer/rejection-type')
 
 class Transfer {
   create ({
@@ -63,12 +64,16 @@ class Transfer {
     return this
   }
 
-  handleTransferRejected (event) {
-    const rejection_reason = event.payload.rejection_reason // eslint-disable-line
+  handleTransferRejected ({timestamp, payload}) {
+    const reason = payload.rejection_reason // eslint-disable-line
     this.state = TransferState.REJECTED
-    this.rejection_reason = rejection_reason // eslint-disable-line
+    this.rejection_reason = reason // eslint-disable-line
     this.timeline = this.timeline || {}
-    this.timeline.rejected_at = new Date(event.timestamp).toISOString()
+    this.timeline.rejected_at = new Date(timestamp).toISOString()
+    if (reason === TransferRejectionType.CANCELLED && this.credits) {
+      this.credits[0].rejected = true
+      this.credits[0].rejection_message = payload.message || ''
+    }
     return this
   }
 

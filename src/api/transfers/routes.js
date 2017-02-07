@@ -84,7 +84,7 @@ module.exports = [{
       params: {
         id: Joi.string().guid().required().description('Id of transfer to reject')
       },
-      payload: Joi.string().max(512).required().description('Rejection reason')
+      payload: Joi.string().allow(null).max(512).description('Rejection reason')
     }
   }
 },

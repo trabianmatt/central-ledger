@@ -42,7 +42,7 @@ module.exports = {
       })
   },
 
-  RejectTransfer ({ id, rejection_reason }) {
+  RejectTransfer ({ id, rejection_reason, message }) {
     return P.resolve(this.$aggregate.load('Transfer', id))
       .then(transfer => {
         return Validator.validateReject(transfer, rejection_reason)
@@ -50,7 +50,7 @@ module.exports = {
           if (result.alreadyRejected) {
             return transfer
           }
-          transfer.reject({ rejection_reason: rejection_reason }) // eslint-disable-line
+          transfer.reject({ rejection_reason: rejection_reason, message: message }) // eslint-disable-line
           return transfer.$save().then(() => transfer)
         })
       })

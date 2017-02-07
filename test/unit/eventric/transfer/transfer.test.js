@@ -10,12 +10,12 @@ const executionCondition = 'ni:///sha-256;47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3
 Test('transfer', transferTest => {
   transferTest.test('create should', createTransferTest => {
     createTransferTest.test('emit TransferPrepared event', assert => {
-      let transfer = new Transfer()
+      const transfer = new Transfer()
 
-      let emitDomainEvent = Sinon.stub()
+      const emitDomainEvent = Sinon.stub()
       transfer.$emitDomainEvent = emitDomainEvent
 
-      let payload = {
+      const payload = {
         ledger: 'http://usd-ledger.example/USD',
         debits: [
           {
@@ -35,7 +35,7 @@ Test('transfer', transferTest => {
 
       transfer.create(payload)
 
-      let emitDomainEventArgs = emitDomainEvent.firstCall.args
+      const emitDomainEventArgs = emitDomainEvent.firstCall.args
       assert.equal(emitDomainEventArgs[0], 'TransferPrepared')
       assert.deepEqual(emitDomainEventArgs[1], payload)
       assert.end()
@@ -46,18 +46,18 @@ Test('transfer', transferTest => {
 
   transferTest.test('fulfill should', fulfillTransferTest => {
     fulfillTransferTest.test('emit TransferExecuted event', assert => {
-      let transfer = new Transfer()
+      const transfer = new Transfer()
       transfer.execution_condition = executionCondition
       transfer.state = TransferState.PREPARED
 
-      let emitDomainEvent = Sinon.stub()
+      const emitDomainEvent = Sinon.stub()
       transfer.$emitDomainEvent = emitDomainEvent
 
-      let fulfillment = 'oAKAAA'
+      const fulfillment = 'oAKAAA'
 
       transfer.fulfill({ fulfillment })
 
-      let emitDomainEventArgs = emitDomainEvent.firstCall.args
+      const emitDomainEventArgs = emitDomainEvent.firstCall.args
       assert.equal(emitDomainEventArgs[0], 'TransferExecuted')
       assert.deepEqual(emitDomainEventArgs[1], { fulfillment: fulfillment })
       assert.end()
@@ -68,11 +68,11 @@ Test('transfer', transferTest => {
 
   transferTest.test('reject should', rejectTest => {
     rejectTest.test('Emit TransferRejected event', t => {
-      let transfer = new Transfer()
-      let emitDomainEvent = Sinon.stub()
+      const transfer = new Transfer()
+      const emitDomainEvent = Sinon.stub()
       transfer.$emitDomainEvent = emitDomainEvent
 
-      let rejectionReason = 'something bad happened'
+      const rejectionReason = 'something bad happened'
 
       transfer.reject({ rejection_reason: rejectionReason })
 
@@ -84,11 +84,11 @@ Test('transfer', transferTest => {
 
   transferTest.test('settle should', rejectTest => {
     rejectTest.test('Emit TransferSettled event', t => {
-      let transfer = new Transfer()
-      let emitDomainEvent = Sinon.stub()
+      const transfer = new Transfer()
+      const emitDomainEvent = Sinon.stub()
       transfer.$emitDomainEvent = emitDomainEvent
 
-      let settlementId = Uuid()
+      const settlementId = Uuid()
 
       transfer.settle({ settlement_id: settlementId })
 
@@ -100,9 +100,9 @@ Test('transfer', transferTest => {
 
   transferTest.test('handleTransferPrepared should', handleTransferPreparedTest => {
     handleTransferPreparedTest.test('set transfer properties', t => {
-      let transfer = new Transfer()
-      let transferId = Uuid()
-      let event = {
+      const transfer = new Transfer()
+      const transferId = Uuid()
+      const event = {
         aggregate: {
           id: transferId
         },
@@ -128,9 +128,9 @@ Test('transfer', transferTest => {
     })
 
     handleTransferPreparedTest.test('set state to EXECUTED if unconditional transfer', t => {
-      let transfer = new Transfer()
-      let transferId = Uuid()
-      let event = {
+      const transfer = new Transfer()
+      const transferId = Uuid()
+      const event = {
         aggregate: {
           id: transferId
         },
@@ -158,12 +158,12 @@ Test('transfer', transferTest => {
 
   transferTest.test('handleTransferExecuted should', handleTest => {
     handleTest.test('set transfer properties', t => {
-      let transfer = new Transfer()
-      let fulfillment = 'test'
+      const transfer = new Transfer()
+      const fulfillment = 'test'
       t.notOk(transfer.state)
       t.notOk(transfer.fulfillment)
 
-      let result = transfer.handleTransferExecuted({
+      const result = transfer.handleTransferExecuted({
         payload: {
           fulfillment: fulfillment
         }
@@ -178,13 +178,121 @@ Test('transfer', transferTest => {
   })
 
   transferTest.test('handleTransferRejected should', handleTest => {
+    handleTest.test('set rejection_reason to expired and state to rejected and update timeline when expired', test => {
+      const time = new Date().getTime()
+      const transfer = new Transfer()
+      const reason = 'expired'
+
+      test.notOk(transfer.state)
+      test.notOk(transfer.timeline)
+      test.notOk(transfer.rejection_reason)
+
+      const result = transfer.handleTransferRejected({
+        timestamp: time,
+        payload: { rejection_reason: reason }
+      })
+      test.deepEqual(result, transfer)
+      test.equal(transfer.rejection_reason, reason)
+      test.equal(transfer.state, TransferState.REJECTED)
+      test.equal(transfer.timeline.rejected_at, new Date(time).toISOString())
+      test.end()
+    })
+
+    handleTest.test('set rejection_reason to cancelled and state to rejected and update timeline when cancelled', test => {
+      const time = new Date().getTime()
+      const transfer = new Transfer()
+      const reason = 'cancelled'
+
+      test.notOk(transfer.state)
+      test.notOk(transfer.timeline)
+      test.notOk(transfer.rejection_reason)
+
+      const result = transfer.handleTransferRejected({
+        timestamp: time,
+        payload: { rejection_reason: reason, message: 'some cancellation' }
+      })
+
+      test.deepEqual(result, transfer)
+      test.equal(transfer.rejection_reason, reason)
+      test.equal(transfer.state, TransferState.REJECTED)
+      test.equal(transfer.timeline.rejected_at, new Date(time).toISOString())
+      test.end()
+    })
+
+    handleTest.test('set credit rejected and message when cancelled', test => {
+      const transfer = new Transfer()
+      const reason = 'cancelled'
+      const message = 'some cancellation'
+
+      transfer.credits = [{
+        account: 'account1',
+        amount: 10
+      }]
+
+      test.notOk(transfer.credits[0].rejected)
+      test.notOk(transfer.credits[0].rejection_message)
+
+      transfer.handleTransferRejected({
+        timestamp: new Date().getTime(),
+        payload: { rejection_reason: reason, message: message }
+      })
+
+      test.equal(transfer.credits[0].rejected, true)
+      test.equal(transfer.credits[0].rejection_message, message)
+      test.end()
+    })
+
+    handleTest.test('set message to empty if null', test => {
+      const transfer = new Transfer()
+      const reason = 'cancelled'
+
+      transfer.credits = [{
+        account: 'account1',
+        amount: 10
+      }]
+
+      test.notOk(transfer.credits[0].rejected)
+      test.notOk(transfer.credits[0].rejection_message)
+
+      transfer.handleTransferRejected({
+        timestamp: new Date().getTime(),
+        payload: { rejection_reason: reason }
+      })
+
+      test.equal(transfer.credits[0].rejected, true)
+      test.equal(transfer.credits[0].rejection_message, '')
+      test.end()
+    })
+
+    handleTest.test('not set credit rejected and message when expired', test => {
+      const transfer = new Transfer()
+      const reason = 'expired'
+
+      transfer.credits = [{
+        account: 'account1',
+        amount: 10
+      }]
+
+      test.notOk(transfer.credits[0].rejected)
+      test.notOk(transfer.credits[0].rejection_message)
+
+      transfer.handleTransferRejected({
+        timestamp: new Date().getTime(),
+        payload: { rejection_reason: reason }
+      })
+
+      test.notOk(transfer.credits[0].rejected)
+      test.notOk(transfer.credits[0].rejection_message)
+      test.end()
+    })
+
     handleTest.test('set transfer rejection_reason and state and return transfer', t => {
-      let transfer = new Transfer()
-      let rejectionReason = 'Another bad apple'
+      const transfer = new Transfer()
+      const rejectionReason = 'Another bad apple'
       t.notOk(transfer.state)
       t.notOk(transfer.rejection_reason)
 
-      let result = transfer.handleTransferRejected({
+      const result = transfer.handleTransferRejected({
         timestamp: new Date().getTime(),
         payload: { rejection_reason: rejectionReason }
       })
@@ -196,9 +304,9 @@ Test('transfer', transferTest => {
     })
 
     handleTest.test('update timeline rejected_at', t => {
-      let time = new Date().getTime()
-      let transfer = new Transfer()
-      let result = transfer.handleTransferRejected({
+      const time = new Date().getTime()
+      const transfer = new Transfer()
+      const result = transfer.handleTransferRejected({
         timestamp: time,
         payload: { rejection_reason: 'not again' }
       })
@@ -211,10 +319,10 @@ Test('transfer', transferTest => {
 
   transferTest.test('handleTransferSettled should', handleTest => {
     handleTest.test('set state to settled and return transfer', t => {
-      let transfer = new Transfer()
-      let settlementId = Uuid()
+      const transfer = new Transfer()
+      const settlementId = Uuid()
 
-      let result = transfer.handleTransferSettled({
+      const result = transfer.handleTransferSettled({
         timestamp: new Date().getTime(),
         payload: { settlement_id: settlementId }
       })

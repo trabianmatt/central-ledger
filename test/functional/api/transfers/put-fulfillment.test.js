@@ -6,12 +6,14 @@ const Fixtures = require('../../../fixtures')
 const TransferState = require('../../../../src/domain/transfer/state')
 const fulfillment = 'oAKAAA'
 
+const amount = '25.00'
+
 Test('PUT /transfer/:id/fulfillment', putTest => {
   putTest.test('should fulfill a transfer', test => {
     let account1Name = Fixtures.generateAccountName()
     let account2Name = Fixtures.generateAccountName()
     let transferId = Fixtures.generateTransferId()
-    let transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(account1Name, '25'), Fixtures.buildDebitOrCredit(account2Name, '25'))
+    let transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(account1Name, amount), Fixtures.buildDebitOrCredit(account2Name, amount))
 
     Base.createAccount(account1Name)
       .then(() => Base.createAccount(account2Name))
@@ -25,9 +27,9 @@ Test('PUT /transfer/:id/fulfillment', putTest => {
             test.equal(res.body.id, transfer.id)
             test.equal(res.body.ledger, transfer.ledger)
             test.equal(res.body.debits[0].account, transfer.debits[0].account)
-            test.equal(res.body.debits[0].amount, parseInt(transfer.debits[0].amount))
+            test.equal(res.body.debits[0].amount, amount)
             test.equal(res.body.credits[0].account, transfer.credits[0].account)
-            test.equal(res.body.credits[0].amount, parseInt(transfer.credits[0].amount))
+            test.equal(res.body.credits[0].amount, amount)
             test.equal(res.body.execution_condition, transfer.execution_condition)
             test.equal(res.body.expires_at, transfer.expires_at)
             test.equal(res.body.state, TransferState.EXECUTED)
@@ -56,7 +58,7 @@ Test('PUT /transfer/:id/fulfillment', putTest => {
     let account1Name = Fixtures.generateAccountName()
     let account2Name = Fixtures.generateAccountName()
     let transferId = Fixtures.generateTransferId()
-    let transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(account1Name, '25'), Fixtures.buildDebitOrCredit(account2Name, '25'))
+    let transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(account1Name, amount), Fixtures.buildDebitOrCredit(account2Name, amount))
 
     Base.createAccount(account1Name)
       .then(() => Base.createAccount(account2Name))
@@ -72,9 +74,9 @@ Test('PUT /transfer/:id/fulfillment', putTest => {
             test.equal(res.body.id, transfer.id)
             test.equal(res.body.ledger, transfer.ledger)
             test.equal(res.body.debits[0].account, transfer.debits[0].account)
-            test.equal(res.body.debits[0].amount, parseInt(transfer.debits[0].amount))
+            test.equal(res.body.debits[0].amount, amount)
             test.equal(res.body.credits[0].account, transfer.credits[0].account)
-            test.equal(res.body.credits[0].amount, parseInt(transfer.credits[0].amount))
+            test.equal(res.body.credits[0].amount, amount)
             test.equal(res.body.execution_condition, transfer.execution_condition)
             test.equal(res.body.expires_at, transfer.expires_at)
             test.equal(res.body.state, TransferState.EXECUTED)
@@ -90,7 +92,7 @@ Test('PUT /transfer/:id/fulfillment', putTest => {
     let account1Name = Fixtures.generateAccountName()
     let account2Name = Fixtures.generateAccountName()
     let transferId = Fixtures.generateTransferId()
-    let transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(account1Name, '25'), Fixtures.buildDebitOrCredit(account2Name, '25'), Fixtures.getMomentToExpire())
+    let transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(account1Name, amount), Fixtures.buildDebitOrCredit(account2Name, amount), Fixtures.getMomentToExpire())
 
     Base.createAccount(account1Name)
       .then(() => Base.createAccount(account2Name))

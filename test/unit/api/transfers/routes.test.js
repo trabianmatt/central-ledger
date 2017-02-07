@@ -69,17 +69,6 @@ Test('return error if id is not a guid on fulfill', function (assert) {
   })
 })
 
-Test('return error if reject reason missing', function (assert) {
-  let req = Base.buildRequest({ url: '/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/rejection', method: 'PUT', payload: '', headers: { 'Content-Type': 'text/plain' } })
-
-  Base.setup().then(server => {
-    server.inject(req, function (res) {
-      Base.assertBadRequestError(assert, res, [{ message: 'value must be a string', params: { key: 'value', value: null } }])
-      assert.end()
-    })
-  })
-})
-
 Test('return error if invalid content type on rejection', function (assert) {
   let req = Base.buildRequest({ url: '/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/rejection', method: 'PUT', headers: { 'Content-Type': 'application/json' } })
 

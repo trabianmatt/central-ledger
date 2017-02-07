@@ -9,9 +9,9 @@ const Commands = require(`${src}/eventric/transfer/commands`)
 const Validator = require(`${src}/eventric/transfer/validator`)
 const NotFoundError = require('@leveloneproject/central-services-shared').NotFoundError
 
-let noAggregateFound = (id) => P.reject(new Error(`No domainEvents for aggregate of type Transfer with ${id} available`))
+const noAggregateFound = (id) => P.reject(new Error(`No domainEvents for aggregate of type Transfer with ${id} available`))
 
-let assertNotFound = (t, promise) => {
+const assertNotFound = (t, promise) => {
   promise
   .then(result => {
     t.fail('Expected exception')
@@ -49,8 +49,8 @@ Test('Commands Test', commandsTest => {
 
   commandsTest.test('Prepare should', prepareTest => {
     prepareTest.test('return existing transfer', t => {
-      let id = Uuid()
-      let transfer = {}
+      const id = Uuid()
+      const transfer = {}
 
       Commands.$aggregate.load.withArgs('Transfer', id).returns(P.resolve(transfer))
       Validator.validateExistingOnPrepare.returns(P.resolve(transfer))
@@ -63,8 +63,8 @@ Test('Commands Test', commandsTest => {
     })
 
     prepareTest.test('return reject if error thrown on load', t => {
-      let id = Uuid()
-      let error = new Error('Some error')
+      const id = Uuid()
+      const error = new Error('Some error')
 
       Commands.$aggregate.load.returns(P.reject(error))
 
@@ -80,8 +80,8 @@ Test('Commands Test', commandsTest => {
     })
 
     prepareTest.test('create new transfer if matching one does not exist', t => {
-      let id = Uuid()
-      let transfer = {
+      const id = Uuid()
+      const transfer = {
         $save: () => P.resolve()
       }
       Commands.$aggregate.load.withArgs('Transfer', id).returns(noAggregateFound(id))
@@ -100,18 +100,18 @@ Test('Commands Test', commandsTest => {
 
   commandsTest.test('Fulfill should', fulfillTest => {
     fulfillTest.test('return NotFoundError if aggregate not found', t => {
-      let id = Uuid()
-      let fulfillment = 'test'
+      const id = Uuid()
+      const fulfillment = 'test'
 
       Commands.$aggregate.load.withArgs('Transfer', id).returns(noAggregateFound(id))
       assertNotFound(t, Commands.FulfillTransfer({ id: id, fulfillment: fulfillment }))
     })
 
     fulfillTest.test('return error if Validator rejects', t => {
-      let id = Uuid()
-      let fulfillmentCondition = 'test'
-      let transfer = {}
-      let error = new Error()
+      const id = Uuid()
+      const fulfillmentCondition = 'test'
+      const transfer = {}
+      const error = new Error()
 
       Commands.$aggregate.load.withArgs('Transfer', id).returns(P.resolve(transfer))
       Validator.validateFulfillment.returns(P.reject(error))
@@ -132,17 +132,17 @@ Test('Commands Test', commandsTest => {
 
   commandsTest.test('Reject should', rejectTest => {
     rejectTest.test('return NotFoundError id transfer not found', t => {
-      let id = Uuid()
-      let rejectionReason = 'test'
+      const id = Uuid()
+      const rejectionReason = 'test'
       Commands.$aggregate.load.withArgs('Transfer', id).returns(noAggregateFound(id))
       assertNotFound(t, Commands.RejectTransfer({ id: id, rejection_reason: rejectionReason }))
     })
 
     rejectTest.test('return error if Validator rejects', t => {
-      let id = Uuid()
-      let transfer = {}
+      const id = Uuid()
+      const transfer = {}
       Commands.$aggregate.load.withArgs('Transfer', id).returns(transfer)
-      let error = new Error('Validation failed')
+      const error = new Error('Validation failed')
       Validator.validateReject.returns(P.reject(error))
 
       Commands.RejectTransfer({ id: id, rejection_reason: 'reason' })
@@ -157,9 +157,9 @@ Test('Commands Test', commandsTest => {
     })
 
     rejectTest.test('return rejection reason if already rejected', t => {
-      let id = Uuid()
-      let transfer = {}
-      let rejectionReason = 'here we go again'
+      const id = Uuid()
+      const transfer = {}
+      const rejectionReason = 'here we go again'
       Validator.validateReject.withArgs(transfer).returns(P.resolve({ alreadyRejected: true }))
 
       Commands.$aggregate.load.withArgs('Transfer', id).returns(P.resolve(transfer))
@@ -172,11 +172,12 @@ Test('Commands Test', commandsTest => {
     })
 
     rejectTest.test('reject and save transfer if not already rejected', t => {
-      let id = Uuid()
-      let transfer = {}
-      let rejectionReason = 'here we go again'
-      let rejectStub = sandbox.stub()
-      let saveStub = sandbox.stub()
+      const id = Uuid()
+      const transfer = {}
+      const rejectionReason = 'cancelled'
+      const message = 'here we go again'
+      const rejectStub = sandbox.stub()
+      const saveStub = sandbox.stub()
       saveStub.returns(P.resolve())
 
       transfer.$save = saveStub
@@ -186,10 +187,10 @@ Test('Commands Test', commandsTest => {
 
       Commands.$aggregate.load.withArgs('Transfer', id).returns(P.resolve(transfer))
 
-      Commands.RejectTransfer({ id: id, rejection_reason: rejectionReason })
+      Commands.RejectTransfer({ id: id, rejection_reason: rejectionReason, message: message })
       .then(transfer => {
         t.equal(transfer, transfer)
-        t.ok(rejectStub.calledWith(Sinon.match({ rejection_reason: rejectionReason })))
+        t.ok(rejectStub.calledWith(Sinon.match({ rejection_reason: rejectionReason, message: message })))
         t.ok(saveStub.calledOnce)
         t.end()
       })
@@ -200,18 +201,18 @@ Test('Commands Test', commandsTest => {
 
   commandsTest.test('Settle should', settleTest => {
     settleTest.test('return NotFoundError if aggregate not found', t => {
-      let id = Uuid()
-      let settlementId = Uuid()
+      const id = Uuid()
+      const settlementId = Uuid()
 
       Commands.$aggregate.load.withArgs('Transfer', id).returns(noAggregateFound(id))
       assertNotFound(t, Commands.SettleTransfer({ id: id, settlement_id: settlementId }))
     })
 
     settleTest.test('return error if Validator rejects', t => {
-      let id = Uuid()
-      let settlementId = Uuid()
-      let transfer = {}
-      let error = new Error()
+      const id = Uuid()
+      const settlementId = Uuid()
+      const transfer = {}
+      const error = new Error()
 
       Commands.$aggregate.load.withArgs('Transfer', id).returns(P.resolve(transfer))
       Validator.validateSettle.returns(P.reject(error))
@@ -228,11 +229,11 @@ Test('Commands Test', commandsTest => {
     })
 
     settleTest.test('settle and save transfer if not already settled', t => {
-      let id = Uuid()
-      let settlementId = Uuid()
-      let transfer = {}
-      let settleStub = sandbox.stub()
-      let saveStub = sandbox.stub()
+      const id = Uuid()
+      const settlementId = Uuid()
+      const transfer = {}
+      const settleStub = sandbox.stub()
+      const saveStub = sandbox.stub()
       saveStub.returns(P.resolve())
 
       transfer.$save = saveStub

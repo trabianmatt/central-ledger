@@ -16,13 +16,15 @@ Test('TransferTranslator', transferTranslatorTest => {
         'credits': [
           {
             'account': 'http://central-ledger/accounts/bob',
-            'amount': 50
+            'amount': 50,
+            'memo': null
           }
         ],
         'debits': [
           {
             'account': 'http://central-ledger/accounts/alice',
-            'amount': 50
+            'amount': 50,
+            'memo': null
           }
         ],
         'execution_condition': executionCondition,
@@ -42,12 +44,12 @@ Test('TransferTranslator', transferTranslatorTest => {
         credits: [
           {
             account: 'http://central-ledger/accounts/bob',
-            amount: 50
+            amount: '50.00'
           }
         ],
         debits: [
           { account: 'http://central-ledger/accounts/alice',
-            amount: 50
+            amount: '50.00'
           }
         ],
         execution_condition: executionCondition,
@@ -79,18 +81,18 @@ Test('TransferTranslator', transferTranslatorTest => {
       let from = {
         'transferUuid': '3a2a1d9e-8640-4d2d-b06c-84f2cd613209',
         'state': 'prepared',
-        'ledger': 'http: //central-ledger',
-        'debitAmount': '50.00',
+        'ledger': 'http://central-ledger',
+        'debitAmount': 50.00,
         'debitMemo': null,
-        'creditAmount': '50.00',
+        'creditAmount': 50.00,
         'creditMemo': null,
         'executionCondition': executionCondition,
         'cancellationCondition': null,
         'rejectionReason': null,
-        'expiresAt': '2016-12-16T00: 00: 01.000Z',
+        'expiresAt': '2016-12-16T00:00:01.000Z',
         'additionalInfo': null,
-        'preparedDate': '2016-11-16T20: 02: 19.363Z',
-        'executedDate': '2016-11-17T20: 02: 19.363Z',
+        'preparedDate': '2016-11-16T20:02:19.363Z',
+        'executedDate': '2016-11-17T20:02:19.363Z',
         'fulfillment': null,
         'creditRejected': 0,
         'creditRejectionMessage': null,
@@ -102,30 +104,86 @@ Test('TransferTranslator', transferTranslatorTest => {
       }
       let expected = {
         id: 'http://central-ledger/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613209',
-        ledger: 'http: //central-ledger',
+        ledger: 'http://central-ledger',
         credits: [
           { account: 'http://central-ledger/accounts/bob',
             amount: '50.00',
-            memo: null
+            rejected: false
+          }
+        ],
+        debits: [
+          { account: 'http://central-ledger/accounts/alice',
+            amount: '50.00'
+          }
+        ],
+        execution_condition: executionCondition,
+        expires_at: '2016-12-16T00:00:01.000Z',
+        state: 'prepared',
+        timeline: {
+          prepared_at: '2016-11-16T20:02:19.363Z',
+          executed_at: '2016-11-17T20:02:19.363Z'
+        }
+      }
+      let actual = TransferTranslator.toTransfer(from)
+      t.deepEquals(actual, expected)
+      t.end()
+    })
+
+    toTransferTest.test('translate all properties containing a "transferUuid" field', function (t) {
+      let from = {
+        'transferUuid': '3a2a1d9e-8640-4d2d-b06c-84f2cd613209',
+        'state': 'prepared',
+        'ledger': 'http://central-ledger',
+        'debitAmount': 50.00,
+        'debitMemo': 'a debit memo',
+        'creditAmount': 50.00,
+        'creditMemo': 'a credit memo',
+        'executionCondition': executionCondition,
+        'cancellationCondition': 'cancellation condition',
+        'rejectionReason': 'rejection reason',
+        'expiresAt': '2016-12-16T00:00:01.000Z',
+        'additionalInfo': '{}',
+        'preparedDate': '2016-11-16T20:02:19.363Z',
+        'executedDate': '2016-11-17T20:02:19.363Z',
+        'rejectedDate': '2016-11-17T20:02:19.363Z',
+        'fulfillment': 'fulfillment',
+        'creditRejected': 1,
+        'creditRejectionMessage': 'credit rejection message',
+        'creditAccountId': 2,
+        'debitAccountId': 1,
+        'creditAccountName': 'bob',
+        'debitAccountName': 'alice'
+      }
+      let expected = {
+        id: 'http://central-ledger/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613209',
+        ledger: 'http://central-ledger',
+        credits: [
+          { account: 'http://central-ledger/accounts/bob',
+            amount: '50.00',
+            memo: 'a credit memo',
+            rejected: true,
+            rejection_message: 'credit rejection message'
           }
         ],
         debits: [
           { account: 'http://central-ledger/accounts/alice',
             amount: '50.00',
-            memo: null
+            memo: 'a debit memo'
           }
         ],
+        cancellation_condition: 'cancellation condition',
         execution_condition: executionCondition,
-        expires_at: '2016-12-16T00: 00: 01.000Z',
-        rejection_reason: null,
+        expires_at: '2016-12-16T00:00:01.000Z',
+        rejection_reason: 'rejection reason',
         state: 'prepared',
         timeline: {
-          prepared_at: '2016-11-16T20: 02: 19.363Z',
-          executed_at: '2016-11-17T20: 02: 19.363Z'
+          prepared_at: '2016-11-16T20:02:19.363Z',
+          executed_at: '2016-11-17T20:02:19.363Z',
+          rejected_at: '2016-11-17T20:02:19.363Z'
         }
       }
       let actual = TransferTranslator.toTransfer(from)
-      t.deepEquals(expected, actual)
+      t.deepEquals(actual, expected)
       t.end()
     })
 

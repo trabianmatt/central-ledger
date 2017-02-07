@@ -5,8 +5,10 @@ const P = require('bluebird')
 const Moment = require('moment')
 const Logger = require('@leveloneproject/central-services-shared').Logger
 const UrlParser = require('../../lib/urlparser')
+const Util = require('../../lib/util')
 const AccountService = require('../../domain/account')
 const TransferState = require('./state')
+const TransferRejectionType = require('./rejection-type')
 const TransfersReadModel = require('./models/transfers-read-model')
 
 const saveTransferPrepared = ({aggregate, payload, timestamp}) => {
@@ -52,9 +54,13 @@ const saveTransferRejected = ({aggregate, payload, timestamp}) => {
   const fields = {
     state: TransferState.REJECTED,
     rejectionReason: payload.rejection_reason,
-    creditRejected: 1,
-    creditRejectionMessage: payload.rejection_reason,
     rejectedDate: Moment(timestamp)
+  }
+  if (payload.rejection_reason === TransferRejectionType.CANCELLED) {
+    Util.assign(fields, {
+      creditRejected: 1,
+      creditRejectionMessage: payload.message || ''
+    })
   }
   return TransfersReadModel.updateTransfer(aggregate.id, fields)
 }

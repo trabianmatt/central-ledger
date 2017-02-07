@@ -10,8 +10,8 @@ const fulfill = (fulfillment) => {
   return Eventric.getContext().then(ctx => ctx.command('FulfillTransfer', fulfillment))
 }
 
-const reject = (idAndReason) => {
-  return Eventric.getContext().then(ctx => ctx.command('RejectTransfer', idAndReason))
+const reject = (rejection) => {
+  return Eventric.getContext().then(ctx => ctx.command('RejectTransfer', rejection))
 }
 
 const settle = ({id, settlement_id}) => {

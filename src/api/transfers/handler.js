@@ -5,6 +5,7 @@ const NotFoundError = require('@leveloneproject/central-services-shared').NotFou
 const Validator = require('./validator')
 const TransferService = require('../../domain/transfer')
 const TransferState = require('../../domain/transfer/state')
+const TransferRejectionType = require('../../domain/transfer/rejection-type')
 const TransferTranslator = require('../../domain/transfer/translator')
 
 const buildGetTransferResponse = (record) => {
@@ -35,7 +36,8 @@ exports.fulfillTransfer = function (request, reply) {
 exports.rejectTransfer = function (request, reply) {
   const rejection = {
     id: request.params.id,
-    rejection_reason: request.payload
+    rejection_reason: TransferRejectionType.CANCELLED,
+    message: request.payload
   }
 
   return TransferService.reject(rejection)

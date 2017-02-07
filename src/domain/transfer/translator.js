@@ -3,25 +3,54 @@
 const UrlParser = require('../../lib/urlparser')
 const Util = require('../../lib/util')
 
-const eventricProperty = (value, key) => {
-  return key.startsWith('$')
+const transferProperties = [
+  'additional_info',
+  'cancellation_condition',
+  'credits',
+  'debits',
+  'execution_condition',
+  'expires_at',
+  'expiry_duration',
+  'id',
+  'ledger',
+  'rejection_reason',
+  'state',
+  'timeline'
+]
+
+const formatAsset = (asset) => Util.mergeAndOmitNil(asset, {
+  account: UrlParser.toAccountUri(asset.account),
+  amount: Util.formatAmount(asset.amount)
+})
+
+const formatAssets = (assets) => (Array.isArray(assets) ? assets.map(formatAsset) : assets)
+
+const fromTransferAggregate = (t) => {
+  const cleanProperties = Util.omitNil({
+    id: UrlParser.toTransferUri(t.id),
+    credits: formatAssets(t.credits),
+    debits: formatAssets(t.debits),
+    timeline: Util.omitNil(t.timeline)
+  })
+  return Util.mergeAndOmitNil(Util.pick(t, transferProperties), cleanProperties)
 }
 
-const fromTransferAggregate = (t) => Util.merge(Util.omitBy(t, eventricProperty), { id: UrlParser.toTransferUri(t.id), timeline: Util.omitNil(t.timeline) })
-
-const fromTransferReadModel = (t) => ({
-  id: UrlParser.toTransferUri(t.transferUuid),
+const fromTransferReadModel = (t) => fromTransferAggregate({
+  id: t.transferUuid,
   ledger: t.ledger,
   debits: [{
-    account: UrlParser.toAccountUri(t.debitAccountName),
+    account: t.debitAccountName,
     amount: t.debitAmount,
     memo: t.debitMemo
   }],
   credits: [{
-    account: UrlParser.toAccountUri(t.creditAccountName),
+    account: t.creditAccountName,
     amount: t.creditAmount,
-    memo: t.creditMemo
+    memo: t.creditMemo,
+    rejected: t.creditRejected === 1,
+    rejection_message: t.creditRejectionMessage
   }],
+  cancellation_condition: t.cancellationCondition,
   execution_condition: t.executionCondition,
   expires_at: t.expiresAt,
   state: t.state,

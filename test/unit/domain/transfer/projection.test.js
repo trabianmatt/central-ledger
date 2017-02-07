@@ -9,6 +9,7 @@ const Logger = require('@leveloneproject/central-services-shared').Logger
 const UrlParser = require('../../../../src/lib/urlparser')
 const AccountService = require('../../../../src/domain/account')
 const TransferState = require('../../../../src/domain/transfer/state')
+const TransferRejectionType = require('../../../../src/domain/transfer/rejection-type')
 const TransfersReadModel = require('../../../../src/domain/transfer/models/transfers-read-model')
 const TransfersProjection = require('../../../../src/domain/transfer/projection')
 
@@ -196,11 +197,11 @@ Test('Transfers-Projection', transfersProjectionTest => {
   })
 
   transfersProjectionTest.test('handleTransferRejected should', rejectedTest => {
-    const event = {
+    const createEvent = () => ({
       id: 2,
       name: 'TransferRejected',
       payload: {
-        rejection_reason: 'this is a bad transfer'
+        rejection_reason: TransferRejectionType.EXPIRED
       },
       aggregate: {
         id: Uuid(),
@@ -208,37 +209,68 @@ Test('Transfers-Projection', transfersProjectionTest => {
       },
       context: 'Ledger',
       timestamp: 1474471286000
-    }
+    })
 
-    rejectedTest.test('update transfer in read model', assert => {
+    rejectedTest.test('update transfer in read model when expired', test => {
       TransfersReadModel.updateTransfer.returns(P.resolve({}))
-
+      const event = createEvent()
       TransfersProjection.handleTransferRejected(event)
         .then(() => {
-          assert.ok(TransfersReadModel.updateTransfer.calledWith(event.aggregate.id, Sinon.match({
-            state: TransferState.REJECTED,
-            rejectionReason: event.payload.rejection_reason,
-            creditRejected: 1,
-            creditRejectionMessage: event.payload.rejection_reason,
-            rejectedDate: Moment(event.timestamp)
-          })))
-          assert.end()
+          const args = TransfersReadModel.updateTransfer.firstCall.args
+          const id = args[0]
+          const fields = args[1]
+
+          test.equal(id, event.aggregate.id)
+          test.equal(fields.state, TransferState.REJECTED)
+          test.equal(fields.rejectionReason, TransferRejectionType.EXPIRED)
+          test.equal(fields.rejectedDate.toISOString(), Moment(event.timestamp).toISOString())
+          test.equal(fields.hasOwnProperty('creditRejected'), false)
+          test.equal(fields.hasOwnProperty('creditRejectionMessage'), false)
+          test.end()
         })
     })
 
-    rejectedTest.test('update rejectionReason if event provides one', assert => {
-      TransfersReadModel.updateTransfer.returns(P.resolve({}))
+    rejectedTest.test('update transfer in read model when cancelled', test => {
+      const message = 'some cancellation reason'
+      const event = createEvent()
+      event.payload.rejection_reason = TransferRejectionType.CANCELLED
+      event.payload.message = message
 
+      TransfersReadModel.updateTransfer.returns(P.resolve({}))
       TransfersProjection.handleTransferRejected(event)
         .then(() => {
-          assert.ok(TransfersReadModel.updateTransfer.calledWith(event.aggregate.id, Sinon.match({
-            state: TransferState.REJECTED,
-            rejectionReason: event.payload.rejection_reason,
-            creditRejected: 1,
-            creditRejectionMessage: event.payload.rejection_reason,
-            rejectedDate: Moment(event.timestamp)
-          })))
-          assert.end()
+          const args = TransfersReadModel.updateTransfer.firstCall.args
+          const id = args[0]
+          const fields = args[1]
+
+          test.equal(id, event.aggregate.id)
+          test.equal(fields.state, TransferState.REJECTED)
+          test.equal(fields.rejectionReason, TransferRejectionType.CANCELLED)
+          test.equal(fields.rejectedDate.toISOString(), Moment(event.timestamp).toISOString())
+          test.equal(fields.creditRejected, 1)
+          test.equal(fields.creditRejectionMessage, message)
+          test.end()
+        })
+    })
+
+    rejectedTest.test('default credit rejection_message to empty if message is null', test => {
+      const event = createEvent()
+      event.payload.rejection_reason = TransferRejectionType.CANCELLED
+
+      TransfersReadModel.updateTransfer.returns(P.resolve({}))
+      TransfersProjection.handleTransferRejected(event)
+        .then(() => {
+          const args = TransfersReadModel.updateTransfer.firstCall.args
+          const id = args[0]
+          const fields = args[1]
+
+          test.equal(id, event.aggregate.id)
+          test.equal(fields.state, TransferState.REJECTED)
+          test.equal(fields.rejectionReason, TransferRejectionType.CANCELLED)
+          test.equal(fields.rejectedDate.toISOString(), Moment(event.timestamp).toISOString())
+          test.equal(fields.creditRejected, 1)
+          test.equal(fields.creditRejectionMessage, '')
+          test.end()
         })
     })
 
@@ -246,7 +278,7 @@ Test('Transfers-Projection', transfersProjectionTest => {
       const error = new Error()
       TransfersReadModel.updateTransfer.returns(P.reject(error))
 
-      TransfersProjection.handleTransferRejected(event)
+      TransfersProjection.handleTransferRejected(createEvent())
       .then(() => {
         t.ok(Logger.error.calledWith('Error handling TransferRejected event', error))
         t.end()
