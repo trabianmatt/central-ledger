@@ -5,15 +5,12 @@ const Sinon = require('sinon')
 const Test = require('tapes')(require('tape'))
 const P = require('bluebird')
 const Uuid = require('uuid4')
-const NotFoundError = require('@leveloneproject/central-services-shared').NotFoundError
 const Validator = require(`${src}/api/transfers/validator`)
 const Config = require(`${src}/lib/config`)
+const Errors = require('../../../../src/errors')
 const Handler = require(`${src}/api/transfers/handler`)
-const TransferService = require(`${src}/domain/transfer`)
+const TransferService = require('../../../../src/domain/transfer')
 const TransferState = require(`${src}/domain/transfer/state`)
-const AlreadyExistsError = require(`${src}/errors/already-exists-error`)
-const ValidationError = require(`${src}/errors/validation-error`)
-const UnpreparedTransferError = require(`${src}/errors/unprepared-transfer-error`)
 const executionCondition = 'ni:///sha-256;47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU?fpt=preimage-sha-256&cost=0'
 
 const createRequest = (id, payload) => {
@@ -40,6 +37,7 @@ Test('transfer handler', handlerTest => {
     sandbox.stub(TransferService, 'getById')
     sandbox.stub(TransferService, 'reject')
     sandbox.stub(TransferService, 'fulfill')
+    sandbox.stub(TransferService, 'getFulfillment')
     originalHostName = Config.HOSTNAME
     Config.HOSTNAME = hostname
     t.end()
@@ -147,7 +145,7 @@ Test('transfer handler', handlerTest => {
       const errorMessage = 'Error message'
       sandbox.restore()
       const transferId = Uuid()
-      const error = new ValidationError(errorMessage)
+      const error = new Errors.ValidationError(errorMessage)
       sandbox.stub(Validator, 'validate').withArgs(payload, transferId).returns(P.reject(error))
 
       const reply = response => {
@@ -158,7 +156,7 @@ Test('transfer handler', handlerTest => {
       Handler.prepareTransfer(createRequest(transferId, payload), reply)
     })
 
-    prepareTransferTest.test('return error if transfer is already prepared', test => {
+    prepareTransferTest.test('return error if transfer prepare throws', test => {
       const payload = {
         id: 'https://central-ledger/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204',
         ledger: 'http://usd-ledger.example/USD',
@@ -178,7 +176,7 @@ Test('transfer handler', handlerTest => {
         expires_at: '2015-06-16T00:00:01.000Z'
       }
 
-      const error = new AlreadyExistsError()
+      const error = new Error()
       TransferService.prepare.returns(P.reject(error))
 
       const reply = response => {
@@ -231,23 +229,9 @@ Test('transfer handler', handlerTest => {
       Handler.fulfillTransfer(createRequest(fulfillment.id, fulfillment.fulfillment), reply)
     })
 
-    fulfillTransferTest.test('return error if transfer is not prepared', test => {
+    fulfillTransferTest.test('return error if transfer service fulfill throws', test => {
       const fulfillment = { id: '3a2a1d9e-8640-4d2d-b06c-84f2cd613204', fulfillment: 'oAKAAA' }
-      const error = new UnpreparedTransferError()
-      TransferService.fulfill.returns(P.reject(error))
-
-      const reply = response => {
-        test.equal(response, error)
-        test.end()
-      }
-
-      Handler.fulfillTransfer(createRequest(fulfillment.id, fulfillment.fulfillment), reply)
-    })
-
-    fulfillTransferTest.test('return error if transfer has no domain events', test => {
-      const fulfillment = { id: '3a2a1d9e-8640-4d2d-b06c-84f2cd613204', fulfillment: 'oAKAAA' }
-
-      const error = new NotFoundError()
+      const error = new Error()
       TransferService.fulfill.returns(P.reject(error))
 
       const reply = response => {
@@ -305,13 +289,13 @@ Test('transfer handler', handlerTest => {
       Handler.rejectTransfer(request, reply)
     })
 
-    rejectTransferTest.test('return error if transfer has no domain events', test => {
+    rejectTransferTest.test('return error if transfer server reject throws', test => {
       const rejectReason = 'error reason'
       const request = {
         params: { id: '3a2a1d9e-8640-4d2d-b06c-84f2cd613204' },
         payload: rejectReason
       }
-      const error = new NotFoundError()
+      const error = new Error()
       TransferService.reject.returns(P.reject(error))
 
       const reply = response => {
@@ -371,7 +355,7 @@ Test('transfer handler', handlerTest => {
     getTransferByIdTest.test('reply with NotFoundError if transfer null', test => {
       TransferService.getById.returns(P.resolve(null))
       const reply = response => {
-        test.ok(response instanceof NotFoundError)
+        test.ok(response instanceof Errors.NotFoundError)
         test.equal(response.message, 'The requested resource could not be found.')
         test.end()
       }
@@ -397,12 +381,12 @@ Test('transfer handler', handlerTest => {
   handlerTest.test('getTransferFulfillment should', getTransferFulfillmentTest => {
     getTransferFulfillmentTest.test('get fulfillment by transfer id', test => {
       const id = Uuid()
+      const fulfillment = 'oAKAAA'
 
-      const transfer = { transferUuid: id, fulfillment: 'oAKAAA', state: TransferState.EXECUTED }
-      TransferService.getById.returns(P.resolve(transfer))
+      TransferService.getFulfillment.withArgs(id).returns(P.resolve(fulfillment))
 
       const reply = response => {
-        test.equal(response, transfer.fulfillment)
+        test.equal(response, fulfillment)
         return {
           type: type => {
             test.equal(type, 'text/plain')
@@ -414,36 +398,9 @@ Test('transfer handler', handlerTest => {
       Handler.getTransferFulfillment(createRequest(id), reply)
     })
 
-    getTransferFulfillmentTest.test('reply with NotFoundError if transfer not executed', test => {
-      const id = Uuid()
-
-      const transfer = { transferUuid: id, fulfillment: 'oAKAAA', state: TransferState.PREPARED }
-      TransferService.getById.returns(P.resolve(transfer))
-
-      const reply = response => {
-        test.ok(response instanceof NotFoundError)
-        test.equal(response.message, 'The requested resource could not be found.')
-        test.end()
-      }
-
-      Handler.getTransferFulfillment(createRequest(), reply)
-    })
-
-    getTransferFulfillmentTest.test('reply with NotFoundError if transfer null', test => {
-      TransferService.getById.returns(P.resolve(null))
-
-      const reply = response => {
-        test.ok(response instanceof NotFoundError)
-        test.equal(response.message, 'The requested resource could not be found.')
-        test.end()
-      }
-
-      Handler.getTransferFulfillment(createRequest(), reply)
-    })
-
-    getTransferFulfillmentTest.test('return error if model throws error', test => {
+    getTransferFulfillmentTest.test('reply with error if service throws', test => {
       const error = new Error()
-      TransferService.getById.returns(P.reject(error))
+      TransferService.getFulfillment.returns(P.reject(error))
 
       const reply = response => {
         test.equal(response, error)

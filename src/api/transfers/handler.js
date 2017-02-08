@@ -1,12 +1,10 @@
 'use strict'
 
-const NotFoundError = require('@leveloneproject/central-services-shared').NotFoundError
-
 const Validator = require('./validator')
 const TransferService = require('../../domain/transfer')
-const TransferState = require('../../domain/transfer/state')
 const TransferRejectionType = require('../../domain/transfer/rejection-type')
 const TransferTranslator = require('../../domain/transfer/translator')
+const NotFoundError = require('../../errors').NotFoundError
 
 const buildGetTransferResponse = (record) => {
   if (!record) {
@@ -19,7 +17,7 @@ exports.prepareTransfer = function (request, reply) {
   return Validator.validate(request.payload, request.params.id)
     .then(TransferService.prepare)
     .then(result => reply(result.transfer).code((result.existing === true) ? 200 : 201))
-    .catch(e => reply(e))
+    .catch(reply)
 }
 
 exports.fulfillTransfer = function (request, reply) {
@@ -30,7 +28,7 @@ exports.fulfillTransfer = function (request, reply) {
 
   return TransferService.fulfill(fulfillment)
     .then(transfer => reply(transfer).code(200))
-    .catch(e => reply(e))
+    .catch(reply)
 }
 
 exports.rejectTransfer = function (request, reply) {
@@ -42,24 +40,18 @@ exports.rejectTransfer = function (request, reply) {
 
   return TransferService.reject(rejection)
   .then(transfer => reply(transfer).code(200))
-  .catch(e => reply(e))
+  .catch(reply)
 }
 
 exports.getTransferById = function (request, reply) {
   return TransferService.getById(request.params.id)
     .then(buildGetTransferResponse)
     .then(result => reply(result))
-    .catch(e => reply(e))
+    .catch(reply)
 }
 
 exports.getTransferFulfillment = function (request, reply) {
-  return TransferService.getById(request.params.id)
-    .then((transfer) => {
-      if (!transfer || transfer.state !== TransferState.EXECUTED) {
-        throw new NotFoundError('The requested resource could not be found.')
-      }
-      return transfer.fulfillment
-    })
-    .then(result => reply(result).type('text/plain'))
-    .catch(e => reply(e))
+  return TransferService.getFulfillment(request.params.id)
+  .then(result => reply(result).type('text/plain'))
+  .catch(reply)
 }

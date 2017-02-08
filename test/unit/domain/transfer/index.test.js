@@ -5,15 +5,16 @@ const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const P = require('bluebird')
 const Uuid = require('uuid4')
-const TransfersReadModel = require(`${src}/domain/transfer/models/transfers-read-model`)
+const TransfersReadModel = require('../../../../src/domain/transfer/models/transfers-read-model')
 const SettleableTransfersReadModel = require(`${src}/models/settleable-transfers-read-model`)
 const SettlementsModel = require(`${src}/models/settlements`)
 const Events = require('../../../../src/lib/events')
 const Commands = require('../../../../src/domain/transfer/commands')
 const Service = require('../../../../src/domain/transfer')
+const TransferState = require('../../../../src/domain/transfer/state')
 const TransferTranslator = require('../../../../src/domain/transfer/translator')
 const RejectionType = require(`${src}/domain/transfer/rejection-type`)
-const ExpiredTransferError = require(`${src}/errors/expired-transfer-error`)
+const Errors = require('../../../../src/errors')
 
 const createTransfer = (transferId = '3a2a1d9e-8640-4d2d-b06c-84f2cd613204') => {
   return {
@@ -63,6 +64,91 @@ Test('Transfer Service tests', serviceTest => {
       test.end()
     })
     getByIdTest.end()
+  })
+
+  serviceTest.test('getFulfillment should', getFulfillmentTest => {
+    getFulfillmentTest.test('throw TransferNotFoundError if transfer does not exists', test => {
+      const id = Uuid()
+      TransfersReadModel.getById.withArgs(id).returns(P.resolve(null))
+      Service.getFulfillment(id)
+        .then(() => {
+          test.fail('Expected exception')
+        })
+        .catch(Errors.TransferNotFoundError, e => {
+          test.equal(e.message, 'This transfer does not exist')
+        })
+        .catch(e => {
+          test.fail('Expected TransferNotFoundError')
+        })
+        .then(test.end)
+    })
+
+    getFulfillmentTest.test('throw TransferNotConditionError if transfer does not have execution_condition', test => {
+      const id = Uuid()
+      const model = { id }
+      TransfersReadModel.getById.withArgs(id).returns(P.resolve(model))
+
+      Service.getFulfillment(id)
+      .then(() => {
+        test.fail('expected exception')
+      })
+      .catch(Errors.TransferNotConditionalError, e => {
+        test.pass()
+      })
+      .catch(e => {
+        test.fail('Exepected TransferNotConditionalError')
+      })
+      .then(test.end)
+    })
+
+    getFulfillmentTest.test('throw AlreadyRolledBackError if transfer rejected', test => {
+      const id = Uuid()
+      const transfer = { id, executionCondition: 'condition', state: TransferState.REJECTED }
+      TransfersReadModel.getById.withArgs(id).returns(P.resolve(transfer))
+
+      Service.getFulfillment(id)
+      .then(() => {
+        test.fail('expected exception')
+      })
+      .catch(Errors.AlreadyRolledBackError, e => {
+        test.pass()
+      })
+      .catch(e => {
+        test.fail('Exepected AlreadyRolledBackError')
+      })
+      .then(test.end)
+    })
+
+    getFulfillmentTest.test('throw MissingFulfillmentError if transfer does not have fulfillment', test => {
+      const id = Uuid()
+      const transfer = { id, executionCondition: 'condition', state: TransferState.EXECUTED }
+      TransfersReadModel.getById.withArgs(id).returns(P.resolve(transfer))
+
+      Service.getFulfillment(id)
+      .then(() => {
+        test.fail('expected exception')
+      })
+      .catch(Errors.MissingFulfillmentError, e => {
+        test.equal(e.message, 'This transfer has not yet been fulfilled')
+      })
+      .catch(e => {
+        test.fail('Exepected MissingFulfillmentError')
+      })
+      .then(test.end)
+    })
+
+    getFulfillmentTest.test('return transfer fulfillment', test => {
+      const id = Uuid()
+      const fulfillment = 'fulfillment'
+      const transfer = { id, fulfillment, executionCondition: 'condition', state: TransferState.EXECUTED }
+      TransfersReadModel.getById.returns(P.resolve(transfer))
+      Service.getFulfillment(id)
+      .then(result => {
+        test.equal(result, fulfillment)
+        test.end()
+      })
+    })
+    getFulfillmentTest.end()
   })
 
   serviceTest.test('rejectExpired should', rejectTest => {
@@ -211,7 +297,7 @@ Test('Transfer Service tests', serviceTest => {
       let transfer = createTransfer()
       let payload = { id: transfer.id, fulfillment }
 
-      Commands.fulfill.withArgs(payload).returns(P.reject(new ExpiredTransferError()))
+      Commands.fulfill.withArgs(payload).returns(P.reject(new Errors.ExpiredTransferError()))
       Commands.reject.returns(P.resolve({ transfer }))
       Service.fulfill(payload)
       .then(() => {

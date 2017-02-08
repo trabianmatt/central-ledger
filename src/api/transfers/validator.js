@@ -6,7 +6,7 @@ const Moment = require('moment')
 const Config = require('../../lib/config')
 const UrlParser = require('../../lib/urlparser')
 const Account = require('../../domain/account')
-const ValidationError = require('../../errors/validation-error')
+const ValidationError = require('../../errors').ValidationError
 const CryptoConditions = require('../../crypto-conditions')
 
 const allowedScale = Config.AMOUNT.SCALE

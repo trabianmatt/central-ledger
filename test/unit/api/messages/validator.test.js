@@ -5,7 +5,7 @@ const Sinon = require('sinon')
 const P = require('bluebird')
 const Config = require('../../../../src/lib/config')
 const InvalidBodyError = require('@leveloneproject/central-services-error-handling').InvalidBodyError
-const ValidationError = require('../../../../src/errors/validation-error')
+const ValidationError = require('../../../../src/errors').ValidationError
 const Accounts = require('../../../../src/domain/account')
 const Validator = require('../../../../src/api/messages/validator')
 

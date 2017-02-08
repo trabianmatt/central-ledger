@@ -5,13 +5,13 @@ const _ = require('lodash')
 const Moment = require('moment')
 const TransferState = require('../../domain/transfer/state')
 const CryptoConditions = require('../../crypto-conditions')
-const UnpreparedTransferError = require('../../errors/unprepared-transfer-error')
-const UnexecutedTransferError = require('../../errors/unexecuted-transfer-error')
-const AlreadyExistsError = require('../../errors/already-exists-error')
-const ExpiredTransferError = require('../../errors/expired-transfer-error')
+const Errors = require('../../errors')
 
-exports.validateFulfillment = ({state, fulfillment, execution_condition, expires_at}, fulfillmentCondition) => {
+const validateFulfillment = ({state, fulfillment, execution_condition, expires_at}, fulfillmentCondition) => {
   return P.resolve().then(() => {
+    if (!execution_condition) { // eslint-disable-line
+      throw new Errors.TransferNotConditionalError()
+    }
     if ((state === TransferState.EXECUTED || state === TransferState.SETTLED) && fulfillment === fulfillmentCondition) {
       return {
         previouslyFulfilled: true
@@ -19,11 +19,11 @@ exports.validateFulfillment = ({state, fulfillment, execution_condition, expires
     }
 
     if (state !== TransferState.PREPARED) {
-      throw new UnpreparedTransferError()
+      throw new Errors.InvalidModificationError(`Transfers in state ${state} may not be executed`)
     }
 
     if (Moment.utc().isAfter(Moment(expires_at))) {
-      throw new ExpiredTransferError()
+      throw new Errors.ExpiredTransferError()
     }
 
     CryptoConditions.validateFulfillment(fulfillmentCondition, execution_condition)
@@ -34,34 +34,44 @@ exports.validateFulfillment = ({state, fulfillment, execution_condition, expires
   })
 }
 
-exports.validateExistingOnPrepare = (proposed, existing) => {
+const validateExistingOnPrepare = (proposed, existing) => {
   return P.resolve().then(() => {
     if (existing.state !== TransferState.PREPARED || !_.isMatch(existing, _.omit(proposed, ['id']))) {
-      throw new AlreadyExistsError()
+      throw new Errors.InvalidModificationError('Transfer may not be modified in this way')
     }
     return existing
   })
 }
 
-exports.validateReject = ({state, rejection_reason}, rejectionReason) => {
+const validateReject = ({state, rejection_reason, execution_condition}, rejectionReason) => {
   return P.resolve().then(() => {
+    if (!execution_condition) { // eslint-disable-line
+      throw new Errors.TransferNotConditionalError()
+    }
     if (state === TransferState.REJECTED && rejection_reason === rejectionReason) { // eslint-disable-line
       return { alreadyRejected: true }
     }
 
     if (state !== TransferState.PREPARED) {
-      throw new UnpreparedTransferError()
+      throw new Errors.InvalidModificationError(`Transfers in state ${state} may not be rejected`)
     }
 
     return { alreadyRejected: false }
   })
 }
 
-exports.validateSettle = ({id, state}) => {
+const validateSettle = ({id, state}) => {
   return P.resolve().then(() => {
     if (state !== TransferState.EXECUTED) {
-      throw new UnexecutedTransferError()
+      throw new Errors.UnexecutedTransferError()
     }
     return
   })
+}
+
+module.exports = {
+  validateExistingOnPrepare,
+  validateFulfillment,
+  validateReject,
+  validateSettle
 }

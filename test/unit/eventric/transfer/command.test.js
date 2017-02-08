@@ -7,7 +7,7 @@ const Uuid = require('uuid4')
 const P = require('bluebird')
 const Commands = require(`${src}/eventric/transfer/commands`)
 const Validator = require(`${src}/eventric/transfer/validator`)
-const NotFoundError = require('@leveloneproject/central-services-shared').NotFoundError
+const NotFoundError = require('../../../../src/errors').NotFoundError
 
 const noAggregateFound = (id) => P.reject(new Error(`No domainEvents for aggregate of type Transfer with ${id} available`))
 

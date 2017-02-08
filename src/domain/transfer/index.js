@@ -7,12 +7,31 @@ const SettlementsModel = require('../../models/settlements')
 const Commands = require('./commands')
 const Translator = require('./translator')
 const RejectionType = require('./rejection-type')
+const State = require('./state')
 const Events = require('../../lib/events')
-const ExpiredTransferError = require('../../errors/expired-transfer-error')
-const UnpreparedTransferError = require('../../errors/unprepared-transfer-error')
+const Errors = require('../../errors')
 
 const getById = (id) => {
   return TransfersReadModel.getById(id)
+}
+
+const getFulfillment = (id) => {
+  return TransfersReadModel.getById(id)
+  .then(transfer => {
+    if (!transfer) {
+      throw new Errors.TransferNotFoundError()
+    }
+    if (!transfer.executionCondition) {
+      throw new Errors.TransferNotConditionalError()
+    }
+    if (transfer.state === State.REJECTED) {
+      throw new Errors.AlreadyRolledBackError()
+    }
+    if (!transfer.fulfillment) {
+      throw new Errors.MissingFulfillmentError()
+    }
+    return transfer.fulfillment
+  })
 }
 
 const prepare = (payload) => {
@@ -46,9 +65,9 @@ const fulfill = (fulfillment) => {
       Events.emitTransferExecuted(t, { execution_condition_fulfillment: fulfillment.fulfillment })
       return t
     })
-    .catch(ExpiredTransferError, () => {
+    .catch(Errors.ExpiredTransferError, () => {
       return expire(fulfillment.id)
-      .then(() => { throw new UnpreparedTransferError() })
+      .then(() => { throw new Errors.UnpreparedTransferError() })
     })
 }
 
@@ -78,6 +97,7 @@ const settle = () => {
 module.exports = {
   fulfill,
   getById,
+  getFulfillment,
   prepare,
   reject,
   rejectExpired,

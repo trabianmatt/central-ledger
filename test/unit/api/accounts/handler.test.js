@@ -7,8 +7,7 @@ const Config = require('../../../../src/lib/config')
 const Handler = require('../../../../src/api/accounts/handler')
 const Account = require('../../../../src/domain/account')
 const PositionService = require('../../../../src/domain/position')
-const NotFoundError = require('@leveloneproject/central-services-shared').NotFoundError
-const RecordExistsError = require('../../../../src/errors/record-exists-error')
+const Errors = require('../../../../src/errors')
 
 const createGet = name => {
   return {
@@ -86,7 +85,7 @@ Test('accounts handler', handlerTest => {
       Account.getByName.returns(P.resolve(null))
 
       const reply = response => {
-        test.ok(response instanceof NotFoundError)
+        test.ok(response instanceof Errors.NotFoundError)
         test.equal(response.message, 'The requested resource could not be found.')
         test.end()
       }
@@ -114,7 +113,7 @@ Test('accounts handler', handlerTest => {
       PositionService.calculateForAccount.withArgs(account).returns(P.resolve(null))
 
       const reply = response => {
-        test.ok(response instanceof NotFoundError)
+        test.ok(response instanceof Errors.NotFoundError)
         test.equal(response.message, 'The requested resource could not be found.')
         test.end()
       }
@@ -178,7 +177,7 @@ Test('accounts handler', handlerTest => {
       Account.getByName.withArgs(payload.name).returns(P.resolve(account))
 
       const reply = response => {
-        test.ok(response instanceof RecordExistsError)
+        test.ok(response instanceof Errors.RecordExistsError)
         test.equal(response.message, 'The account has already been registered')
         test.end()
       }

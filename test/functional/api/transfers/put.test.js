@@ -114,11 +114,11 @@ Test('PUT /transfers', putTest => {
         transfer.credits.push(Fixtures.buildDebitOrCredit(account1Name, amount))
 
         Base.prepareTransfer(transferId, transfer)
-          .expect(422)
+          .expect(400)
           .expect('Content-Type', /json/)
           .then(res => {
-            test.equal(res.body.id, 'AlreadyExistsError')
-            test.equal(res.body.message, 'The specified entity already exists and may not be modified.')
+            test.equal(res.body.id, 'InvalidModificationError')
+            test.equal(res.body.message, 'Transfer may not be modified in this way')
             test.end()
           })
       })
@@ -138,11 +138,11 @@ Test('PUT /transfers', putTest => {
       .delay(100)
       .then(() => {
         Base.prepareTransfer(transferId, transfer)
-          .expect(422)
+          .expect(400)
           .expect('Content-Type', /json/)
           .then(res => {
-            test.equal(res.body.id, 'AlreadyExistsError')
-            test.equal(res.body.message, 'The specified entity already exists and may not be modified.')
+            test.equal(res.body.id, 'InvalidModificationError')
+            test.equal(res.body.message, 'Transfer may not be modified in this way')
             test.end()
           })
       })

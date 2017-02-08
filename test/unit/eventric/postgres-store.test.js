@@ -7,7 +7,6 @@ const P = require('bluebird')
 const Uuid = require('uuid4')
 const PostgresStore = require(`${src}/eventric/postgres-store`).default
 const Db = require(`${src}/db`)
-const AlreadyExistsError = require(`${src}/errors/already-exists-error`)
 
 Test('postgres store test', storeTest => {
   let sandbox
@@ -158,22 +157,6 @@ Test('postgres store test', storeTest => {
               test.equal(result.timestamp, domainEvent.timestamp.getTime())
               test.end()
             })
-        })
-    })
-
-    saveDomainEventTest.test('throw AlreadyExistsError if duplicate key error', test => {
-      let error = new Error('padding - duplicate key value violates unique constraint - padding')
-      tableStub.insertAsync.returns(P.reject(error))
-      setSequenceNumber(0)
-      createStore()
-        .then(store => store.saveDomainEvent(createDomainEvent()))
-        .catch(AlreadyExistsError, e => {
-          test.pass(e)
-          test.end()
-        })
-        .catch(e => {
-          test.fail('Wrong exception thrown')
-          test.end()
         })
     })
 

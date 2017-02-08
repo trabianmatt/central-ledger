@@ -2,7 +2,7 @@
 
 const P = require('bluebird')
 const Model = require('./model')
-const ValidationError = require('../../errors/validation-error')
+const ValidationError = require('../../errors').ValidationError
 const UrlParser = require('../../lib/urlparser')
 const Crypto = require('../../lib/crypto')
 

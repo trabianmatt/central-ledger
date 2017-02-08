@@ -2,7 +2,7 @@
 
 const UrlParser = require('../lib/urlparser')
 const AccountService = require('../domain/account')
-const NotFoundError = require('@leveloneproject/central-services-shared').NotFoundError
+const NotFoundError = require('../errors').NotFoundError
 
 const sendNotFoundAndClose = (socket, message) => {
   socket.send(JSON.stringify(new NotFoundError(message).payload))

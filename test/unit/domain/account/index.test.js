@@ -6,7 +6,7 @@ const P = require('bluebird')
 const Uuid = require('uuid4')
 const Model = require('../../../../src/domain/account/model')
 const Crypto = require('../../../../src/lib/crypto')
-const ValidationError = require('../../../../src/errors/validation-error')
+const ValidationError = require('../../../../src/errors').ValidationError
 const AccountService = require('../../../../src/domain/account')
 
 Test('Account service', serviceTest => {

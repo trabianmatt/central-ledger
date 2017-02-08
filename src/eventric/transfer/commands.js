@@ -2,8 +2,7 @@
 
 const P = require('bluebird')
 const Validator = require('./validator')
-const AggregateNotFoundError = require('../../errors/aggregate-not-found-error')
-const NotFoundError = require('@leveloneproject/central-services-shared').NotFoundError
+const Errors = require('../../errors')
 
 module.exports = {
   PrepareTransfer (proposed) {
@@ -11,7 +10,7 @@ module.exports = {
     return P.resolve(this.$aggregate.load('Transfer', id))
     .then(existing => Validator.validateExistingOnPrepare(proposed, existing))
     .then(existing => { return { existing: true, transfer: existing } })
-    .catch(AggregateNotFoundError, () => {
+    .catch(Errors.AggregateNotFoundError, () => {
       return this.$aggregate.create('Transfer', {
         ledger,
         debits,
@@ -37,8 +36,8 @@ module.exports = {
           return transfer.$save().then(() => transfer)
         })
       })
-      .catch(AggregateNotFoundError, () => {
-        throw new NotFoundError('The requested resource could not be found.')
+      .catch(Errors.AggregateNotFoundError, () => {
+        throw new Errors.NotFoundError('The requested resource could not be found.')
       })
   },
 
@@ -54,8 +53,8 @@ module.exports = {
           return transfer.$save().then(() => transfer)
         })
       })
-      .catch(AggregateNotFoundError, () => {
-        throw new NotFoundError('The requested resource could not be found.')
+      .catch(Errors.AggregateNotFoundError, () => {
+        throw new Errors.NotFoundError('The requested resource could not be found.')
       })
   },
 
@@ -68,8 +67,8 @@ module.exports = {
         return transfer.$save().then(() => transfer)
       })
     })
-    .catch(AggregateNotFoundError, () => {
-      throw new NotFoundError()
+    .catch(Errors.AggregateNotFoundError, () => {
+      throw new Errors.NotFoundError()
     })
   }
 }

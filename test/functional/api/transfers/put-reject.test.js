@@ -99,11 +99,38 @@ Test('PUT /transfers/:id/reject', putTest => {
       .delay(100)
       .then(() => {
         Base.rejectTransfer(transferId, reason)
+          .expect(400)
+          .expect('Content-Type', /json/)
+          .then(res => {
+            test.equal(res.body.id, 'InvalidModificationError')
+            test.equal(res.body.message, 'Transfers in state executed may not be rejected')
+            test.end()
+          })
+      })
+  })
+
+  putTest.test('should return error when rejecting unconditional transfer', test => {
+    const reason = 'some reason'
+    const transferId = Fixtures.generateTransferId()
+    const fulfillment = 'oAKAAA'
+
+    const account1Name = Fixtures.generateAccountName()
+    const account2Name = Fixtures.generateAccountName()
+    const transfer = Fixtures.buildUnconditionalTransfer(transferId, Fixtures.buildDebitOrCredit(account1Name, amount), Fixtures.buildDebitOrCredit(account2Name, amount))
+
+    Base.createAccount(account1Name)
+      .then(() => Base.createAccount(account2Name))
+      .then(() => Base.prepareTransfer(transferId, transfer))
+      .delay(100)
+      .then(() => Base.fulfillTransfer(transferId, fulfillment))
+      .delay(100)
+      .then(() => {
+        Base.rejectTransfer(transferId, reason)
           .expect(422)
           .expect('Content-Type', /json/)
           .then(res => {
-            test.equal(res.body.id, 'UnpreparedTransferError')
-            test.equal(res.body.message, 'The provided entity is syntactically correct, but there is a generic semantic problem with it.')
+            test.equal(res.body.id, 'TransferNotConditionalError')
+            test.equal(res.body.message, 'Transfer is not conditional')
             test.end()
           })
       })

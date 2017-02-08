@@ -7,22 +7,18 @@ const Moment = require('moment')
 const _ = require('lodash')
 const Validator = require(`${src}/eventric/transfer/validator`)
 const TransferState = require(`${src}/domain/transfer/state`)
-const UnpreparedTransferError = require(`${src}/errors/unprepared-transfer-error`)
-const UnexecutedTransferError = require(`${src}/errors/unexecuted-transfer-error`)
+const Errors = require('../../../../src/errors')
 const CryptoConditions = require(`${src}/crypto-conditions`)
-const AlreadyExistsError = require(`${src}/errors/already-exists-error`)
-const ExpiredTransferError = require(`${src}/errors/expired-transfer-error`)
 const executionCondition = 'ni:///sha-256;47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU?fpt=preimage-sha-256&cost=0'
 
 Test('validator tests', validatorTest => {
   let sandbox
   let clock
-  let now = Moment('2016-06-16T00:00:01.000Z')
+  const now = Moment('2016-06-16T00:00:01.000Z')
 
   validatorTest.beforeEach(t => {
     sandbox = Sinon.sandbox.create()
     sandbox.stub(CryptoConditions, 'validateFulfillment')
-
     clock = Sinon.useFakeTimers(now.unix())
     t.end()
   })
@@ -34,10 +30,27 @@ Test('validator tests', validatorTest => {
   })
 
   validatorTest.test('validateFulfillment should', fulfillmentTest => {
-    fulfillmentTest.test('return previouslyFulfilled if transfer is Executed and fulfillment is the same', t => {
-      let fulfillment = 'test-fulfillment'
-      let transfer = {
+    fulfillmentTest.test('throw TransferNotConditionalError if transfer does not have execution_condition', test => {
+      const transfer = {
         state: TransferState.EXECUTED,
+        expires_at: now.clone().add(1, 'hour').unix()
+      }
+
+      Validator.validateFulfillment(transfer, 'test-fulfillment')
+        .then(() => {
+          test.fail('Expected exception')
+        })
+        .catch(Errors.TransferNotConditionalError, e => {
+          test.ok(e instanceof Errors.TransferNotConditionalError)
+          test.equal(e.message, 'Transfer is not conditional')
+        }).then(test.end)
+    })
+
+    fulfillmentTest.test('return previouslyFulfilled if transfer is Executed and fulfillment is the same', t => {
+      const fulfillment = 'test-fulfillment'
+      const transfer = {
+        state: TransferState.EXECUTED,
+        execution_condition: executionCondition,
         fulfillment,
         expires_at: now.clone().add(1, 'hour').unix()
       }
@@ -50,9 +63,10 @@ Test('validator tests', validatorTest => {
     })
 
     fulfillmentTest.test('return previouslyFulfilled if transfer is Settled and fulfillment is the same', t => {
-      let fulfillment = 'test-fulfillment'
-      let transfer = {
+      const fulfillment = 'test-fulfillment'
+      const transfer = {
         state: TransferState.SETTLED,
+        execution_condition: executionCondition,
         fulfillment,
         expires_at: now.clone().add(1, 'hour').unix()
       }
@@ -64,29 +78,31 @@ Test('validator tests', validatorTest => {
       })
     })
 
-    fulfillmentTest.test('throw UnpreparedTransferError if transfer is not prepared', t => {
-      let transfer = {
-        state: TransferState.EXECUTED,
+    fulfillmentTest.test('throw InvalidModificationError if transfer is not prepared', t => {
+      const transfer = {
+        state: TransferState.REJECTED,
+        execution_condition: executionCondition,
         expires_at: now.clone().add(1, 'hour').unix()
       }
 
       Validator.validateFulfillment(transfer, 'test-fulfillment')
       .then(() => {
         t.fail('Expected exception')
-        t.end()
       })
-      .catch(UnpreparedTransferError, e => {
-        t.ok(e instanceof UnpreparedTransferError)
-        t.end()
+      .catch(Errors.InvalidModificationError, e => {
+        t.equal(e.message, 'Transfers in state rejected may not be executed')
       })
+      .catch(e => {
+        t.fail('Expected InvalidModificationError')
+      })
+      .then(t.end)
     })
 
     fulfillmentTest.test('throw error if validateFulfillmentCondition throw', t => {
-      let error = new Error()
-      let fulfillment = 'fulfillment'
-      let executionCondition = 'execution_condition'
+      const error = new Error()
+      const fulfillment = 'fulfillment'
       CryptoConditions.validateFulfillment.withArgs(fulfillment, executionCondition).throws(error)
-      let transfer = {
+      const transfer = {
         state: TransferState.PREPARED,
         execution_condition: executionCondition,
         expires_at: now.clone().add(1, 'hour').unix()
@@ -95,18 +111,18 @@ Test('validator tests', validatorTest => {
       Validator.validateFulfillment(transfer, fulfillment)
       .then(() => {
         t.fail('Expected exception')
-        t.end()
       })
       .catch(e => {
         t.equal(e, error)
-        t.end()
       })
+      .then(t.end)
     })
 
     fulfillmentTest.test('return not previouslyFulfilled if transfer passes all checks', t => {
       CryptoConditions.validateFulfillment.returns(true)
-      let transfer = {
+      const transfer = {
         state: TransferState.PREPARED,
+        execution_condition: executionCondition,
         expires_at: now.clone().add(1, 'hour').unix()
       }
 
@@ -120,48 +136,45 @@ Test('validator tests', validatorTest => {
     fulfillmentTest.test('throw error if current time is greater than expired_at', t => {
       CryptoConditions.validateFulfillment.returns(true)
 
-      let transfer = {
+      const transfer = {
         state: TransferState.PREPARED,
+        execution_condition: executionCondition,
         expires_at: now.clone().subtract(1, 'hour').unix()
       }
 
       Validator.validateFulfillment(transfer, 'fulfillment')
       .then(result => {
         t.fail('Expected exception')
-        t.end()
       })
-      .catch(ExpiredTransferError, e => {
+      .catch(Errors.ExpiredTransferError, e => {
         t.pass()
-        t.end()
       })
       .catch(e => {
         t.fail('Expected ExpiredTransferError')
-        t.end()
       })
+      .then(t.end)
     })
 
     fulfillmentTest.end()
   })
 
   validatorTest.test('validateExistingOnPrepare should', existingPrepareTest => {
-    let assertAlreadyExistsError = (t, proposed, existing) => {
+    const assertAlreadyExistsError = (t, proposed, existing) => {
       Validator.validateExistingOnPrepare(proposed, existing)
       .then(() => {
         t.fail('Expected exception')
-        t.end()
       })
-      .catch(AlreadyExistsError, e => {
-        t.equal(e.message, 'The specified entity already exists and may not be modified.')
-        t.end()
+      .catch(Errors.InvalidModificationError, e => {
+        t.equal(e.message, 'Transfer may not be modified in this way')
       })
       .catch(() => {
-        t.fail('Expected AlreadyExistsError')
-        t.end()
+        t.fail('Expected InvalidModificationError')
       })
+      .then(t.end)
     }
 
     existingPrepareTest.test('reject if proposed does not equal existing', t => {
-      let proposed = {
+      const proposed = {
         id: 'https://central-ledger/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204',
         ledger: 'http://usd-ledger.example/USD',
         debits: [
@@ -179,14 +192,14 @@ Test('validator tests', validatorTest => {
         execution_condition: executionCondition,
         expires_at: '2015-06-16T00:00:01.000Z'
       }
-      let existing = _.omit(proposed, ['debits'])
+      const existing = _.omit(proposed, ['debits'])
       existing.state = TransferState.PREPARED
 
       assertAlreadyExistsError(t, proposed, _.omit(proposed, ['debits']))
     })
 
     existingPrepareTest.test('return existing if existing matches proposed', t => {
-      let proposed = {
+      const proposed = {
         id: 'https://central-ledger/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204',
         ledger: 'http://usd-ledger.example/USD',
         debits: [
@@ -204,7 +217,7 @@ Test('validator tests', validatorTest => {
         execution_condition: executionCondition,
         expires_at: '2015-06-16T00:00:01.000Z'
       }
-      let existing = {
+      const existing = {
         id: 'https://central-ledger/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204',
         ledger: 'http://usd-ledger.example/USD',
         debits: [
@@ -234,7 +247,7 @@ Test('validator tests', validatorTest => {
     })
 
     existingPrepareTest.test('not match id', t => {
-      let proposed = {
+      const proposed = {
         id: 'https://central-ledger/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204',
         ledger: 'http://usd-ledger.example/USD',
         debits: [
@@ -252,7 +265,7 @@ Test('validator tests', validatorTest => {
         execution_condition: executionCondition,
         expires_at: '2015-06-16T00:00:01.000Z'
       }
-      let existing = {
+      const existing = {
         ledger: 'http://usd-ledger.example/USD',
         debits: [
           {
@@ -281,8 +294,8 @@ Test('validator tests', validatorTest => {
     })
 
     existingPrepareTest.test('throw error when existing is not prepared', t => {
-      let proposed = {}
-      let existing = {
+      const proposed = {}
+      const existing = {
         state: TransferState.EXECUTED
       }
 
@@ -293,10 +306,27 @@ Test('validator tests', validatorTest => {
   })
 
   validatorTest.test('validateReject should', rejectTest => {
+    rejectTest.test('throw TransferNotConditionalError if unconditional transfer', test => {
+      const transfer = {
+        state: TransferState.PREPARED
+      }
+
+      Validator.validateReject(transfer, 'rejection reason')
+        .then(() => {
+          test.fail('Expected exception to be thrown')
+        }).catch(Errors.TransferNotConditionalError, e => {
+          test.equal(e.message, 'Transfer is not conditional')
+        }).catch(e => {
+          test.fail(e.message)
+        })
+        .then(test.end)
+    })
+
     rejectTest.test('return alreadyRejected if state is rejected and rejectionReason matches', t => {
-      let rejectionReason = 'r-e-j-e-c-t find out what it means to me'
-      let transfer = {
+      const rejectionReason = 'r-e-j-e-c-t find out what it means to me'
+      const transfer = {
         state: TransferState.REJECTED,
+        execution_condition: executionCondition,
         rejection_reason: rejectionReason
       }
 
@@ -307,80 +337,76 @@ Test('validator tests', validatorTest => {
       })
     })
 
-    rejectTest.test('throw UnpreparedTransferError is state is not prepared', t => {
-      let rejectionReason = 'Dear John,'
-      let transfer = {
-        state: TransferState.REJECTED,
+    rejectTest.test('throw InvalidModificationError if state is executed', test => {
+      const rejectionReason = 'Dear John,'
+      const transfer = {
+        state: TransferState.EXECUTED,
+        execution_condition: executionCondition,
         rejection_reason: 'not ' + rejectionReason
       }
 
       Validator.validateReject(transfer, rejectionReason)
       .then(() => {
-        t.fail('Expected exception to be thrown')
-        t.end()
-      }).catch(UnpreparedTransferError, e => {
-        t.pass()
-        t.end()
+        test.fail('Expected exception to be thrown')
+      }).catch(Errors.InvalidModificationError, e => {
+        test.equal(e.message, 'Transfers in state executed may not be rejected')
       }).catch(e => {
-        t.fail(e.message)
-        t.end()
+        test.fail('Expected InvalidModificationError')
       })
+      .then(test.end)
     })
 
-    rejectTest.test('return alreadyReject false if all transfer is not rejected', t => {
-      let rejectionReason = "It's not you, it's me"
-      let transfer = {
-        state: TransferState.PREPARED
+    rejectTest.test('return alreadyReject false if all transfer is not rejected', test => {
+      const rejectionReason = "It's not you, it's me"
+      const transfer = {
+        state: TransferState.PREPARED,
+        execution_condition: executionCondition
       }
 
       Validator.validateReject(transfer, rejectionReason)
       .then(result => {
-        t.equal(result.alreadyRejected, false)
-        t.end()
+        test.equal(result.alreadyRejected, false)
       })
       .catch(e => {
-        t.fail(e.message)
-        t.end()
+        test.fail(e.message)
       })
+      .then(test.end)
     })
     rejectTest.end()
   })
 
   validatorTest.test('validateSettle should', settleTest => {
-    settleTest.test('throw error when not executed', t => {
-      let transfer = {
+    settleTest.test('throw error when not executed', test => {
+      const transfer = {
         state: TransferState.PREPARED
       }
 
       Validator.validateSettle(transfer)
       .then(() => {
-        t.fail('Expected exception')
-        t.end()
+        test.fail('Expected exception')
       })
-      .catch(UnexecutedTransferError, e => {
-        t.equal(e.message, 'The provided entity is syntactically correct, but there is a generic semantic problem with it.')
-        t.end()
+      .catch(Errors.UnexecutedTransferError, e => {
+        test.equal(e.message, 'The provided entity is syntactically correct, but there is a generic semantic problem with it.')
       })
       .catch(() => {
-        t.fail('Expected UnexecutedTransferError')
-        t.end()
+        test.fail('Expected UnexecutedTransferError')
       })
+      .then(test.end)
     })
 
-    settleTest.test('return transfer if executed', t => {
-      let transfer = {
+    settleTest.test('return transfer if executed', test => {
+      const transfer = {
         state: TransferState.EXECUTED
       }
 
       Validator.validateSettle(transfer)
       .then(() => {
-        t.pass()
-        t.end()
+        test.pass()
       })
       .catch(() => {
-        t.fail('Expected no exception to be thrown')
-        t.end()
+        test.fail('Expected no exception to be thrown')
       })
+      .then(test.end)
     })
 
     settleTest.end()

@@ -9,7 +9,7 @@ const Config = require('../../../../src/lib/config')
 const UrlParser = require('../../../../src/lib/urlparser')
 const Account = require('../../../../src/domain/account')
 const Validator = require('../../../../src/api/transfers/validator')
-const ValidationError = require('../../../../src/errors/validation-error')
+const ValidationError = require('../../../../src/errors').ValidationError
 const CryptoConditions = require('../../../../src/crypto-conditions')
 
 let assertValidationError = (promise, assert, message) => {

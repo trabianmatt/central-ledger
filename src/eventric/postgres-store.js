@@ -2,7 +2,6 @@
 
 const Db = require('../db')
 const Uuid = require('uuid4')
-const AlreadyExistsError = require('../errors/already-exists-error')
 
 class PostgresStore {
   constructor () {
@@ -50,12 +49,6 @@ class PostgresStore {
       aggregateName: domainEvent.aggregate.name,
       sequenceNumber: sequenceNumber,
       timestamp: (new Date(domainEvent.timestamp)).toISOString()
-    })
-    .catch(e => {
-      if (e.message.includes('duplicate key value violates unique constraint') && sequenceNumber === 1) {
-        throw new AlreadyExistsError()
-      }
-      throw e
     })
   }
 

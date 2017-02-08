@@ -153,7 +153,7 @@ const buildAccountPosition = (accountName, payments, receipts) => {
   }
 }
 
-const getMomentToExpire = (timeToPrepareTransfer = 2) => {
+const getMomentToExpire = (timeToPrepareTransfer = 0.5) => {
   return Moment.utc().add(timeToPrepareTransfer, 'seconds')
 }
 

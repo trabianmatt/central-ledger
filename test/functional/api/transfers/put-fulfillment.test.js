@@ -10,10 +10,10 @@ const amount = '25.00'
 
 Test('PUT /transfer/:id/fulfillment', putTest => {
   putTest.test('should fulfill a transfer', test => {
-    let account1Name = Fixtures.generateAccountName()
-    let account2Name = Fixtures.generateAccountName()
-    let transferId = Fixtures.generateTransferId()
-    let transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(account1Name, amount), Fixtures.buildDebitOrCredit(account2Name, amount))
+    const account1Name = Fixtures.generateAccountName()
+    const account2Name = Fixtures.generateAccountName()
+    const transferId = Fixtures.generateTransferId()
+    const transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(account1Name, amount), Fixtures.buildDebitOrCredit(account2Name, amount))
 
     Base.createAccount(account1Name)
       .then(() => Base.createAccount(account2Name))
@@ -42,23 +42,22 @@ Test('PUT /transfer/:id/fulfillment', putTest => {
   })
 
   putTest.test('should return error when fulfilling non-existing transfer', test => {
-    let transferId = Fixtures.generateTransferId()
+    const transferId = Fixtures.generateTransferId()
 
     Base.putApi(`/transfers/${transferId}/fulfillment`, fulfillment, 'text/plain')
       .expect(404)
       .then(res => {
         test.equal(res.body.id, 'NotFoundError')
         test.equal(res.body.message, 'The requested resource could not be found.')
-        test.pass()
         test.end()
       })
   })
 
   putTest.test('should return fulfillment when fulfilling already fulfilled transfer', test => {
-    let account1Name = Fixtures.generateAccountName()
-    let account2Name = Fixtures.generateAccountName()
-    let transferId = Fixtures.generateTransferId()
-    let transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(account1Name, amount), Fixtures.buildDebitOrCredit(account2Name, amount))
+    const account1Name = Fixtures.generateAccountName()
+    const account2Name = Fixtures.generateAccountName()
+    const transferId = Fixtures.generateTransferId()
+    const transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(account1Name, amount), Fixtures.buildDebitOrCredit(account2Name, amount))
 
     Base.createAccount(account1Name)
       .then(() => Base.createAccount(account2Name))
@@ -89,10 +88,10 @@ Test('PUT /transfer/:id/fulfillment', putTest => {
   })
 
   putTest.test('should return error when fulfilling expired transfer', test => {
-    let account1Name = Fixtures.generateAccountName()
-    let account2Name = Fixtures.generateAccountName()
-    let transferId = Fixtures.generateTransferId()
-    let transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(account1Name, amount), Fixtures.buildDebitOrCredit(account2Name, amount), Fixtures.getMomentToExpire())
+    const account1Name = Fixtures.generateAccountName()
+    const account2Name = Fixtures.generateAccountName()
+    const transferId = Fixtures.generateTransferId()
+    const transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(account1Name, amount), Fixtures.buildDebitOrCredit(account2Name, amount), Fixtures.getMomentToExpire())
 
     Base.createAccount(account1Name)
       .then(() => Base.createAccount(account2Name))
@@ -105,7 +104,89 @@ Test('PUT /transfer/:id/fulfillment', putTest => {
           .then(res => {
             test.equal(res.body.id, 'UnpreparedTransferError')
             test.equal(res.body.message, 'The provided entity is syntactically correct, but there is a generic semantic problem with it.')
-            test.pass()
+            test.end()
+          })
+      })
+  })
+
+  putTest.test('should return error when fulfilling unconditional transfer', test => {
+    const account1Name = Fixtures.generateAccountName()
+    const account2Name = Fixtures.generateAccountName()
+    const transferId = Fixtures.generateTransferId()
+    const transfer = Fixtures.buildUnconditionalTransfer(transferId, Fixtures.buildDebitOrCredit(account1Name, amount), Fixtures.buildDebitOrCredit(account2Name, amount))
+
+    Base.createAccount(account1Name)
+      .then(() => Base.createAccount(account2Name))
+      .then(() => Base.prepareTransfer(transferId, transfer))
+      .then(() => {
+        Base.fulfillTransfer(transferId, fulfillment)
+          .expect(422)
+          .expect('Content-Type', 'application/json; charset=utf-8')
+          .then(res => {
+            test.equal(res.body.id, 'TransferNotConditionalError')
+            test.equal(res.body.message, 'Transfer is not conditional')
+            test.end()
+          })
+      })
+  })
+
+  putTest.test('should return error when fulfilling rejected transfer', test => {
+    const account1Name = Fixtures.generateAccountName()
+    const account2Name = Fixtures.generateAccountName()
+    const transferId = Fixtures.generateTransferId()
+    const transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(account1Name, amount), Fixtures.buildDebitOrCredit(account2Name, amount), Fixtures.getMomentToExpire())
+
+    Base.createAccount(account1Name)
+      .then(() => Base.createAccount(account2Name))
+      .then(() => Base.prepareTransfer(transferId, transfer))
+      .then(() => Base.rejectTransfer(transferId, 'any reason'))
+      .then(() => {
+        Base.fulfillTransfer(transferId, fulfillment)
+          .expect(400)
+          .expect('Content-Type', 'application/json; charset=utf-8')
+          .then(res => {
+            test.equal(res.body.id, 'InvalidModificationError')
+            test.equal(res.body.message, 'Transfers in state rejected may not be executed')
+            test.end()
+          })
+      })
+  })
+
+  putTest.test('should return error when fulfillment is invalid', test => {
+    const account1Name = Fixtures.generateAccountName()
+    const account2Name = Fixtures.generateAccountName()
+    const transferId = Fixtures.generateTransferId()
+    const transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(account1Name, amount), Fixtures.buildDebitOrCredit(account2Name, amount))
+
+    Base.createAccount(account1Name)
+      .then(() => Base.createAccount(account2Name))
+      .then(() => Base.prepareTransfer(transferId, transfer))
+      .then(() => {
+        Base.fulfillTransfer(transferId, 'garbage')
+          .expect(400)
+          .expect('Content-Type', 'application/json; charset=utf-8')
+          .then(res => {
+            test.equal(res.body.id, 'InvalidBodyError')
+            test.end()
+          })
+      })
+  })
+
+  putTest.test('should return error when fulfullment is incorrect', test => {
+    const account1Name = Fixtures.generateAccountName()
+    const account2Name = Fixtures.generateAccountName()
+    const transferId = Fixtures.generateTransferId()
+    const transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(account1Name, amount), Fixtures.buildDebitOrCredit(account2Name, amount))
+
+    Base.createAccount(account1Name)
+      .then(() => Base.createAccount(account2Name))
+      .then(() => Base.prepareTransfer(transferId, transfer))
+      .then(() => {
+        Base.fulfillTransfer(transferId, 'oCKAIOwXK5OtXlY79JMscOEkUDTDVGfvLv1NZOv4GWg0Z-K_')
+          .expect(422)
+          .expect('Content-Type', 'application/json; charset=utf-8')
+          .then(res => {
+            test.equal(res.body.id, 'UnmetConditionError')
             test.end()
           })
       })
