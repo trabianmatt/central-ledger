@@ -12,24 +12,47 @@ class Transfer {
       execution_condition,
       expires_at
     }) {
-    return this.$emitDomainEvent('TransferPrepared', {
+    const payload = {
       ledger,
       debits,
-      credits,
-      execution_condition,
-      expires_at
-    })
+      credits
+    }
+
+    if (execution_condition) { // eslint-disable-line
+      payload.execution_condition = execution_condition // eslint-disable-line
+      payload.expires_at = expires_at // eslint-disable-line
+      return this._emitTransferPrepared(payload)
+    } else {
+      this._emitTransferPrepared(payload)
+      return this._emitTransferExecuted({})
+    }
   }
 
   fulfill (payload) {
-    return this.$emitDomainEvent('TransferExecuted', payload)
+    return this._emitTransferExecuted(payload)
   }
 
   reject (payload) {
-    return this.$emitDomainEvent('TransferRejected', payload)
+    return this._emitTransferRejected(payload)
   }
 
   settle (payload) {
+    return this._emitTransferSettled(payload)
+  }
+
+  _emitTransferPrepared (payload) {
+    return this.$emitDomainEvent('TransferPrepared', payload)
+  }
+
+  _emitTransferExecuted (payload) {
+    return this.$emitDomainEvent('TransferExecuted', payload)
+  }
+
+  _emitTransferRejected (payload) {
+    return this.$emitDomainEvent('TransferRejected', payload)
+  }
+
+  _emitTransferSettled (payload) {
     return this.$emitDomainEvent('TransferSettled', payload)
   }
 
@@ -40,19 +63,10 @@ class Transfer {
     this.credits = event.payload.credits
     this.execution_condition = event.payload.execution_condition
     this.expires_at = event.payload.expires_at
-    const time = Moment(event.timestamp).toISOString()
-    const timeline = {
-      prepared_at: time
+    this.state = TransferState.PREPARED
+    this.timeline = {
+      prepared_at: Moment(event.timestamp).toISOString()
     }
-
-    let state = TransferState.PREPARED
-    const executionCondition = event.payload.execution_condition
-    if (!executionCondition) {
-      state = TransferState.EXECUTED
-      timeline.executed_at = time
-    }
-    this.state = state
-    this.timeline = timeline
     return this
   }
 
@@ -80,7 +94,6 @@ class Transfer {
   handleTransferSettled (event) {
     this.state = TransferState.SETTLED
     this.settlement_id = event.payload.settlement_id
-
     return this
   }
 }

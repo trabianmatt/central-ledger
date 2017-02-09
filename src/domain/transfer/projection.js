@@ -3,6 +3,7 @@
 const _ = require('lodash')
 const P = require('bluebird')
 const Moment = require('moment')
+const DA = require('deasync-promise')
 const Logger = require('@leveloneproject/central-services-shared').Logger
 const UrlParser = require('../../lib/urlparser')
 const Util = require('../../lib/util')
@@ -74,24 +75,24 @@ const initialize = (params, done) => {
 }
 
 const handleTransferPrepared = (event) => {
-  return saveTransferPrepared(event)
+  return DA(saveTransferPrepared(event)
     .catch(err => {
       Logger.error('Error handling TransferPrepared event', err)
-    })
+    }))
 }
 
 const handleTransferExecuted = (event) => {
-  return saveTransferExecuted(event)
+  return DA(saveTransferExecuted(event)
     .catch(err => {
       Logger.error('Error handling TransferExecuted event', err)
-    })
+    }))
 }
 
 const handleTransferRejected = (event) => {
-  return saveTransferRejected(event)
+  return DA(saveTransferRejected(event)
     .catch(err => {
       Logger.error('Error handling TransferRejected event', err)
-    })
+    }))
 }
 
 module.exports = {

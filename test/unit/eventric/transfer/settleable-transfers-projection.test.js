@@ -65,10 +65,8 @@ Test('Transfers-Projection', transfersProjectionTest => {
       ExecutedTransfers.create.withArgs({ id: event.aggregate.id }).returns(P.resolve())
 
       SettleableTransfersProjection.handleTransferExecuted(event)
-      .then(result => {
-        t.ok(ExecutedTransfers.create.calledOnce)
-        t.end()
-      })
+      t.ok(ExecutedTransfers.create.calledOnce)
+      t.end()
     })
 
     executedTest.test('log error', t => {
@@ -78,10 +76,8 @@ Test('Transfers-Projection', transfersProjectionTest => {
       ExecutedTransfers.create.withArgs({ id: event.aggregate.id }).returns(P.reject(error))
 
       SettleableTransfersProjection.handleTransferExecuted(event)
-      .then(() => {
-        t.ok(Logger.error.calledWith('Error handling TransferExecuted event', error))
-        t.end()
-      })
+      t.ok(Logger.error.calledWith('Error handling TransferExecuted event', error))
+      t.end()
     })
 
     executedTest.end()
@@ -94,10 +90,8 @@ Test('Transfers-Projection', transfersProjectionTest => {
       SettledTransfers.create.withArgs({ id: event.aggregate.id, settlementId: event.payload.settlement_id }).returns(P.resolve())
 
       SettleableTransfersProjection.handleTransferSettled(event)
-      .then(result => {
-        t.ok(SettledTransfers.create.calledOnce)
-        t.end()
-      })
+      t.ok(SettledTransfers.create.calledOnce)
+      t.end()
     })
 
     settledTest.test('log error', t => {
@@ -106,10 +100,8 @@ Test('Transfers-Projection', transfersProjectionTest => {
       SettledTransfers.create.withArgs({ id: event.aggregate.id, settlementId: event.payload.settlement_id }).returns(P.reject(error))
 
       SettleableTransfersProjection.handleTransferSettled(event)
-      .then(() => {
-        t.ok(Logger.error.calledWith('Error handling TransferSettled event', error))
-        t.end()
-      })
+      t.ok(Logger.error.calledWith('Error handling TransferSettled event', error))
+      t.end()
     })
 
     settledTest.end()

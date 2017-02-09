@@ -6,17 +6,11 @@ const Fixtures = require('../../../fixtures')
 
 Test('POST /webhooks/settle-transfers', settleTest => {
   settleTest.test('should settle transfers', test => {
-    let account1Name = Fixtures.generateAccountName()
-    let account2Name = Fixtures.generateAccountName()
     let transferId = Fixtures.generateTransferId()
-    let transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(account1Name, '50'), Fixtures.buildDebitOrCredit(account2Name, '50'))
+    let transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(Base.account1Name, '50'), Fixtures.buildDebitOrCredit(Base.account2Name, '50'))
 
-    Base.createAccount(account1Name)
-      .then(() => Base.createAccount(account2Name))
-      .then(() => Base.prepareTransfer(transferId, transfer))
-      .delay(100)
+    Base.prepareTransfer(transferId, transfer)
       .then(() => Base.fulfillTransfer(transferId, 'oAKAAA'))
-      .delay(100)
       .then(() => {
         Base.postAdmin('/webhooks/settle-transfers', {})
           .expect(200)

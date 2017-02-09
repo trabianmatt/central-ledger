@@ -50,6 +50,7 @@
     "boom": "4.2.0",
     "db-migrate": "0.10.0-beta.20",
     "db-migrate-pg": "0.1.11",
+    "deasync-promise": "1.0.1",
     "decimal.js": "7.1.0",
     "eventric": "0.26.0",
     "five-bells-condition": "5.0.0",

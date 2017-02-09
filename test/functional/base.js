@@ -1,76 +1,65 @@
 'use strict'
 
-let host = process.env.HOST_IP || 'localhost'
+const host = process.env.HOST_IP || 'localhost'
 const RequestApi = require('supertest-as-promised')('http://' + host + ':3000')
 const RequestAdmin = require('supertest-as-promised')('http://' + host + ':3001')
 const Encoding = require('@leveloneproject/central-services-shared').Encoding
+const DA = require('deasync-promise')
 
 const basicAuth = (name, password) => {
   const credentials = Encoding.toBase64(name + ':' + password)
   return { 'Authorization': `Basic ${credentials}` }
 }
 
-function getApi (path, headers = {}) {
-  return RequestApi.get(path).set(headers)
+let account1promise
+let account2promise
+const account1 = () => {
+  if (!account1promise) {
+    account1promise = createAccount('dfsp1', 'dfsp1').then(res => res.body)
+  }
+  return DA(account1promise)
 }
 
-function postApi (path, data, contentType = 'application/json') {
-  return RequestApi.post(path).set('Content-Type', contentType).send(data)
+const account2 = () => {
+  if (!account2promise) {
+    account2promise = createAccount('dfsp2', 'dfsp2').then(res => res.body)
+  }
+  return DA(account2promise)
 }
 
-function putApi (path, data, contentType = 'application/json') {
-  return RequestApi.put(path).set('Content-Type', contentType).send(data)
-}
+const getApi = (path, headers = {}) => RequestApi.get(path).set(headers)
 
-function getAdmin (path, headers = {}) {
-  return RequestAdmin.get(path).set(headers)
-}
+const postApi = (path, data, contentType = 'application/json') => RequestApi.post(path).set('Content-Type', contentType).send(data)
 
-function postAdmin (path, data, contentType = 'application/json') {
-  return RequestAdmin.post(path).set('Content-Type', contentType).send(data)
-}
+const putApi = (path, data, contentType = 'application/json') => RequestApi.put(path).set('Content-Type', contentType).send(data)
 
-function putAdmin (path, data, contentType = 'application/json') {
-  return RequestAdmin.put(path).set('Content-Type', contentType).send(data)
-}
+const getAdmin = (path, headers = {}) => RequestAdmin.get(path).set(headers)
 
-function createAccount (accountName, password = '1234') {
-  return postApi('/accounts', { name: accountName, password: password })
-}
+const postAdmin = (path, data, contentType = 'application/json') => RequestAdmin.post(path).set('Content-Type', contentType).send(data)
 
-function getAccount (accountName) {
-  return getApi(`/accounts/${accountName}`)
-}
+const putAdmin = (path, data, contentType = 'application/json') => RequestAdmin.put(path).set('Content-Type', contentType).send(data)
 
-function updateAccount (accountName, isDisabled) {
-  return putAdmin(`/accounts/${accountName}`, { is_disabled: isDisabled })
-}
+const createAccount = (accountName, password = '1234') => postApi('/accounts', { name: accountName, password: password })
 
-function getTransfer (transferId) {
-  return getApi(`/transfers/${transferId}`)
-}
+const getAccount = (accountName) => getApi(`/accounts/${accountName}`)
 
-function getFulfillment (transferId) {
-  return getApi(`/transfers/${transferId}/fulfillment`)
-}
+const updateAccount = (accountName, isDisabled) => putAdmin(`/accounts/${accountName}`, { is_disabled: isDisabled })
 
-function prepareTransfer (transferId, transfer) {
-  return putApi(`/transfers/${transferId}`, transfer)
-}
+const getTransfer = (transferId) => getApi(`/transfers/${transferId}`)
 
-function fulfillTransfer (transferId, fulfillment) {
-  return putApi(`/transfers/${transferId}/fulfillment`, fulfillment, 'text/plain')
-}
+const getFulfillment = (transferId) => getApi(`/transfers/${transferId}/fulfillment`)
 
-function rejectTransfer (transferId, reason) {
-  return putApi(`/transfers/${transferId}/rejection`, reason, 'text/plain')
-}
+const prepareTransfer = (transferId, transfer) => putApi(`/transfers/${transferId}`, transfer)
 
-function createCharge (payload) {
-  return postAdmin('/charges', payload)
-}
+const fulfillTransfer = (transferId, fulfillment) => putApi(`/transfers/${transferId}/fulfillment`, fulfillment, 'text/plain')
+
+const rejectTransfer = (transferId, reason) => putApi(`/transfers/${transferId}/rejection`, reason, 'text/plain')
+
+const createCharge = (payload) => postAdmin('/charges', payload)
 
 module.exports = {
+  account1Name: account1().name,
+  account2Name: account2().name,
   basicAuth,
   createAccount,
   createCharge,

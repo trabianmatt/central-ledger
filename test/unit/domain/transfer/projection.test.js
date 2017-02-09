@@ -101,26 +101,24 @@ Test('Transfers-Projection', transfersProjectionTest => {
       TransfersReadModel.saveTransfer.returns(P.resolve({}))
 
       TransfersProjection.handleTransferPrepared(event)
-      .then(() => {
-        test.ok(TransfersReadModel.saveTransfer.calledWith(Sinon.match({
-          transferUuid: event.aggregate.id,
-          state: TransferState.PREPARED,
-          ledger: event.payload.ledger,
-          debitAccountId: dfsp1Account.accountId,
-          debitAmount: event.payload.debits[0].amount,
-          debitMemo: undefined,
-          creditAccountId: dfsp2Account.accountId,
-          creditAmount: event.payload.credits[0].amount,
-          creditMemo: undefined,
-          executionCondition: event.payload.execution_condition,
-          cancellationCondition: undefined,
-          rejectReason: undefined,
-          expiresAt: event.payload.expires_at,
-          additionalInfo: undefined,
-          preparedDate: Moment(event.timestamp)
-        })))
-        test.end()
-      })
+      test.ok(TransfersReadModel.saveTransfer.calledWith(Sinon.match({
+        transferUuid: event.aggregate.id,
+        state: TransferState.PREPARED,
+        ledger: event.payload.ledger,
+        debitAccountId: dfsp1Account.accountId,
+        debitAmount: event.payload.debits[0].amount,
+        debitMemo: undefined,
+        creditAccountId: dfsp2Account.accountId,
+        creditAmount: event.payload.credits[0].amount,
+        creditMemo: undefined,
+        executionCondition: event.payload.execution_condition,
+        cancellationCondition: undefined,
+        rejectReason: undefined,
+        expiresAt: event.payload.expires_at,
+        additionalInfo: undefined,
+        preparedDate: Moment(event.timestamp)
+      })))
+      test.end()
     })
 
     preparedTest.test('log error', t => {
@@ -133,10 +131,8 @@ Test('Transfers-Projection', transfersProjectionTest => {
       TransfersReadModel.saveTransfer.returns(P.reject(error))
 
       TransfersProjection.handleTransferPrepared(event)
-      .then(() => {
-        t.ok(Logger.error.calledWith('Error handling TransferPrepared event', error))
-        t.end()
-      })
+      t.ok(Logger.error.calledWith('Error handling TransferPrepared event', error))
+      t.end()
     })
 
     preparedTest.end()
@@ -172,14 +168,12 @@ Test('Transfers-Projection', transfersProjectionTest => {
       TransfersReadModel.updateTransfer.returns(P.resolve({}))
 
       TransfersProjection.handleTransferExecuted(event)
-        .then(() => {
-          assert.ok(TransfersReadModel.updateTransfer.calledWith(event.aggregate.id, Sinon.match({
-            state: TransferState.EXECUTED,
-            fulfillment: event.payload.fulfillment,
-            executedDate: Moment(event.timestamp)
-          })))
-          assert.end()
-        })
+      assert.ok(TransfersReadModel.updateTransfer.calledWith(event.aggregate.id, Sinon.match({
+        state: TransferState.EXECUTED,
+        fulfillment: event.payload.fulfillment,
+        executedDate: Moment(event.timestamp)
+      })))
+      assert.end()
     })
 
     executedTest.test('log error', t => {
@@ -187,10 +181,8 @@ Test('Transfers-Projection', transfersProjectionTest => {
       TransfersReadModel.updateTransfer.returns(P.reject(error))
 
       TransfersProjection.handleTransferExecuted(event)
-      .then(() => {
-        t.ok(Logger.error.calledWith('Error handling TransferExecuted event', error))
-        t.end()
-      })
+      t.ok(Logger.error.calledWith('Error handling TransferExecuted event', error))
+      t.end()
     })
 
     executedTest.end()
@@ -215,19 +207,17 @@ Test('Transfers-Projection', transfersProjectionTest => {
       TransfersReadModel.updateTransfer.returns(P.resolve({}))
       const event = createEvent()
       TransfersProjection.handleTransferRejected(event)
-        .then(() => {
-          const args = TransfersReadModel.updateTransfer.firstCall.args
-          const id = args[0]
-          const fields = args[1]
+      const args = TransfersReadModel.updateTransfer.firstCall.args
+      const id = args[0]
+      const fields = args[1]
 
-          test.equal(id, event.aggregate.id)
-          test.equal(fields.state, TransferState.REJECTED)
-          test.equal(fields.rejectionReason, TransferRejectionType.EXPIRED)
-          test.equal(fields.rejectedDate.toISOString(), Moment(event.timestamp).toISOString())
-          test.equal(fields.hasOwnProperty('creditRejected'), false)
-          test.equal(fields.hasOwnProperty('creditRejectionMessage'), false)
-          test.end()
-        })
+      test.equal(id, event.aggregate.id)
+      test.equal(fields.state, TransferState.REJECTED)
+      test.equal(fields.rejectionReason, TransferRejectionType.EXPIRED)
+      test.equal(fields.rejectedDate.toISOString(), Moment(event.timestamp).toISOString())
+      test.equal(fields.hasOwnProperty('creditRejected'), false)
+      test.equal(fields.hasOwnProperty('creditRejectionMessage'), false)
+      test.end()
     })
 
     rejectedTest.test('update transfer in read model when cancelled', test => {
@@ -238,19 +228,17 @@ Test('Transfers-Projection', transfersProjectionTest => {
 
       TransfersReadModel.updateTransfer.returns(P.resolve({}))
       TransfersProjection.handleTransferRejected(event)
-        .then(() => {
-          const args = TransfersReadModel.updateTransfer.firstCall.args
-          const id = args[0]
-          const fields = args[1]
+      const args = TransfersReadModel.updateTransfer.firstCall.args
+      const id = args[0]
+      const fields = args[1]
 
-          test.equal(id, event.aggregate.id)
-          test.equal(fields.state, TransferState.REJECTED)
-          test.equal(fields.rejectionReason, TransferRejectionType.CANCELLED)
-          test.equal(fields.rejectedDate.toISOString(), Moment(event.timestamp).toISOString())
-          test.equal(fields.creditRejected, 1)
-          test.equal(fields.creditRejectionMessage, message)
-          test.end()
-        })
+      test.equal(id, event.aggregate.id)
+      test.equal(fields.state, TransferState.REJECTED)
+      test.equal(fields.rejectionReason, TransferRejectionType.CANCELLED)
+      test.equal(fields.rejectedDate.toISOString(), Moment(event.timestamp).toISOString())
+      test.equal(fields.creditRejected, 1)
+      test.equal(fields.creditRejectionMessage, message)
+      test.end()
     })
 
     rejectedTest.test('default credit rejection_message to empty if message is null', test => {
@@ -259,19 +247,17 @@ Test('Transfers-Projection', transfersProjectionTest => {
 
       TransfersReadModel.updateTransfer.returns(P.resolve({}))
       TransfersProjection.handleTransferRejected(event)
-        .then(() => {
-          const args = TransfersReadModel.updateTransfer.firstCall.args
-          const id = args[0]
-          const fields = args[1]
+      const args = TransfersReadModel.updateTransfer.firstCall.args
+      const id = args[0]
+      const fields = args[1]
 
-          test.equal(id, event.aggregate.id)
-          test.equal(fields.state, TransferState.REJECTED)
-          test.equal(fields.rejectionReason, TransferRejectionType.CANCELLED)
-          test.equal(fields.rejectedDate.toISOString(), Moment(event.timestamp).toISOString())
-          test.equal(fields.creditRejected, 1)
-          test.equal(fields.creditRejectionMessage, '')
-          test.end()
-        })
+      test.equal(id, event.aggregate.id)
+      test.equal(fields.state, TransferState.REJECTED)
+      test.equal(fields.rejectionReason, TransferRejectionType.CANCELLED)
+      test.equal(fields.rejectedDate.toISOString(), Moment(event.timestamp).toISOString())
+      test.equal(fields.creditRejected, 1)
+      test.equal(fields.creditRejectionMessage, '')
+      test.end()
     })
 
     rejectedTest.test('log error', t => {
@@ -279,10 +265,8 @@ Test('Transfers-Projection', transfersProjectionTest => {
       TransfersReadModel.updateTransfer.returns(P.reject(error))
 
       TransfersProjection.handleTransferRejected(createEvent())
-      .then(() => {
-        t.ok(Logger.error.calledWith('Error handling TransferRejected event', error))
-        t.end()
-      })
+      t.ok(Logger.error.calledWith('Error handling TransferRejected event', error))
+      t.end()
     })
 
     rejectedTest.end()

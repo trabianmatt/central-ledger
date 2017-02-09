@@ -9,7 +9,7 @@ const executionCondition = 'ni:///sha-256;47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3
 
 Test('transfer', transferTest => {
   transferTest.test('create should', createTransferTest => {
-    createTransferTest.test('emit TransferPrepared event', assert => {
+    createTransferTest.test('emit TransferPrepared event', test => {
       const transfer = new Transfer()
 
       const emitDomainEvent = Sinon.stub()
@@ -36,16 +36,51 @@ Test('transfer', transferTest => {
       transfer.create(payload)
 
       const emitDomainEventArgs = emitDomainEvent.firstCall.args
-      assert.equal(emitDomainEventArgs[0], 'TransferPrepared')
-      assert.deepEqual(emitDomainEventArgs[1], payload)
-      assert.end()
+      test.equal(emitDomainEventArgs[0], 'TransferPrepared')
+      test.deepEqual(emitDomainEventArgs[1], payload)
+      test.end()
+    })
+
+    createTransferTest.test('emit TransferExecuted event for unconditional transfer', test => {
+      const transfer = new Transfer()
+      const emitDomainEvent = Sinon.stub()
+      transfer.$emitDomainEvent = emitDomainEvent
+
+      const payload = {
+        ledger: 'http://usd-ledger.example/USD',
+        debits: [
+          {
+            account: 'http://usd-ledger.example/USD/accounts/alice',
+            amount: '50'
+          }
+        ],
+        credits: [
+          {
+            account: 'http://usd-ledger.example/USD/accounts/bob',
+            amount: '50'
+          }
+        ]
+      }
+
+      transfer.create(payload)
+      test.equal(emitDomainEvent.callCount, 2)
+
+      const firstCallArgs = emitDomainEvent.firstCall.args
+      test.equal(firstCallArgs[0], 'TransferPrepared')
+      test.deepEqual(firstCallArgs[1], payload)
+
+      const secondCallArgs = emitDomainEvent.secondCall.args
+      test.equal(secondCallArgs[0], 'TransferExecuted')
+      test.deepEqual(secondCallArgs[1], {})
+
+      test.end()
     })
 
     createTransferTest.end()
   })
 
   transferTest.test('fulfill should', fulfillTransferTest => {
-    fulfillTransferTest.test('emit TransferExecuted event', assert => {
+    fulfillTransferTest.test('emit TransferExecuted event', test => {
       const transfer = new Transfer()
       transfer.execution_condition = executionCondition
       transfer.state = TransferState.PREPARED
@@ -58,9 +93,9 @@ Test('transfer', transferTest => {
       transfer.fulfill({ fulfillment })
 
       const emitDomainEventArgs = emitDomainEvent.firstCall.args
-      assert.equal(emitDomainEventArgs[0], 'TransferExecuted')
-      assert.deepEqual(emitDomainEventArgs[1], { fulfillment: fulfillment })
-      assert.end()
+      test.equal(emitDomainEventArgs[0], 'TransferExecuted')
+      test.deepEqual(emitDomainEventArgs[1], { fulfillment: fulfillment })
+      test.end()
     })
 
     fulfillTransferTest.end()
@@ -127,7 +162,7 @@ Test('transfer', transferTest => {
       t.end()
     })
 
-    handleTransferPreparedTest.test('set state to EXECUTED if unconditional transfer', t => {
+    handleTransferPreparedTest.test('set state to PREPARED if unconditional transfer', t => {
       const transfer = new Transfer()
       const transferId = Uuid()
       const event = {
@@ -148,8 +183,8 @@ Test('transfer', transferTest => {
       t.equal(transfer.credits, 'credits')
       t.notOk(transfer.execution_condition)
       t.notOk(transfer.expires_at)
-      t.equal(transfer.state, TransferState.EXECUTED)
-      t.deepEquals(transfer.timeline, { prepared_at: '2016-11-29T23:09:36.239Z', executed_at: '2016-11-29T23:09:36.239Z' })
+      t.equal(transfer.state, TransferState.PREPARED)
+      t.deepEquals(transfer.timeline, { prepared_at: '2016-11-29T23:09:36.239Z' })
       t.end()
     })
 
@@ -166,12 +201,14 @@ Test('transfer', transferTest => {
       const result = transfer.handleTransferExecuted({
         payload: {
           fulfillment: fulfillment
-        }
+        },
+        timestamp: 1480460976239
       })
 
       t.deepEqual(result, transfer)
       t.equal(transfer.state, TransferState.EXECUTED)
       t.equal(transfer.fulfillment, fulfillment)
+      t.equal(transfer.timeline.executed_at, '2016-11-29T23:09:36.239Z')
       t.end()
     })
     handleTest.end()

@@ -4,7 +4,7 @@ const Test = require('tape')
 const Base = require('../../base')
 const Fixtures = require('../../../fixtures')
 
-Test('post and get an account', function (assert) {
+Test('post and get an account', assert => {
   const accountName = Fixtures.generateAccountName()
   const password = '1234'
 
@@ -30,39 +30,31 @@ Test('post and get an account', function (assert) {
     })
 })
 
-Test('return the net position for the account as the balance', function (assert) {
+Test('return the net position for the account as the balance', assert => {
   let fulfillment = 'oAKAAA'
-  let account1Name = Fixtures.generateAccountName()
-  let account2Name = Fixtures.generateAccountName()
-
   let transferId = Fixtures.generateTransferId()
-  let transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(account1Name, '50'), Fixtures.buildDebitOrCredit(account2Name, '50'))
+  let transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(Base.account1Name, '50'), Fixtures.buildDebitOrCredit(Base.account2Name, '50'))
 
   let transfer2Id = Fixtures.generateTransferId()
-  let transfer2 = Fixtures.buildTransfer(transfer2Id, Fixtures.buildDebitOrCredit(account2Name, '15'), Fixtures.buildDebitOrCredit(account1Name, '15'))
+  let transfer2 = Fixtures.buildTransfer(transfer2Id, Fixtures.buildDebitOrCredit(Base.account2Name, '15'), Fixtures.buildDebitOrCredit(Base.account1Name, '15'))
 
-  Base.createAccount(account1Name)
-    .then(() => Base.createAccount(account2Name))
-    .then(() => Base.prepareTransfer(transferId, transfer))
-    .delay(100)
+  Base.prepareTransfer(transferId, transfer)
     .then(() => Base.fulfillTransfer(transferId, fulfillment))
     .then(() => Base.prepareTransfer(transfer2Id, transfer2))
-    .delay(100)
     .then(() => Base.fulfillTransfer(transfer2Id, fulfillment))
-    .delay(100)
     .then(() => {
-      Base.getAccount(account1Name)
+      Base.getAccount(Base.account1Name)
         .expect(200)
         .expect('Content-Type', /json/)
         .then(res => {
-          assert.equal(account1Name, res.body.name)
+          assert.equal(Base.account1Name, res.body.name)
           assert.equal('-35', res.body.balance)
           assert.end()
         })
     })
 })
 
-Test('ensure an account name can only be registered once', function (assert) {
+Test('ensure an account name can only be registered once', assert => {
   const accountName = Fixtures.generateAccountName()
   const password = '1234'
 

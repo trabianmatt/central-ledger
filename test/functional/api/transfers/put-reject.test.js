@@ -9,15 +9,10 @@ const amount = '25.00'
 
 Test('PUT /transfers/:id/reject', putTest => {
   putTest.test('should reject a transfer', test => {
-    const account1Name = Fixtures.generateAccountName()
-    const account2Name = Fixtures.generateAccountName()
     const transferId = Fixtures.generateTransferId()
-    const transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(account1Name, amount), Fixtures.buildDebitOrCredit(account2Name, amount))
+    const transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(Base.account1Name, amount), Fixtures.buildDebitOrCredit(Base.account2Name, amount))
 
-    Base.createAccount(account1Name)
-      .then(() => Base.createAccount(account2Name))
-      .then(() => Base.prepareTransfer(transferId, transfer))
-      .delay(100)
+    Base.prepareTransfer(transferId, transfer)
       .then(() => {
         Base.rejectTransfer(transferId)
           .expect(200)
@@ -46,17 +41,11 @@ Test('PUT /transfers/:id/reject', putTest => {
   putTest.test('should return reason when rejecting a rejected transfer', test => {
     const reason = 'some reason'
 
-    const account1Name = Fixtures.generateAccountName()
-    const account2Name = Fixtures.generateAccountName()
     const transferId = Fixtures.generateTransferId()
-    const transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(account1Name, amount), Fixtures.buildDebitOrCredit(account2Name, amount))
+    const transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(Base.account1Name, amount), Fixtures.buildDebitOrCredit(Base.account2Name, amount))
 
-    Base.createAccount(account1Name)
-      .then(() => Base.createAccount(account2Name))
-      .then(() => Base.prepareTransfer(transferId, transfer))
-      .delay(100)
+    Base.prepareTransfer(transferId, transfer)
       .then(() => Base.rejectTransfer(transferId, reason))
-      .delay(100)
       .then(() => {
         Base.rejectTransfer(transferId, reason)
           .expect(200)
@@ -87,16 +76,10 @@ Test('PUT /transfers/:id/reject', putTest => {
     const transferId = Fixtures.generateTransferId()
     const fulfillment = 'oAKAAA'
 
-    const account1Name = Fixtures.generateAccountName()
-    const account2Name = Fixtures.generateAccountName()
-    const transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(account1Name, amount), Fixtures.buildDebitOrCredit(account2Name, amount))
+    const transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(Base.account1Name, amount), Fixtures.buildDebitOrCredit(Base.account2Name, amount))
 
-    Base.createAccount(account1Name)
-      .then(() => Base.createAccount(account2Name))
-      .then(() => Base.prepareTransfer(transferId, transfer))
-      .delay(100)
+    Base.prepareTransfer(transferId, transfer)
       .then(() => Base.fulfillTransfer(transferId, fulfillment))
-      .delay(100)
       .then(() => {
         Base.rejectTransfer(transferId, reason)
           .expect(400)
@@ -114,16 +97,10 @@ Test('PUT /transfers/:id/reject', putTest => {
     const transferId = Fixtures.generateTransferId()
     const fulfillment = 'oAKAAA'
 
-    const account1Name = Fixtures.generateAccountName()
-    const account2Name = Fixtures.generateAccountName()
-    const transfer = Fixtures.buildUnconditionalTransfer(transferId, Fixtures.buildDebitOrCredit(account1Name, amount), Fixtures.buildDebitOrCredit(account2Name, amount))
+    const transfer = Fixtures.buildUnconditionalTransfer(transferId, Fixtures.buildDebitOrCredit(Base.account1Name, amount), Fixtures.buildDebitOrCredit(Base.account2Name, amount))
 
-    Base.createAccount(account1Name)
-      .then(() => Base.createAccount(account2Name))
-      .then(() => Base.prepareTransfer(transferId, transfer))
-      .delay(100)
+    Base.prepareTransfer(transferId, transfer)
       .then(() => Base.fulfillTransfer(transferId, fulfillment))
-      .delay(100)
       .then(() => {
         Base.rejectTransfer(transferId, reason)
           .expect(422)
