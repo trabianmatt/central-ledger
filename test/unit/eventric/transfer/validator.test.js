@@ -294,12 +294,97 @@ Test('validator tests', validatorTest => {
     })
 
     existingPrepareTest.test('throw error when existing is not prepared', t => {
-      const proposed = {}
+      const proposed = { execution_condition: 'condition' }
       const existing = {
-        state: TransferState.EXECUTED
+        state: TransferState.EXECUTED,
+        execution_condition: 'condition'
       }
 
       assertAlreadyExistsError(t, proposed, existing)
+    })
+
+    existingPrepareTest.test('not throw error if transfer is unconditional', test => {
+      const proposed = {
+        id: 'https://central-ledger/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204',
+        ledger: 'http://usd-ledger.example/USD',
+        debits: [
+          {
+            account: 'http://usd-ledger.example/USD/accounts/alice',
+            amount: '50'
+          }
+        ],
+        credits: [
+          {
+            account: 'http://usd-ledger.example/USD/accounts/bob',
+            amount: '50'
+          }
+        ]
+      }
+      const existing = {
+        id: 'https://central-ledger/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204',
+        ledger: 'http://usd-ledger.example/USD',
+        debits: [
+          {
+            account: 'http://usd-ledger.example/USD/accounts/alice',
+            amount: '50'
+          }
+        ],
+        credits: [
+          {
+            account: 'http://usd-ledger.example/USD/accounts/bob',
+            amount: '50'
+          }
+        ],
+        state: TransferState.EXECUTED,
+        $save: () => {},
+        $setIdOnCreation: () => {}
+      }
+
+      Validator.validateExistingOnPrepare(proposed, existing)
+      .then(result => {
+        test.equal(result, existing)
+        test.end()
+      })
+    })
+
+    existingPrepareTest.test('throw error if transfer is unconditional and does not match', test => {
+      const proposed = {
+        id: 'https://central-ledger/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204',
+        ledger: 'http://usd-ledger.example/USD',
+        debits: [
+          {
+            account: 'http://usd-ledger.example/USD/accounts/alice',
+            amount: '50'
+          }
+        ],
+        credits: [
+          {
+            account: 'http://usd-ledger.example/USD/accounts/bob',
+            amount: '50'
+          }
+        ]
+      }
+      const existing = {
+        id: 'https://central-ledger/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204',
+        ledger: 'http://usd-ledger.example/USD',
+        debits: [
+          {
+            account: 'http://usd-ledger.example/USD/accounts/alice',
+            amount: '50'
+          }
+        ],
+        credits: [
+          {
+            account: 'http://usd-ledger.example/USD/accounts/bob',
+            amount: '50.1'
+          }
+        ],
+        state: TransferState.EXECUTED,
+        $save: () => {},
+        $setIdOnCreation: () => {}
+      }
+
+      assertAlreadyExistsError(test, proposed, existing)
     })
 
     existingPrepareTest.end()

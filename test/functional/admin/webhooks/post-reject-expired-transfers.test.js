@@ -1,7 +1,6 @@
 'use strict'
 
 const Test = require('tape')
-const P = require('bluebird')
 const Base = require('../../base')
 const Fixtures = require('../../../fixtures')
 const State = require('../../../../src/domain/transfer/state')
@@ -12,7 +11,7 @@ Test('POST /webhooks/reject-expired-transfers', rejectTest => {
     let transferId = Fixtures.generateTransferId()
     let transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(Base.account1Name, '50'), Fixtures.buildDebitOrCredit(Base.account2Name, '50'), Fixtures.getMomentToExpire())
 
-    P.resolve(Base.prepareTransfer(transferId, transfer))
+    Base.prepareTransfer(transferId, transfer)
       .delay(1000)
       .then(() => {
         Base.postAdmin('/webhooks/reject-expired-transfers', {})
@@ -29,7 +28,7 @@ Test('POST /webhooks/reject-expired-transfers', rejectTest => {
     let transferId = Fixtures.generateTransferId()
     let transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(Base.account1Name, '50'), Fixtures.buildDebitOrCredit(Base.account2Name, '50'), Fixtures.getMomentToExpire())
 
-    P.resolve(Base.prepareTransfer(transferId, transfer))
+    Base.prepareTransfer(transferId, transfer)
       .delay(1000)
       .then(() => Base.postAdmin('/webhooks/reject-expired-transfers', {}))
       .then(() => {

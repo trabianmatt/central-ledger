@@ -9,7 +9,8 @@
     "url": "git@github.com:LevelOneProject/central-ledger.git"
   },
   "config": {
-    "db": "--config ./config/db-migrate.json"
+    "db": "--config ./config/db-migrate.json",
+    "image": "central-ledger"
   },
   "standard": {
     "ignore": [
@@ -18,7 +19,7 @@
   },
   "scripts": {
     "start": "node src/server.js",
-    "ledger-test": "CLEDG_HOSTNAME=http://localhost:3000 CLEDG_EXPIRES_TIMEOUT=5000 npm start",
+    "ledger-test": "npm install five-bells-condition@3.3.1 && CLEDG_HOSTNAME=http://localhost:3000 CLEDG_EXPIRES_TIMEOUT=5000 npm start",
     "dev": "npm run docker:stop && docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d",
     "test": "npm run test:unit | faucet",
     "pretest": "standard",
@@ -29,13 +30,14 @@
     "test:coverage": "istanbul cover tape -- 'test/unit/**/*.test.js'",
     "test:coverage-check": "npm run test:coverage && istanbul check-coverage",
     "test:integration": "./test/integration-runner.sh .env",
-    "test:functional": "./test/functional-runner.sh docker-compose.yml docker-compose.functional.yml .env",
-    "test:circle": "./test/functional-runner.sh docker-compose.yml docker-compose.circle.yml .env",
+    "test:functional": "npm run docker:build && npm run test:functional:test-only",
+    "test:functional:test-only": "./test/functional-runner.sh docker-compose.yml docker-compose.functional.yml .env",
     "db:psql": "docker run -it --net centralledger_back --rm postgres:9.4 sh -c 'exec psql -h postgres -p \"$POSTGRES_PORT_5432_TCP_PORT\" -U central_ledger -d postgres'",
     "migrate": "db-migrate up $npm_package_config_db",
     "migrate:reset": "db-migrate reset $npm_package_config_db",
     "migrate:create": "db-migrate create $npm_package_config_db",
     "migrate:down": "db-migrate down $npm_package_config_db",
+    "docker:build": "docker build -t $npm_package_config_image:latest .",
     "docker:stop": "docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.functional.yml stop",
     "docker:rm": "docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.functional.yml rm -f -v",
     "docker:clean": "docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.functional.yml down --rmi local"
@@ -83,7 +85,6 @@
     "sinon": "1.17.6",
     "standard": "8.5.0",
     "supertest": "2.0.1",
-    "supertest-as-promised": "4.0.2",
     "tap-xunit": "1.4.0",
     "tape": "4.6.2",
     "tapes": "4.1.0"

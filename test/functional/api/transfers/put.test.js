@@ -7,12 +7,16 @@ const TransferState = require('../../../../src/domain/transfer/state')
 const Moment = require('moment')
 const amount = '50.00'
 
+const prepareTransfer = (transferId, transfer) => {
+  return Base.putApi(`/transfers/${transferId}`, transfer)
+}
+
 Test('PUT /transfers', putTest => {
   putTest.test('should prepare a transfer', test => {
     const transferId = Fixtures.generateTransferId()
     const transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(Base.account1Name, amount, { interledger: 'blah', path: 'blah' }), Fixtures.buildDebitOrCredit(Base.account2Name, amount, { interledger: 'blah', path: 'blah' }))
 
-    Base.prepareTransfer(transferId, transfer)
+    prepareTransfer(transferId, transfer)
       .expect(201)
       .expect('Content-Type', /json/)
       .then(res => {
@@ -36,7 +40,7 @@ Test('PUT /transfers', putTest => {
     const transferId = Fixtures.generateTransferId()
     const transfer = Fixtures.buildUnconditionalTransfer(transferId, Fixtures.buildDebitOrCredit(Base.account1Name, amount, { interledger: 'blah', path: 'blah' }), Fixtures.buildDebitOrCredit(Base.account2Name, amount, { interledger: 'blah', path: 'blah' }))
 
-    Base.prepareTransfer(transferId, transfer)
+    prepareTransfer(transferId, transfer)
     .expect(201)
     .expect('Content-Type', /json/)
     .then(res => {
@@ -56,13 +60,32 @@ Test('PUT /transfers', putTest => {
     })
   })
 
+  putTest.test('should not throw error on optimistic transfer with repeat id', test => {
+    const transferId = Fixtures.generateTransferId()
+    const transfer = Fixtures.buildUnconditionalTransfer(transferId, Fixtures.buildDebitOrCredit(Base.account1Name, amount, { interledger: 'blah', path: 'blah' }), Fixtures.buildDebitOrCredit(Base.account2Name, amount, { interledger: 'blah', path: 'blah' }))
+
+    Base.prepareTransfer(transferId, transfer)
+    .then(() =>
+      prepareTransfer(transferId, transfer)
+      .expect(200)
+      .expect('Content-Type', /json/)
+      .then(res => {
+        test.equal(res.body.id, transfer.id)
+        test.equal(res.body.state, TransferState.EXECUTED)
+        test.ok(res.body.timeline.prepared_at)
+        test.ok(res.body.timeline.executed_at)
+        test.end()
+      })
+    )
+  })
+
   putTest.test('should return transfer details when preparing existing transfer', test => {
     const transferId = Fixtures.generateTransferId()
     const transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(Base.account1Name, amount), Fixtures.buildDebitOrCredit(Base.account2Name, amount))
 
     Base.prepareTransfer(transferId, transfer)
       .then(() => {
-        Base.prepareTransfer(transferId, transfer)
+        prepareTransfer(transferId, transfer)
         .expect(200)
         .expect('Content-Type', /json/)
         .then(res => {
@@ -91,7 +114,7 @@ Test('PUT /transfers', putTest => {
       .then(() => {
         transfer.credits.push(Fixtures.buildDebitOrCredit(Base.account1Name, amount))
 
-        Base.prepareTransfer(transferId, transfer)
+        prepareTransfer(transferId, transfer)
           .expect(400)
           .expect('Content-Type', /json/)
           .then(res => {
@@ -109,7 +132,7 @@ Test('PUT /transfers', putTest => {
     Base.prepareTransfer(transferId, transfer)
       .then(() => Base.fulfillTransfer(transferId, 'oAKAAA'))
       .then(() => {
-        Base.prepareTransfer(transferId, transfer)
+        prepareTransfer(transferId, transfer)
           .expect(400)
           .expect('Content-Type', /json/)
           .then(res => {
@@ -128,7 +151,7 @@ Test('PUT /transfers', putTest => {
     Base.prepareTransfer(transferId, transfer)
       .then(() => Base.fulfillTransfer(transferId, 'oAKAAA'))
       .then(() => {
-        Base.prepareTransfer(transferId, transfer)
+        prepareTransfer(transferId, transfer)
           .expect(422)
           .expect('Content-Type', /json/)
           .then(res => {

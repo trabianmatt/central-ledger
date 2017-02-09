@@ -36,7 +36,10 @@ const validateFulfillment = ({state, fulfillment, execution_condition, expires_a
 
 const validateExistingOnPrepare = (proposed, existing) => {
   return P.resolve().then(() => {
-    if (existing.state !== TransferState.PREPARED || !_.isMatch(existing, _.omit(proposed, ['id']))) {
+    const match = _.isMatch(existing, _.omit(proposed, ['id']))
+    const conditional = !!existing.execution_condition
+    const isFinal = existing.state !== TransferState.PREPARED
+    if ((conditional && isFinal) || !match) {
       throw new Errors.InvalidModificationError('Transfer may not be modified in this way')
     }
     return existing

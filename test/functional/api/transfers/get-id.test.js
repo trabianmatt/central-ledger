@@ -2,7 +2,6 @@
 
 const Test = require('tape')
 const Moment = require('moment')
-const P = require('bluebird')
 const Base = require('../../base')
 const Fixtures = require('../../../fixtures')
 const TransferState = require('../../../../src/domain/transfer/state')
@@ -103,7 +102,7 @@ Test('GET /transfers/:id', getTest => {
     const transferId = Fixtures.generateTransferId()
     const transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(Base.account1Name, amount), Fixtures.buildDebitOrCredit(Base.account2Name, amount), Fixtures.getMomentToExpire())
 
-    P.resolve(Base.prepareTransfer(transferId, transfer))
+    Base.prepareTransfer(transferId, transfer)
     .delay(1000)
     .then(() => Base.postAdmin('/webhooks/reject-expired-transfers', {}))
     .then(() => {

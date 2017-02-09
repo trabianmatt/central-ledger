@@ -34,7 +34,7 @@ test:
     - set -o pipefail && npm -s run test:xunit > ./test/results/tape.xml
     - npm -s run test:coverage-check
     - npm -s run test:integration
-    - npm -s run test:circle
+    - npm -s run test:functional:test-only
   post:
     - cp ./test/results/* $CIRCLE_TEST_REPORTS
     - mv ./coverage $CIRCLE_ARTIFACTS

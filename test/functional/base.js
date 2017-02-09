@@ -1,8 +1,9 @@
 'use strict'
 
 const host = process.env.HOST_IP || 'localhost'
-const RequestApi = require('supertest-as-promised')('http://' + host + ':3000')
-const RequestAdmin = require('supertest-as-promised')('http://' + host + ':3001')
+const RequestApi = require('supertest')('http://' + host + ':3000')
+const RequestAdmin = require('supertest')('http://' + host + ':3001')
+const P = require('bluebird')
 const Encoding = require('@leveloneproject/central-services-shared').Encoding
 const DA = require('deasync-promise')
 
@@ -49,7 +50,7 @@ const getTransfer = (transferId) => getApi(`/transfers/${transferId}`)
 
 const getFulfillment = (transferId) => getApi(`/transfers/${transferId}/fulfillment`)
 
-const prepareTransfer = (transferId, transfer) => putApi(`/transfers/${transferId}`, transfer)
+const prepareTransfer = (transferId, transfer) => P.resolve(putApi(`/transfers/${transferId}`, transfer))
 
 const fulfillTransfer = (transferId, fulfillment) => putApi(`/transfers/${transferId}/fulfillment`, fulfillment, 'text/plain')
 
