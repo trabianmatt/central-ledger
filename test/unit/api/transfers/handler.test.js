@@ -25,6 +25,12 @@ const createRequest = (id, payload) => {
   }
 }
 
+const auth = {
+  credentials: {
+    name: 'dfsp1'
+  }
+}
+
 Test('transfer handler', handlerTest => {
   let sandbox
   let originalHostName
@@ -271,7 +277,8 @@ Test('transfer handler', handlerTest => {
       const transferId = '3a2a1d9e-8640-4d2d-b06c-84f2cd613204'
       const request = {
         params: { id: transferId },
-        payload: rejectReason
+        payload: rejectReason,
+        auth
       }
 
       TransferService.reject.returns(P.resolve(transfer))
@@ -293,7 +300,8 @@ Test('transfer handler', handlerTest => {
       const rejectReason = 'error reason'
       const request = {
         params: { id: '3a2a1d9e-8640-4d2d-b06c-84f2cd613204' },
-        payload: rejectReason
+        payload: rejectReason,
+        auth
       }
       const error = new Error()
       TransferService.reject.returns(P.reject(error))

@@ -14,7 +14,7 @@ module.exports = [
     config: {
       id: 'accounts',
       tags: tags,
-      auth: Auth.tokenAuth(),
+      auth: Auth.strategy(),
       description: 'Create an account.',
       validate: {
         payload: {
@@ -32,7 +32,7 @@ module.exports = [
       id: 'account',
       tags: tags,
       description: 'Retrieve an accounts details by name',
-      auth: Auth.tokenAuth(),
+      auth: Auth.strategy(),
       validate: {
         params: {
           name: nameValidator

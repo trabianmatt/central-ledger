@@ -49,19 +49,35 @@ Test('Auth module', authTest => {
     registerTest.end()
   })
 
-  authTest.test('tokenAuth should', tokenAuthTest => {
-    tokenAuthTest.test('return token if ENABLE_TOKEN_AUTH true', test => {
+  authTest.test('strategy should', strategyTest => {
+    strategyTest.test('return token if ENABLE_TOKEN_AUTH true', test => {
       Config.ENABLE_TOKEN_AUTH = true
-      test.equal(AuthModule.tokenAuth(), 'token')
+      Config.ENABLE_BASIC_AUTH = false
+      test.equal(AuthModule.strategy(), 'token')
       test.end()
     })
 
-    tokenAuthTest.test('return false if ENABLE_TOKEN_AUTH is false', test => {
+    strategyTest.test('return account if ENABLE_BASIC_AUTH true', test => {
       Config.ENABLE_TOKEN_AUTH = false
-      test.equal(AuthModule.tokenAuth(), false)
+      Config.ENABLE_BASIC_AUTH = true
+      test.equal(AuthModule.strategy(), 'account')
       test.end()
     })
-    tokenAuthTest.end()
+
+    strategyTest.test('return account if ENABLE_TOKEN_AUTH and ENABLE_BASIC_AUTH true', test => {
+      Config.ENABLE_TOKEN_AUTH = true
+      Config.ENABLE_BASIC_AUTH = true
+      test.equal(AuthModule.strategy(), 'token')
+      test.end()
+    })
+
+    strategyTest.test('return false if ENABLE_TOKEN_AUTH and ENABLE_BASIC_AUTH is false', test => {
+      Config.ENABLE_TOKEN_AUTH = false
+      Config.ENABLE_BASIC_AUTH = false
+      test.equal(AuthModule.strategy(), false)
+      test.end()
+    })
+    strategyTest.end()
   })
 
   authTest.end()

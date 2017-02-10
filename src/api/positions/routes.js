@@ -9,7 +9,7 @@ module.exports = [
     handler: Handler.perform,
     config: {
       id: 'positions',
-      auth: Auth.tokenAuth(),
+      auth: Auth.strategy(),
       tags: tags,
       description: 'Retrieve outstanding positions.'
     }

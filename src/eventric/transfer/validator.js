@@ -6,6 +6,7 @@ const Moment = require('moment')
 const TransferState = require('../../domain/transfer/state')
 const CryptoConditions = require('../../crypto-conditions')
 const Errors = require('../../errors')
+const UrlParser = require('../../lib/urlparser')
 
 const validateFulfillment = ({state, fulfillment, execution_condition, expires_at}, fulfillmentCondition) => {
   return P.resolve().then(() => {
@@ -46,11 +47,16 @@ const validateExistingOnPrepare = (proposed, existing) => {
   })
 }
 
-const validateReject = ({state, rejection_reason, execution_condition}, rejectionReason) => {
+const validateReject = ({state, rejection_reason, execution_condition, credits}, rejectionReason, requestingAccount) => {
   return P.resolve().then(() => {
     if (!execution_condition) { // eslint-disable-line
       throw new Errors.TransferNotConditionalError()
     }
+
+    if (requestingAccount && !credits.find(c => c.account === UrlParser.toAccountUri(requestingAccount.name))) {
+      throw new Errors.UnauthorizedError('Invalid attempt to reject credit')
+    }
+
     if (state === TransferState.REJECTED && rejection_reason === rejectionReason) { // eslint-disable-line
       return { alreadyRejected: true }
     }

@@ -9,6 +9,7 @@ const Validator = require(`${src}/eventric/transfer/validator`)
 const TransferState = require(`${src}/domain/transfer/state`)
 const Errors = require('../../../../src/errors')
 const CryptoConditions = require(`${src}/crypto-conditions`)
+const UrlParser = require('../../../../src/lib/urlparser')
 const executionCondition = 'ni:///sha-256;47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU?fpt=preimage-sha-256&cost=0'
 
 Test('validator tests', validatorTest => {
@@ -407,7 +408,7 @@ Test('validator tests', validatorTest => {
         .then(test.end)
     })
 
-    rejectTest.test('return alreadyRejected if state is rejected and rejectionReason matches', t => {
+    rejectTest.test('return alreadyRejected if state is rejected and rejectionReason matches', test => {
       const rejectionReason = 'r-e-j-e-c-t find out what it means to me'
       const transfer = {
         state: TransferState.REJECTED,
@@ -417,9 +418,33 @@ Test('validator tests', validatorTest => {
 
       Validator.validateReject(transfer, rejectionReason)
       .then(result => {
-        t.equal(result.alreadyRejected, true)
-        t.end()
+        test.equal(result.alreadyRejected, true)
+        test.end()
       })
+    })
+
+    rejectTest.test('throw UnauthorizedError if requesting account does not match credit account', test => {
+      const name = 'dfsp2'
+      const accountUri = UrlParser.toAccountUri(name) + '1'
+      const transfer = {
+        execution_condition: 'condition',
+        credits: [{
+          amount: 1,
+          account: accountUri
+        }]
+      }
+
+      Validator.validateReject(transfer, 'reason', { name })
+      .then(() => {
+        test.fail('Expected exception')
+      })
+      .catch(Errors.UnauthorizedError, e => {
+        test.equal(e.message, 'Invalid attempt to reject credit')
+      })
+      .catch(e => {
+        test.fail('Expected UnauthorizedError but caught ' + e.constructor.name)
+      })
+      .then(test.end)
     })
 
     rejectTest.test('throw InvalidModificationError if state is executed', test => {

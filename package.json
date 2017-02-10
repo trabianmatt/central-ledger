@@ -19,7 +19,7 @@
   },
   "scripts": {
     "start": "node src/server.js",
-    "ledger-test": "npm install five-bells-condition@3.3.1 && CLEDG_HOSTNAME=http://localhost:3000 CLEDG_EXPIRES_TIMEOUT=5000 npm start",
+    "ledger-test": "npm install five-bells-condition@3.3.1 && CLEDG_HOSTNAME=http://localhost:3000 CLEDG_EXPIRES_TIMEOUT=5000 CLEDG_ENABLE_BASIC_AUTH=true npm start",
     "dev": "npm run docker:stop && docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d",
     "test": "npm run test:unit | faucet",
     "pretest": "standard",

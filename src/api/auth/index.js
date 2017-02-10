@@ -14,6 +14,5 @@ exports.register.attributes = {
   name: 'auth'
 }
 
-exports.tokenAuth = () => {
-  return Config.ENABLE_TOKEN_AUTH ? TokenStrategy.name : false
-}
+exports.strategy = () => (Config.ENABLE_TOKEN_AUTH ? TokenStrategy.name : (Config.ENABLE_BASIC_AUTH ? AccountStrategy.name : false))
+

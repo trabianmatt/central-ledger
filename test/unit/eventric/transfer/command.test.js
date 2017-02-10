@@ -176,6 +176,7 @@ Test('Commands Test', commandsTest => {
       const transfer = {}
       const rejectionReason = 'cancelled'
       const message = 'here we go again'
+      const requestingAccount = { name: 'dfps1' }
       const rejectStub = sandbox.stub()
       const saveStub = sandbox.stub()
       saveStub.returns(P.resolve())
@@ -183,11 +184,11 @@ Test('Commands Test', commandsTest => {
       transfer.$save = saveStub
       transfer.reject = rejectStub
 
-      Validator.validateReject.withArgs(transfer).returns(P.resolve({ alreadyRejected: false }))
+      Validator.validateReject.withArgs(transfer, rejectionReason, requestingAccount).returns(P.resolve({ alreadyRejected: false }))
 
       Commands.$aggregate.load.withArgs('Transfer', id).returns(P.resolve(transfer))
 
-      Commands.RejectTransfer({ id: id, rejection_reason: rejectionReason, message: message })
+      Commands.RejectTransfer({ id, message, requestingAccount, rejection_reason: rejectionReason })
       .then(transfer => {
         t.equal(transfer, transfer)
         t.ok(rejectStub.calledWith(Sinon.match({ rejection_reason: rejectionReason, message: message })))

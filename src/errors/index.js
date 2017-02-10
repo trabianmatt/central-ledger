@@ -10,6 +10,7 @@ const MissingFulfillmentError = require('./missing-fulfillment')
 const RecordExistsError = require('./record-exists-error')
 const TransferNotConditionalError = require('./transfer-not-conditional')
 const TransferNotFoundError = require('./transfer-not-found')
+const UnauthorizedError = require('./unauthorized')
 const UnexecutedTransferError = require('./unexecuted-transfer-error')
 const UnmetConditionError = require('./unmet-condition')
 const UnpreparedTransferError = require('./unprepared-transfer-error')
@@ -25,6 +26,7 @@ module.exports = {
   RecordExistsError,
   TransferNotConditionalError,
   TransferNotFoundError,
+  UnauthorizedError,
   UnexecutedTransferError,
   UnmetConditionError,
   UnpreparedTransferError,

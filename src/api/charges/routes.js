@@ -12,7 +12,7 @@ module.exports = [
     config: {
       id: 'charges',
       tags: tags,
-      auth: Auth.tokenAuth(),
+      auth: Auth.strategy(),
       description: 'Quote a charge for a transaction amount',
       validate: {
         payload: {

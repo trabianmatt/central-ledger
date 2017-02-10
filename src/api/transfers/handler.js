@@ -35,7 +35,8 @@ exports.rejectTransfer = function (request, reply) {
   const rejection = {
     id: request.params.id,
     rejection_reason: TransferRejectionType.CANCELLED,
-    message: request.payload
+    message: request.payload,
+    requestingAccount: request.auth.credentials
   }
 
   return TransferService.reject(rejection)

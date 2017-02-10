@@ -41,10 +41,10 @@ module.exports = {
       })
   },
 
-  RejectTransfer ({ id, rejection_reason, message }) {
+  RejectTransfer ({ id, rejection_reason, message, requestingAccount }) {
     return P.resolve(this.$aggregate.load('Transfer', id))
       .then(transfer => {
-        return Validator.validateReject(transfer, rejection_reason)
+        return Validator.validateReject(transfer, rejection_reason, requestingAccount)
         .then(result => {
           if (result.alreadyRejected) {
             return transfer
