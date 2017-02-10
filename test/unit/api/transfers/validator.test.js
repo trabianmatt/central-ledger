@@ -33,7 +33,6 @@ Test('transfer validator', (test) => {
   const badScaleAmount = '1.123'
   const expiredAt = Moment('2016-12-26T00:00:01.000Z').utc()
   let transferId
-  let originalScale
   let originalPrecision
   let originalHostName
   let sandbox
@@ -94,7 +93,6 @@ Test('transfer validator', (test) => {
 
   test.afterEach((t) => {
     sandbox.restore()
-    Config.AMOUNT.SCALE = originalScale
     Config.AMOUNT.PRECISION = originalPrecision
     Config.HOSTNAME = originalHostName
     t.end()

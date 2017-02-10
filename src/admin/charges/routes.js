@@ -26,12 +26,12 @@ module.exports = [
       validate: {
         payload: {
           name: Joi.string().token().max(256).required().description('Name of the charge'),
-          charge_type: Joi.string().token().max(256).required().description('Type of the charge'),
-          rate_type: Joi.string().token().max(256).required().description('Rate type of the charge'),
+          charge_type: Joi.string().required().valid('tax', 'fee').description('Type of the charge'),
+          rate_type: Joi.string().required().valid('percent', 'flat').description('Rate type of the charge'),
           rate: Joi.number().required().description('Rate for the charge'),
           minimum: Joi.number().optional().description('Minimum amount for the charge'),
           maximum: Joi.number().optional().description('Maximum amount for the charge'),
-          code: Joi.number().required().description('Code for the charger'),
+          code: Joi.string().token().max(256).required().description('Code for the charger'),
           is_active: Joi.boolean().required().description('Status for charge')
         }
       }

@@ -2,10 +2,6 @@
 
 const Db = require('../../db')
 
-exports.getAll = () => {
-  return Db.connect().then(db => db.charges.findAsync({}, { order: 'name' }))
-}
-
 exports.create = (charge) => {
   return Db.connect()
     .then(db => {
@@ -21,4 +17,8 @@ exports.create = (charge) => {
           isActive: charge.is_active
         })
     })
+}
+
+exports.getAll = () => {
+  return Db.connect().then(db => db.charges.findAsync({}, { order: 'name' }))
 }

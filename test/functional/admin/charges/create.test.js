@@ -9,12 +9,12 @@ Test('POST /charges', putTest => {
     const chargeName = Fixtures.generateRandomName()
     const payload = {
       name: chargeName,
-      charge_type: 'chargeType',
-      rate_type: 'rateType',
+      charge_type: 'tax',
+      rate_type: 'flat',
       rate: '1.00',
-      minimum: '0.25',
+      minimum: '25.00',
       maximum: '100.00',
-      code: '1',
+      code: '003',
       is_active: true
     }
 

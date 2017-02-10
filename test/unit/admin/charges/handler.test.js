@@ -15,7 +15,7 @@ function createCharge (name = 'charge') {
     rate: '1.00',
     minimum: '0.25',
     maximum: '100.00',
-    code: 1,
+    code: '001',
     is_active: true
   }
 }

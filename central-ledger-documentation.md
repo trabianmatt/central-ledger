@@ -12,6 +12,7 @@ In this guide, we'll walk through the different central ledger endpoints:
 * `GET` [**Get net positions**](#get-net-positions) 
 * `GET` [**Get metadata**](#get-metadata) 
 * `POST` [**Settle fulfilled transfers**](#settle-all-currently-fulfilled-transfers) 
+* `POST` [**Get charge quote**](#get-charge-quote) 
 
 The different endpoints often deal with these [data structures](#data-structures): 
 * [**Transfer Object**](#transfer-object)
@@ -578,6 +579,72 @@ POST http://central-ledger/webhooks/settle-transfers HTTP/1.1
 ``` http
 HTTP/1.1 200 OK
 ["3a2a1d9e-8640-4d2d-b06c-84f2cd613207", "7e10238b-4e39-49a4-93dc-c8f73afc1717"]
+```
+
+#### Get a charge quote
+Get a list of charge quotes for a given amount
+
+##### HTTP Request
+`POST http://central-ledger/charges/quote`
+
+##### Headers
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Content-Type | String | Must be set to `application/json` |
+
+##### Request Body
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Amount | Decimal | The amount for quote |
+
+##### Response 200 OK
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| N/A | Array | A list of charge quotes |
+
+##### Request
+``` http
+POST http://central-ledger/charges/quotes HTTP/1.1
+Content-Type: application/json
+{
+  "amount": "10.00"
+}
+```
+
+##### Response
+``` http
+HTTP/1.1 200 OK
+Content-Type: application/json
+[
+  {
+    "name": "charge1",
+    "charge_type": "tax",
+    "code": "001",
+    "amount": "0.25",
+    "currency_code": "USD",
+    "currency_symbol": "$"
+  },
+  {
+    "name": "charge2",
+    "charge_type": "tax",
+    "code": "002",
+    "amount": "2.00",
+    "currency_code": "USD",
+    "currency_symbol": "$"
+  }
+]
+```
+
+##### Errors (4xx)
+| Field | Description |
+| ----- | ----------- |
+| InvalidBodyError | Body does not match schema |
+
+``` http
+{
+  "id": "InvalidBodyError",
+  "message": "Body does not match schema"
+}
 ```
 
 ***

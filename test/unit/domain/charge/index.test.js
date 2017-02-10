@@ -6,6 +6,19 @@ const P = require('bluebird')
 const Model = require('../../../../src/domain/charge/model')
 const ChargeService = require('../../../../src/domain/charge')
 
+function createCharge (name = 'charge', rateType = 'percent', minimum = null, maximum = null) {
+  return {
+    name,
+    chargeType: 'tax',
+    rateType: rateType,
+    rate: '0.50',
+    minimum,
+    maximum,
+    code: '001',
+    is_active: true
+  }
+}
+
 Test('Charge service', serviceTest => {
   let sandbox
 
@@ -50,6 +63,36 @@ Test('Charge service', serviceTest => {
       ChargeService.getAll()
       .then(result => {
         test.equal(result, all)
+        test.end()
+      })
+    })
+
+    getAllTest.end()
+  })
+
+  serviceTest.test('quote should', getAllTest => {
+    getAllTest.test('return charge quotes from Model', test => {
+      const charge1 = createCharge('acharge1')
+      const charge2 = createCharge('bcharge2', 'flat')
+      const charge3 = createCharge('ccharge3', 'flat', '50.00', '100.00')
+      const charges = [charge1, charge2, charge3]
+
+      const amount = 20.00
+      const transaction = {
+        'amount': amount
+      }
+      Model.getAll.returns(P.resolve(charges))
+      ChargeService.quote(transaction)
+      .then(result => {
+        test.equal(result.length, 2)
+        test.equal(result[0].name, charge1.name)
+        test.equal(result[0].code, charge1.code)
+        test.equal(result[0].charge_type, charge1.chargeType)
+        test.equal(result[0].amount, charge1.rate * amount)
+        test.equal(result[1].name, charge2.name)
+        test.equal(result[1].code, charge2.code)
+        test.equal(result[1].charge_type, charge2.chargeType)
+        test.equal(result[1].amount, charge2.rate)
         test.end()
       })
     })
