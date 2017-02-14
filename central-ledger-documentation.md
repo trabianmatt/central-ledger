@@ -582,7 +582,7 @@ HTTP/1.1 200 OK
 ```
 
 #### Get a charge quote
-Get a list of charge quotes for a given amount
+Get a list of charge quotes for a given amount, that the sender would be responsible for paying
 
 ##### HTTP Request
 `POST http://central-ledger/charges/quote`

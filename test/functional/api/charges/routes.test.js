@@ -22,9 +22,13 @@ const buildCharge = (name, rateType, code) => {
 Test('return the list of charges in a charge quote', function (assert) {
   const charge1Name = 'a' + Fixtures.generateRandomName()
   const charge2Name = 'b' + Fixtures.generateRandomName()
+  const charge3Name = 'c' + Fixtures.generateRandomName()
 
   const charge = buildCharge(charge1Name, 'percent', '001')
   const charge2 = buildCharge(charge2Name, 'flat', '002')
+  const charge3 = buildCharge(charge3Name, 'flat', '003')
+  charge3.payer = 'ledger'
+  charge3.payee - 'sender'
 
   Config.AMOUNT.SCALE = 2
 
@@ -37,6 +41,8 @@ Test('return the list of charges in a charge quote', function (assert) {
         .expect(200)
         .expect('Content-Type', /json/)
         .then(res => {
+          assert.equal(2, res.body.length)
+
           assert.equal(charge.name, res.body[0].name)
           assert.equal(Util.formatAmount(charge.rate * amount), res.body[0].amount)
           assert.equal(charge.charge_type, res.body[0].charge_type)

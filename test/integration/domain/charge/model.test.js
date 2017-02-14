@@ -14,8 +14,8 @@ function createChargePayload (name) {
     maximum: '100.00',
     code: '1',
     is_active: true,
-    payer: 'sender',
-    payee: 'ledger'
+    payer: 'ledger',
+    payee: 'sender'
   }
 }
 
@@ -59,6 +59,32 @@ Test('charges model', function (modelTest) {
           assert.ok(charges.length > 0)
           assert.ok(charges.find(a => a.name === charge1Name))
           assert.ok(charges.find(a => a.name === charge2Name))
+          assert.end()
+        })
+    })
+
+    getAllTest.end()
+  })
+
+  modelTest.test('getAllSenderAsPayer should', function (getAllTest) {
+    getAllTest.test('return all charges where the sender is the payer', function (assert) {
+      const charge1Name = Fixtures.generateRandomName()
+      const charge2Name = Fixtures.generateRandomName()
+      const charge3Name = Fixtures.generateRandomName()
+
+      const chargePayload1 = createChargePayload(charge1Name)
+      const chargePayload2 = createChargePayload(charge2Name)
+      const chargePayload3 = createChargePayload(charge3Name)
+      chargePayload3.payer = 'sender'
+      chargePayload3.payee = 'ledger'
+
+      Model.create(chargePayload1)
+        .then(() => Model.create(chargePayload2))
+        .then(() => Model.create(chargePayload3))
+        .then(() => Model.getAllSenderAsPayer())
+        .then((charges) => {
+          assert.ok(charges.length === 1)
+          assert.ok(charges.find(a => a.name === charge3Name))
           assert.end()
         })
     })

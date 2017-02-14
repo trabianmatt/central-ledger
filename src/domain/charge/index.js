@@ -41,13 +41,18 @@ const getAll = () => {
   return Model.getAll()
 }
 
+const getAllSenderAsPayer = () => {
+  return Model.getAllSenderAsPayer()
+}
+
 const quote = (transaction) => {
-  return getAll().then(charges => charges.filter(charge => shouldQuote(charge, transaction))
+  return getAllSenderAsPayer().then(charges => charges.filter(charge => shouldQuote(charge, transaction))
                                           .map(charge => chargeQuote(charge, transaction.amount)))
 }
 
 module.exports = {
   create,
   getAll,
+  getAllSenderAsPayer,
   quote
 }

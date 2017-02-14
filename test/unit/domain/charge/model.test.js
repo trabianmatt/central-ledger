@@ -77,6 +77,61 @@ Test('charges model', function (modelTest) {
     getAllTest.end()
   })
 
+  modelTest.test('getAllSenderAsPayer should', function (getAllSenderAsPayerTest) {
+    getAllSenderAsPayerTest.test('return exception if db.connect throws', function (assert) {
+      const error = new Error()
+      sandbox.stub(Db, 'connect').returns(P.reject(error))
+
+      Model.getAllSenderAsPayer()
+        .then(() => {
+          assert.fail('Should have thrown error')
+        })
+        .catch(err => {
+          assert.equal(err, error)
+          assert.end()
+        })
+    })
+
+    getAllSenderAsPayerTest.test('return exception if db.findAsync throws', function (assert) {
+      const error = new Error()
+      const findAsync = function () { return P.reject(error) }
+      setupChargesDb({ findAsync: findAsync })
+
+      Model.getAllSenderAsPayer()
+        .then(() => {
+          assert.fail('Should have thrown error')
+        })
+        .catch(err => {
+          assert.equal(err, error)
+          assert.end()
+        })
+    })
+
+    getAllSenderAsPayerTest.test('return all charges ordered by name', function (assert) {
+      const charge1Name = 'charge1'
+      const charge2Name = 'charge2'
+      const charge3Name = 'charge3'
+      const charges = [{ name: charge1Name }, { name: charge2Name }, {name: charge3Name}]
+      const findArg = { payer: 'sender' }
+
+      const findAsync = Sinon.stub().returns(P.resolve(charges))
+      setupChargesDb({ findAsync: findAsync })
+
+      Model.getAllSenderAsPayer()
+        .then((found) => {
+          assert.equal(found, charges)
+          assert.deepEqual(findAsync.firstCall.args[0], findArg)
+          assert.equal(findAsync.firstCall.args[1].order, 'name')
+          assert.end()
+        })
+        .catch(err => {
+          assert.fail(err)
+        })
+    })
+
+    getAllSenderAsPayerTest.end()
+  })
+
   modelTest.test('create should', function (createTest) {
     createTest.test('save payload as new object', function (assert) {
       let name = 'charge'

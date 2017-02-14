@@ -70,6 +70,20 @@ Test('Charge service', serviceTest => {
     getAllTest.end()
   })
 
+  serviceTest.test('getAllSenderAsPayer should', getAllTest => {
+    getAllTest.test('getAllSenderAsPayer from Model', test => {
+      const all = []
+      Model.getAllSenderAsPayer.returns(P.resolve(all))
+      ChargeService.getAllSenderAsPayer()
+      .then(result => {
+        test.equal(result, all)
+        test.end()
+      })
+    })
+
+    getAllTest.end()
+  })
+
   serviceTest.test('quote should', getAllTest => {
     getAllTest.test('return charge quotes from Model', test => {
       const charge1 = createCharge('acharge1')
@@ -81,7 +95,7 @@ Test('Charge service', serviceTest => {
       const transaction = {
         'amount': amount
       }
-      Model.getAll.returns(P.resolve(charges))
+      Model.getAllSenderAsPayer.returns(P.resolve(charges))
       ChargeService.quote(transaction)
       .then(result => {
         test.equal(result.length, 2)

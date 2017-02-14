@@ -24,3 +24,7 @@ exports.create = (charge) => {
 exports.getAll = () => {
   return Db.connect().then(db => db.charges.findAsync({}, { order: 'name' }))
 }
+
+exports.getAllSenderAsPayer = () => {
+  return Db.connect().then(db => db.charges.findAsync({ payer: 'sender' }, { order: 'name' }))
+}
