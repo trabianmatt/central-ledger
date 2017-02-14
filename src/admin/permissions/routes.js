@@ -1,12 +1,12 @@
 'use strict'
 
 const Handler = require('./handler')
-const tags = ['api', 'security']
+const tags = ['api', 'permissions']
 
 module.exports = [
   {
     method: 'GET',
-    path: '/security/permissions',
+    path: '/permissions',
     handler: Handler.getPermissions,
     config: {
       tags,

@@ -1,10 +1,10 @@
 'use strict'
 
-const Test = require('tape')
-const Permissions = require('../../../../src/admin/auth/permissions')
-const Handler = require('../../../../src/admin/security/handler')
+const Test = require('tapes')(require('tape'))
+const Permissions = require('../../../../src/domain/security/permissions')
+const Handler = require('../../../../src/admin/permissions/handler')
 
-Test('Security handler', handlerTest => {
+Test('Permissions handler', handlerTest => {
   handlerTest.test('getPermissions should', permissionsTest => {
     permissionsTest.test('return defined permissions', test => {
       const reply = (response) => {
@@ -16,5 +16,6 @@ Test('Security handler', handlerTest => {
     })
     permissionsTest.end()
   })
+
   handlerTest.end()
 })

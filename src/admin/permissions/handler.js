@@ -1,6 +1,6 @@
 'use strict'
 
-const Permissions = require('../auth/permissions')
+const Permissions = require('../../domain/security/permissions')
 
 const getPermissions = (request, reply) => {
   const permissions = Object.keys(Permissions).map(k => {

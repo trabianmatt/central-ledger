@@ -27,11 +27,21 @@ const formatAmount = (amount) => {
   return Number(amount).toFixed(Config.AMOUNT.SCALE).toString()
 }
 
+const squish = (array) => {
+  return _.join(array, '|')
+}
+
+const expand = (value) => {
+  return (value) ? _.split(value, '|') : value
+}
+
 module.exports = {
   assign,
+  expand,
   formatAmount,
   merge,
   mergeAndOmitNil,
   omitNil,
-  pick
+  pick,
+  squish
 }
