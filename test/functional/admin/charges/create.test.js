@@ -15,7 +15,9 @@ Test('POST /charges', putTest => {
       minimum: '25.00',
       maximum: '100.00',
       code: '003',
-      is_active: true
+      is_active: true,
+      payer: 'sender',
+      payee: 'ledger'
     }
 
     Base.createCharge(payload)
@@ -29,6 +31,8 @@ Test('POST /charges', putTest => {
         test.equal(res.body.maximum, payload.maximum)
         test.equal(res.body.code, payload.code)
         test.equal(res.body.is_active, payload.is_active)
+        test.equal(res.body.payer, payload.payer)
+        test.equal(res.body.payee, payload.payee)
         test.end()
       })
   })

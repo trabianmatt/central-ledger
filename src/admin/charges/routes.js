@@ -32,7 +32,9 @@ module.exports = [
           minimum: Joi.number().optional().description('Minimum amount for the charge'),
           maximum: Joi.number().optional().description('Maximum amount for the charge'),
           code: Joi.string().token().max(256).required().description('Code for the charger'),
-          is_active: Joi.boolean().required().description('Status for charge')
+          is_active: Joi.boolean().required().description('Status for charge'),
+          payer: Joi.string().required().valid('sender', 'receiver', 'ledger').description('Payer of the charged fee'),
+          payee: Joi.string().required().valid('sender', 'receiver', 'ledger').description('Payee of the charged fee')
         }
       }
     }

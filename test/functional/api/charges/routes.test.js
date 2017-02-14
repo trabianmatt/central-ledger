@@ -13,7 +13,9 @@ const buildCharge = (name, rateType, code) => {
     'rate_type': rateType,
     'rate': '0.50',
     'code': code,
-    'is_active': true
+    'is_active': true,
+    'payer': 'sender',
+    'payee': 'ledger'
   }
 }
 

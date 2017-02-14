@@ -16,7 +16,9 @@ function createCharge (name = 'charge') {
     minimum: '0.25',
     maximum: '100.00',
     code: '001',
-    is_active: true
+    is_active: true,
+    payer: 'ledger',
+    payee: 'sender'
   }
 }
 
@@ -105,7 +107,9 @@ Test('charges handler', handlerTest => {
         minimum: '1',
         maximum: '100',
         code: '1',
-        is_active: true
+        is_active: true,
+        payer: 'ledger',
+        payee: 'sender'
       }
 
       Charge.create.withArgs(payload).returns(P.resolve(charge))
@@ -134,13 +138,55 @@ Test('charges handler', handlerTest => {
 
     createTest.test('reply with error if Charge services throws', test => {
       const error = new Error()
-      Charge.create.returns(P.reject(error))
+
+      const payload = {
+        name: 'charge',
+        chargeType: 'tax',
+        rateType: 'flat',
+        rate: '1.00',
+        minimum: '1.00',
+        maximum: '100.00',
+        code: '001',
+        is_active: true,
+        payer: 'ledger',
+        payee: 'sender'
+      }
+
+      Charge.create.withArgs(payload).returns(P.reject(error))
 
       const reply = (e) => {
         test.equal(e, error)
         test.end()
       }
-      Handler.create({}, reply)
+      Handler.create({payload}, reply)
+    })
+
+    createTest.test('reply with validation error if payer and payee match', test => {
+      const charge = createCharge('charge')
+      charge.payer = 'ledger'
+      charge.payee = 'ledger'
+
+      const payload = {
+        name: 'charge',
+        chargeType: 'tax',
+        rateType: 'flat',
+        rate: '1.00',
+        minimum: '1.00',
+        maximum: '100.00',
+        code: '001',
+        is_active: true,
+        payer: 'ledger',
+        payee: 'ledger'
+      }
+
+      Charge.create.withArgs(payload).returns(P.resolve(charge))
+
+      const reply = (e) => {
+        test.equal(e.name, 'ValidationError')
+        test.equal(e.payload.message, 'Payer and payee should be set to \'sender\', \'receiver\', or \'ledger\' and should not have the same value.')
+        test.end()
+      }
+      Handler.create({payload}, reply)
     })
 
     createTest.end()

@@ -13,7 +13,9 @@ function createChargePayload (name) {
     minimum: '0.25',
     maximum: '100.00',
     code: '1',
-    is_active: true
+    is_active: true,
+    payer: 'sender',
+    payee: 'ledger'
   }
 }
 

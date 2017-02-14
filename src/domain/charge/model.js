@@ -14,7 +14,9 @@ exports.create = (charge) => {
           minimum: charge.minimum,
           maximum: charge.maximum,
           code: charge.code,
-          isActive: charge.is_active
+          isActive: charge.is_active,
+          payer: charge.payer,
+          payee: charge.payee
         })
     })
 }
