@@ -32,7 +32,7 @@ module.exports = [
       id: 'account',
       tags: tags,
       description: 'Retrieve an accounts details by name',
-      auth: Auth.strategy(),
+      auth: Auth.strategy(true),
       validate: {
         params: {
           name: nameValidator

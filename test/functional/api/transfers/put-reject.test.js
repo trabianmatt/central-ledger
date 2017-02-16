@@ -14,7 +14,7 @@ Test('PUT /transfers/:id/reject', putTest => {
 
     Base.prepareTransfer(transferId, transfer)
       .then(() => {
-        Base.rejectTransfer(transferId)
+        Base.rejectTransfer(transferId, '', { name: Base.account2Name, password: Base.account2Password })
           .expect(200)
           .expect('Content-Type', /json/)
           .then(res => {
@@ -45,9 +45,9 @@ Test('PUT /transfers/:id/reject', putTest => {
     const transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(Base.account1Name, amount), Fixtures.buildDebitOrCredit(Base.account2Name, amount))
 
     Base.prepareTransfer(transferId, transfer)
-      .then(() => Base.rejectTransfer(transferId, reason))
+      .then(() => Base.rejectTransfer(transferId, reason, { name: Base.account2Name, password: Base.account2Password }))
       .then(() => {
-        Base.rejectTransfer(transferId, reason)
+        Base.rejectTransfer(transferId, reason, { name: Base.account2Name, password: Base.account2Password })
           .expect(200)
           .expect('Content-Type', /json/)
           .then(res => {
@@ -81,7 +81,7 @@ Test('PUT /transfers/:id/reject', putTest => {
     Base.prepareTransfer(transferId, transfer)
       .then(() => Base.fulfillTransfer(transferId, fulfillment))
       .then(() => {
-        Base.rejectTransfer(transferId, reason)
+        Base.rejectTransfer(transferId, reason, { name: Base.account2Name, password: Base.account2Password })
           .expect(400)
           .expect('Content-Type', /json/)
           .then(res => {
@@ -102,7 +102,7 @@ Test('PUT /transfers/:id/reject', putTest => {
     Base.prepareTransfer(transferId, transfer)
       .then(() => Base.fulfillTransfer(transferId, fulfillment))
       .then(() => {
-        Base.rejectTransfer(transferId, reason)
+        Base.rejectTransfer(transferId, reason, { name: Base.account2Name, password: Base.account2Password })
           .expect(422)
           .expect('Content-Type', /json/)
           .then(res => {

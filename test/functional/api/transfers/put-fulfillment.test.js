@@ -39,7 +39,7 @@ Test('PUT /transfer/:id/fulfillment', putTest => {
   putTest.test('should return error when fulfilling non-existing transfer', test => {
     const transferId = Fixtures.generateTransferId()
 
-    Base.putApi(`/transfers/${transferId}/fulfillment`, fulfillment, 'text/plain')
+    Base.fulfillTransfer(transferId, fulfillment)
       .expect(404)
       .then(res => {
         test.equal(res.body.id, 'NotFoundError')
@@ -116,7 +116,7 @@ Test('PUT /transfer/:id/fulfillment', putTest => {
     const transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(Base.account1Name, amount), Fixtures.buildDebitOrCredit(Base.account2Name, amount), Fixtures.getMomentToExpire())
 
     Base.prepareTransfer(transferId, transfer)
-      .then(() => Base.rejectTransfer(transferId, 'any reason'))
+      .then(() => Base.rejectTransfer(transferId, 'any reason', { name: Base.account2Password, password: Base.account2Password }))
       .then(() => {
         Base.fulfillTransfer(transferId, fulfillment)
           .expect(400)

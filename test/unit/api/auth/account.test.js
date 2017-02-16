@@ -3,6 +3,7 @@
 const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const P = require('bluebird')
+const Config = require('../../../../src/lib/config')
 const AccountService = require('../../../../src/domain/account')
 const AccountAuth = require('../../../../src/api/auth/account')
 const Logger = require('@leveloneproject/central-services-shared').Logger
@@ -55,6 +56,24 @@ Test('account auth module', authTest => {
       }
 
       AccountAuth.validate({}, name, password, cb)
+    })
+
+    validateTest.test('return true if user is configured admin', test => {
+      const adminName = 'admin'
+      const adminSecret = 'admin'
+      Config.ADMIN_KEY = adminName
+      Config.ADMIN_SECRET = adminSecret
+
+      const cb = (err, isValid, credentials) => {
+        test.notOk(err)
+        test.equal(isValid, true)
+        test.equal(credentials.is_admin, true)
+        test.equal(credentials.name, adminName)
+        test.equal(AccountService.verify.callCount, 0)
+        test.end()
+      }
+
+      AccountAuth.validate({}, adminName, adminSecret, cb)
     })
 
     validateTest.test('return true and account if password verified', test => {

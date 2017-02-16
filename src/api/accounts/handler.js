@@ -3,64 +3,62 @@
 const Account = require('../../domain/account')
 const Config = require('../../lib/config')
 const UrlParser = require('../../lib/urlparser')
+const Util = require('../../lib/util')
 const PositionService = require('../../domain/position')
 const Errors = require('../../errors')
 
-const buildResponse = (account, { net = '0' } = {}) => {
-  const response = {
+const buildAccount = (account) => {
+  return {
     id: UrlParser.toAccountUri(account.name),
     name: account.name,
-    created: account.createdDate,
-    balance: net,
-    is_disabled: account.isDisabled,
     ledger: Config.HOSTNAME
   }
-  if (account.credentials) {
-    response.credentials = account.credentials
-  }
-  return response
 }
 
-const handleExistingRecord = () => {
-  return (entity) => {
-    if (entity) {
-      throw new Errors.RecordExistsError()
-    } else {
-      return entity
-    }
-  }
+const buildResponse = (account, { net = '0' } = {}) => {
+  return Util.mergeAndOmitNil(buildAccount(account), {
+    created: account.createdDate,
+    balance: net,
+    is_disabled: account.isDisabled || false,
+    credentials: account.credentials
+  })
 }
 
-const createAccount = (payload) => {
-  return () => {
-    return Account.create(payload)
+const handleExistingRecord = (entity) => {
+  if (entity) {
+    throw new Errors.RecordExistsError()
   }
+  return entity
+}
+
+const handleMissingRecord = (entity) => {
+  if (!entity) {
+    throw new Errors.NotFoundError('The requested resource could not be found.')
+  }
+  return entity
 }
 
 const getPosition = (account) => {
-  if (!account) {
-    throw new Errors.NotFoundError('The requested resource could not be found.')
-  }
   return PositionService.calculateForAccount(account)
-    .then(position => {
-      if (!position) {
-        throw new Errors.NotFoundError('The requested resource could not be found.')
-      }
-      return buildResponse(account, position)
-    })
+    .then(handleMissingRecord)
+    .then(position => buildResponse(account, position))
 }
 
 exports.create = (request, reply) => {
   Account.getByName(request.payload.name)
-    .then(handleExistingRecord())
-    .then(createAccount(request.payload))
+    .then(handleExistingRecord)
+    .then(() => Account.create(request.payload))
     .then(account => reply(buildResponse(account)).code(201))
-    .catch(e => reply(e))
+    .catch(reply)
 }
 
 exports.getByName = (request, reply) => {
+  const accountName = request.params.name
+  const credentials = request.auth.credentials
+  const authenticated = (credentials && (credentials.is_admin || credentials.name === accountName))
   Account.getByName(request.params.name)
-    .then(getPosition)
-    .then(result => reply(result))
-    .catch(e => reply(e))
+    .then(handleMissingRecord)
+    .then(account => (authenticated ? getPosition(account) : buildAccount(account)))
+    .then(reply)
+    .catch(reply)
 }

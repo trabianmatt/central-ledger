@@ -14,5 +14,15 @@ exports.register.attributes = {
   name: 'auth'
 }
 
-exports.strategy = () => (Config.ENABLE_TOKEN_AUTH ? TokenStrategy.name : (Config.ENABLE_BASIC_AUTH ? AccountStrategy.name : false))
+exports.strategy = (optional = false) => {
+  if (!Config.ENABLE_TOKEN_AUTH && !Config.ENABLE_BASIC_AUTH) {
+    return false
+  }
+  const strategy = (Config.ENABLE_TOKEN_AUTH ? TokenStrategy.name : AccountStrategy.name)
+  const mode = (optional ? 'try' : 'required')
+  return {
+    mode,
+    strategy
+  }
+}
 

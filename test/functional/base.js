@@ -7,6 +7,9 @@ const P = require('bluebird')
 const Encoding = require('@leveloneproject/central-services-shared').Encoding
 const DA = require('deasync-promise')
 
+const account1Name = 'dfsp1'
+const account2Name = 'dfsp2'
+
 const basicAuth = (name, password) => {
   const credentials = Encoding.toBase64(name + ':' + password)
   return { 'Authorization': `Basic ${credentials}` }
@@ -16,23 +19,23 @@ let account1promise
 let account2promise
 const account1 = () => {
   if (!account1promise) {
-    account1promise = createAccount('dfsp1', 'dfsp1').then(res => res.body)
+    account1promise = createAccount(account1Name, account1Name).then(res => res.body)
   }
   return DA(account1promise)
 }
 
 const account2 = () => {
   if (!account2promise) {
-    account2promise = createAccount('dfsp2', 'dfsp2').then(res => res.body)
+    account2promise = createAccount(account2Name, account2Name).then(res => res.body)
   }
   return DA(account2promise)
 }
 
-const getApi = (path, headers = {}) => RequestApi.get(path).set(headers)
+const getApi = (path, headers = {}) => RequestApi.get(path).auth('admin', 'admin').set(headers)
 
-const postApi = (path, data, contentType = 'application/json') => RequestApi.post(path).set('Content-Type', contentType).send(data)
+const postApi = (path, data, auth = { name: 'admin', password: 'admin' }, contentType = 'application/json') => RequestApi.post(path).auth(auth.name, auth.password).set('Content-Type', contentType).send(data)
 
-const putApi = (path, data, contentType = 'application/json') => RequestApi.put(path).set('Content-Type', contentType).send(data)
+const putApi = (path, data, auth = { name: 'admin', password: 'admin' }, contentType = 'application/json') => RequestApi.put(path).auth(auth.name, auth.password).set('Content-Type', contentType).send(data)
 
 const getAdmin = (path, headers = {}) => RequestAdmin.get(path).set(headers)
 
@@ -52,15 +55,17 @@ const getFulfillment = (transferId) => getApi(`/transfers/${transferId}/fulfillm
 
 const prepareTransfer = (transferId, transfer) => P.resolve(putApi(`/transfers/${transferId}`, transfer))
 
-const fulfillTransfer = (transferId, fulfillment) => putApi(`/transfers/${transferId}/fulfillment`, fulfillment, 'text/plain')
+const fulfillTransfer = (transferId, fulfillment, auth) => putApi(`/transfers/${transferId}/fulfillment`, fulfillment, auth, 'text/plain')
 
-const rejectTransfer = (transferId, reason) => putApi(`/transfers/${transferId}/rejection`, reason, 'text/plain')
+const rejectTransfer = (transferId, reason, auth) => putApi(`/transfers/${transferId}/rejection`, reason, auth, 'text/plain')
 
 const createCharge = (payload) => postAdmin('/charges', payload)
 
 module.exports = {
   account1Name: account1().name,
+  account1Password: account1Name,
   account2Name: account2().name,
+  account2Password: account2Name,
   basicAuth,
   createAccount,
   createCharge,

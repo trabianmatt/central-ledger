@@ -9,10 +9,13 @@ const Account = require('../../../../src/domain/account')
 const PositionService = require('../../../../src/domain/position')
 const Errors = require('../../../../src/errors')
 
-const createGet = name => {
+const createGet = (name, credentials = null) => {
   return {
     params: { name: name || 'name' },
-    server: { log: () => {} }
+    server: { log: () => {} },
+    auth: {
+      credentials
+    }
   }
 }
 
@@ -72,9 +75,68 @@ Test('accounts handler', handlerTest => {
         test.equal(response.balance, '-50')
         test.equal(response.is_disabled, true)
         test.equal(response.ledger, hostname)
-        test.notOk(response.hasOwnProperty['key'])
-        test.notOk(response.hasOwnProperty['secret'])
-        test.notOk(response.hasOwnProperty['credentials'])
+        test.notOk(response.hasOwnProperty('key'))
+        test.notOk(response.hasOwnProperty('secret'))
+        test.notOk(response.hasOwnProperty('credentials'))
+        test.end()
+      }
+
+      Handler.getByName(createGet(name, { name }), reply)
+    })
+
+    getByNameTest.test('get account by name and set balance to position if admin', test => {
+      const name = 'somename'
+      const account = createAccount(name)
+      Account.getByName.returns(P.resolve(account))
+      PositionService.calculateForAccount.withArgs(account).returns(P.resolve(buildPosition(account.name, '50', '0', '-50')))
+
+      const reply = response => {
+        test.equal(response.id, `${hostname}/accounts/${response.name}`)
+        test.equal(response.name, name)
+        test.equal(response.created, account.createdDate)
+        test.equal(response.balance, '-50')
+        test.equal(response.is_disabled, true)
+        test.equal(response.ledger, hostname)
+        test.notOk(response.hasOwnProperty('key'))
+        test.notOk(response.hasOwnProperty('secret'))
+        test.notOk(response.hasOwnProperty('credentials'))
+        test.end()
+      }
+
+      Handler.getByName(createGet(name, { name: 'not' + name, is_admin: true }), reply)
+    })
+
+    getByNameTest.test('get account by name and set balance to position and default is_disabled to false', test => {
+      const name = 'somename'
+      const account = { accountId: 1, name: name, createdDate: new Date() }
+      Account.getByName.returns(P.resolve(account))
+      PositionService.calculateForAccount.withArgs(account).returns(P.resolve(buildPosition(account.name, '50', '0', '-50')))
+
+      const reply = response => {
+        test.equal(response.id, `${hostname}/accounts/${response.name}`)
+        test.equal(response.is_disabled, false)
+        test.end()
+      }
+
+      Handler.getByName(createGet(name, { name }), reply)
+    })
+
+    getByNameTest.test('reply with limited fields if requesting account is not account', test => {
+      const name = 'dfsp1'
+      const account = createAccount(name)
+      Account.getByName.returns(P.resolve(account))
+
+      const reply = response => {
+        test.equal(response.id, `${hostname}/accounts/${response.name}`)
+        test.equal(response.name, name)
+        test.equal(response.ledger, hostname)
+        test.equal(PositionService.calculateForAccount.callCount, 0)
+        test.notOk(response.hasOwnProperty('created'))
+        test.notOk(response.hasOwnProperty('balance'))
+        test.notOk(response.hasOwnProperty('is_disabled'))
+        test.notOk(response.hasOwnProperty('key'))
+        test.notOk(response.hasOwnProperty('secret'))
+        test.notOk(response.hasOwnProperty('credentials'))
         test.end()
       }
 
@@ -118,7 +180,7 @@ Test('accounts handler', handlerTest => {
         test.end()
       }
 
-      Handler.getByName(createGet(), reply)
+      Handler.getByName(createGet(name, { name }), reply)
     })
 
     getByNameTest.test('reply with error if PositionService throws error', test => {
@@ -134,7 +196,7 @@ Test('accounts handler', handlerTest => {
         test.end()
       }
 
-      Handler.getByName(createGet(), reply)
+      Handler.getByName(createGet(name, { name }), reply)
     })
 
     getByNameTest.end()

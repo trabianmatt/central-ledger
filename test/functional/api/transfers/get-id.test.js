@@ -71,7 +71,7 @@ Test('GET /transfers/:id', getTest => {
     const message = 'rejection reason'
 
     Base.prepareTransfer(transferId, transfer)
-    .then(() => Base.rejectTransfer(transferId, message))
+    .then(() => Base.rejectTransfer(transferId, message, { name: Base.account2Name, password: Base.account2Password }))
     .then(() => {
       Base.getTransfer(transferId)
         .expect(200)

@@ -53,21 +53,21 @@ Test('Auth module', authTest => {
     strategyTest.test('return token if ENABLE_TOKEN_AUTH true', test => {
       Config.ENABLE_TOKEN_AUTH = true
       Config.ENABLE_BASIC_AUTH = false
-      test.equal(AuthModule.strategy(), 'token')
+      test.deepEqual(AuthModule.strategy(), { strategy: 'token', mode: 'required' })
       test.end()
     })
 
     strategyTest.test('return account if ENABLE_BASIC_AUTH true', test => {
       Config.ENABLE_TOKEN_AUTH = false
       Config.ENABLE_BASIC_AUTH = true
-      test.equal(AuthModule.strategy(), 'account')
+      test.deepEqual(AuthModule.strategy(), { strategy: 'account', mode: 'required' })
       test.end()
     })
 
     strategyTest.test('return account if ENABLE_TOKEN_AUTH and ENABLE_BASIC_AUTH true', test => {
       Config.ENABLE_TOKEN_AUTH = true
       Config.ENABLE_BASIC_AUTH = true
-      test.equal(AuthModule.strategy(), 'token')
+      test.deepEqual(AuthModule.strategy(), { strategy: 'token', mode: 'required' })
       test.end()
     })
 
@@ -77,6 +77,14 @@ Test('Auth module', authTest => {
       test.equal(AuthModule.strategy(), false)
       test.end()
     })
+
+    strategyTest.test('return try if optional', test => {
+      Config.ENABLE_TOKEN_AUTH = false
+      Config.ENABLE_BASIC_AUTH = true
+      test.deepEqual(AuthModule.strategy(true), { strategy: 'account', mode: 'try' })
+      test.end()
+    })
+
     strategyTest.end()
   })
 
