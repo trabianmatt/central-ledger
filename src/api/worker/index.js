@@ -1,9 +1,9 @@
 'use strict'
 
 const Logger = require('@leveloneproject/central-services-shared').Logger
-const TransferService = require('../domain/transfer')
-const TokenService = require('../domain/token')
-const Config = require('../lib/config')
+const TransferService = require('../../domain/transfer')
+const TokenService = require('../../domain/token')
+const Config = require('../../lib/config')
 
 const rejectExpiredTransfers = () => {
   return TransferService.rejectExpired()

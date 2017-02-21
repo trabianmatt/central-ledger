@@ -3,7 +3,7 @@
 const WS = require('ws')
 const Url = require('url')
 const Uuid = require('uuid4')
-const Events = require('../lib/events')
+const Events = require('../../lib/events')
 const SocketManager = require('./socket-manager')
 const WebSocket = require('./websocket')
 const AccountTransfers = require('./account-transfers')
@@ -73,9 +73,7 @@ const wireEvents = () => {
 exports.register = (server, options, next) => {
   manager = SocketManager.create()
 
-  const connection = server.select('api')
-
-  const wss = createWebSocketServer(connection.listener)
+  const wss = createWebSocketServer(server.listener)
 
   wireConnection(wss)
 

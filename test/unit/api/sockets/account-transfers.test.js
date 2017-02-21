@@ -3,10 +3,10 @@
 const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const P = require('bluebird')
-const AccountService = require('../../../src/domain/account')
-const UrlParser = require('../../../src/lib/urlparser')
-const ValidationError = require('../../../src/errors').ValidationError
-const AccountTransfers = require('../../../src/sockets/account-transfers')
+const AccountService = require('../../../../src/domain/account')
+const UrlParser = require('../../../../src/lib/urlparser')
+const ValidationError = require('../../../../src/errors').ValidationError
+const AccountTransfers = require('../../../../src/api/sockets/account-transfers')
 
 Test('AccountTransfers', transfersTest => {
   let sandbox

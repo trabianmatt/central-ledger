@@ -3,7 +3,7 @@
 const Joi = require('joi')
 const P = require('bluebird')
 const ValidationError = require('@leveloneproject/central-services-shared').ValidationError
-const AccountService = require('../domain/account')
+const AccountService = require('../../domain/account')
 
 const validationOptions = { abortEarly: false, language: { key: '{{!key}} ' } }
 const requestSchema = Joi.object().keys({

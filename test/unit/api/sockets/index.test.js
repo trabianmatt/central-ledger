@@ -4,11 +4,11 @@ const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const EventEmitter = require('events').EventEmitter
 const WS = require('ws')
-const Index = require('../../../src/sockets')
-const SocketManager = require('../../../src/sockets/socket-manager')
-const Events = require('../../../src/lib/events')
-const WebSocket = require('../../../src/sockets/websocket')
-const AccountTransfers = require('../../../src/sockets/account-transfers')
+const Index = require('../../../../src/api/sockets')
+const SocketManager = require('../../../../src/api/sockets/socket-manager')
+const Events = require('../../../../src/lib/events')
+const WebSocket = require('../../../../src/api/sockets/websocket')
+const AccountTransfers = require('../../../../src/api/sockets/account-transfers')
 
 const assertEvent = (assert, message, event, resource, relatedResources) => {
   assert.equal(message.jsonrpc, '2.0')
@@ -31,9 +31,8 @@ Test('Socket Module', moduleTest => {
 
   const mockServer = (listener = {}, serverTag = 'api') => {
     const server = {
-      select: sandbox.stub()
+      listener
     }
-    server.select.withArgs(serverTag).returns({ listener })
     return server
   }
 

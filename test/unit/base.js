@@ -1,21 +1,20 @@
 'use strict'
 
-const Path = require('path')
-const Glue = require('glue')
-const Manifest = require('../../src/manifest')
+const ServerSetup = require('../../src/shared/setup')
+const ApiAuth = require('../../src/api/auth')
+const ApiRoutes = require('../../src/api/routes')
 
 let serverPromise
 
 const setupServer = () => {
   if (!serverPromise) {
-    let serverPath = Path.normalize(Path.join(__dirname, '../../src/'))
-    serverPromise = Glue.compose(Manifest, { relativeTo: serverPath })
+    serverPromise = ServerSetup.createServer(3000, [ApiAuth, ApiRoutes])
   }
   return serverPromise
 }
 
 exports.setup = (connection = 'api') => {
-  return setupServer().then(server => server.select(connection))
+  return setupServer()
 }
 
 exports.buildRequest = (options) => {

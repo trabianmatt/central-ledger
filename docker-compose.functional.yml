@@ -1,7 +1,12 @@
 version: '2'
 services:
   central-ledger:
-    image: ${DOCKER_IMAGE}:latest
+    image: ${API_IMAGE}:latest
+    environment:
+     CLEDG_DATABASE_URI: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/central_ledger_functional"
+     CLEDG_ENABLE_BASIC_AUTH: "true"
+  central-ledger-admin:
+    image: ${ADMIN_IMAGE}:latest
     environment:
      CLEDG_DATABASE_URI: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/central_ledger_functional"
      CLEDG_ENABLE_BASIC_AUTH: "true"

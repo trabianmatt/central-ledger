@@ -1,0 +1,50 @@
+'use strict'
+
+const Hapi = require('hapi')
+const ErrorHandling = require('@leveloneproject/central-services-error-handling')
+const P = require('bluebird')
+const Migrator = require('../lib/migrator')
+const Db = require('../db')
+const Eventric = require('../eventric')
+const Plugins = require('./plugins')
+
+const runMigrations = () => Migrator.migrate()
+
+const connectDatabase = () => Db.connect()
+
+const startEventric = () => Eventric.getContext()
+
+const createServer = (port, modules) => {
+  return new P((resolve, reject) => {
+    const server = new Hapi.Server()
+    server.connection({
+      port,
+      routes: {
+        validate: ErrorHandling.validateRoutes()
+      }
+    })
+    Plugins.registerPlugins(server)
+    server.register(modules)
+    resolve(server)
+  })
+}
+
+// Migrations must run before connecting to the database, due to the way Massive loads all database objects on initialization.
+// Eventric.getContext is called to replay all events through projections (creating the read-model) before starting the server.
+const initialize = (port, modules = [], loadEventric = false) => {
+  return runMigrations()
+  .then(connectDatabase)
+  .then(r => {
+    if (loadEventric) {
+      return startEventric()
+    } else {
+      return r
+    }
+  })
+  .then(() => createServer(port, modules))
+}
+
+module.exports = {
+  initialize,
+  createServer
+}

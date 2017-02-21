@@ -3,7 +3,7 @@
 const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const EventEmitter = require('events').EventEmitter
-const SocketManager = require('../../../src/sockets/socket-manager')
+const SocketManager = require('../../../../src/api/sockets/socket-manager')
 
 Test('SocketManager', managerTest => {
   let manager

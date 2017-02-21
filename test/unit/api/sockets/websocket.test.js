@@ -3,8 +3,8 @@
 const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const EventEmitter = require('events').EventEmitter
-const SocketValidator = require('../../../src/sockets/validator')
-const WebSocket = require('../../../src/sockets/websocket')
+const SocketValidator = require('../../../../src/api/sockets/validator')
+const WebSocket = require('../../../../src/api/sockets/websocket')
 
 Test('WebSocket', socketTest => {
   let sandbox

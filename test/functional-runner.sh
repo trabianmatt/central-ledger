@@ -2,7 +2,8 @@
 POSTGRES_USER=${POSTGRES_USER:-postgres}
 POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
 LEDGER_HOST=${HOST_IP:-localhost}
-export DOCKER_IMAGE=${DOCKER_IMAGE:-'central-ledger'}
+export API_IMAGE=${API_IMAGE:-'central-ledger'}
+export ADMIN_IMAGE=${ADMIN_IMAGE:-'central-ledger-admin'}
 FUNC_TEST_CMD=${FUNC_TEST_CMD:-tape \'test/functional/**/*.test.js\' | faucet}
 docker_compose_file=$1
 docker_functional_compose_file=$2
@@ -30,8 +31,12 @@ is_psql_up() {
     psql -c '\l' > /dev/null 2>&1
 }
 
-is_central_ledger_up() {
+is_api_up() {
     curl --output /dev/null --silent --head --fail http://${LEDGER_HOST}:3000/health
+}
+
+is_admin_up() {
+    curl --output /dev/null --silent --head --fail http://${LEDGER_HOST}:3001/health
 }
 
 run_test_command()
@@ -64,9 +69,20 @@ EOSQL
 docker-compose -f $docker_compose_file -f $docker_functional_compose_file up -d central-ledger
 
 >&2 printf "Central-ledger is starting ..."
-until is_central_ledger_up; do
+until is_api_up; do
   >&2 printf "."
-  sleep 1
+  sleep 5
+done
+
+>&2 echo " done"
+
+>&2 printf "Central-ledger-admin is building ..."
+docker-compose -f $docker_compose_file -f $docker_functional_compose_file up -d central-ledger-admin
+
+>&2 printf "Central-ledger-admin is starting ..."
+until is_admin_up; do
+  >&2 printf "."
+  sleep 5
 done
 
 >&2 echo " done"

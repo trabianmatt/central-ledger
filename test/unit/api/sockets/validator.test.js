@@ -3,8 +3,8 @@
 const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const P = require('bluebird')
-const Validator = require('../../../src/sockets/validator')
-const AccountService = require('../../../src/domain/account')
+const Validator = require('../../../../src/api/sockets/validator')
+const AccountService = require('../../../../src/domain/account')
 
 Test('subscription validator', validatorTest => {
   let sandbox

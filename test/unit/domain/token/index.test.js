@@ -63,6 +63,7 @@ Test('Token Service', serviceTest => {
 
       Time.getCurrentUTCTimeInMilliseconds.returns(currentTime)
       Config.TOKEN_EXPIRATION = tokenExpiration
+
       Model.create.returns(P.resolve({ accountId, token: encodedTokenHash, expiration: tokenExpires }))
       TokenService.create(account)
         .then(result => {
@@ -70,6 +71,25 @@ Test('Token Service', serviceTest => {
           test.end()
         })
     })
+
+    createTest.test('create non expiring token if Config.TOKEN_EXPIRATION not set', test => {
+      const accountId = 1234
+      const account = { accountId }
+      const token = 'token'
+      const tokenHash = 'tokenHash'
+      const encodedTokenHash = tokenHash
+      Crypto.generateToken.returns(P.resolve(token))
+      Crypto.hash.withArgs(token).returns(P.resolve(tokenHash))
+      Config.TOKEN_EXPIRATION = null
+      Model.create.returns(P.resolve({}))
+
+      TokenService.create(account)
+        .then(result => {
+          test.ok(Model.create.calledWith(Sinon.match({ accountId, token: encodedTokenHash, expiration: null })))
+          test.end()
+        })
+    })
+
     createTest.end()
   })
 

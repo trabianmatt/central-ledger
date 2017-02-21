@@ -1,15 +1,16 @@
 'use strict'
 
-const Glob = require('glob')
+const Logger = require('@leveloneproject/central-services-shared').Logger
 
-exports.register = function (server, options, next) {
-  Glob.sync('**/routes.js', { cwd: __dirname }).forEach(function (x) {
-    server.route(require('./' + x))
-  })
+const Config = require('../lib/config')
+const Routes = require('./routes')
+const Auth = require('./auth')
+const Sockets = require('./sockets')
+const Worker = require('./worker')
 
-  next()
-}
+const Setup = require('../shared/setup')
 
-exports.register.attributes = {
-  name: 'api routes'
-}
+module.exports = Setup.initialize(Config.PORT, [Auth, Routes, Sockets, Worker], true)
+  .then(server => server.start().then(() => {
+    Logger.info('Server running at: %s', server.info.uri)
+  }))
