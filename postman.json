@@ -196,7 +196,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"id\": \"http://central-ledger/transfers/9d4f2a70-e0d6-42dc-9efb-6d23060ccd6f\",\n    \"ledger\": \"http://central-ledger\",\n    \"debits\": [{\n      \"account\": \"http://central-ledger/account/dfsp18\",\n      \"amount\": \"50\",\n      \"memo\": {\n      \t\"interledger\": \"blah\",\n      \t\"path\": \"blah\"\n      }\n    }],\n    \"credits\": [{\n      \"account\": \"http://central-ledger/account/dfsp2\",\n      \"amount\": \"50\",\n      \"memo\": {\n      \t\"interledger\": \"blah\",\n      \t\"path\": \"blah\"\n      }\n    }],\n    \"execution_condition\": \"ni:///sha-256;47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU?fpt=preimage-sha-256&cost=0\",\n    \"expires_at\": \"2016-11-16T00:00:01.000Z\"\n  }"
+							"raw": "{\n    \"id\": \"http://{{BASE_URL}}/transfers/9d4f2a70-e0d6-42dc-9efb-6d23060ccd6f\",\n    \"ledger\": \"http://{{BASE_URL}}\",\n    \"debits\": [{\n      \"account\": \"http://{{BASE_URL}}/account/dfsp18\",\n      \"amount\": \"50\",\n      \"memo\": {\n      \t\"interledger\": \"blah\",\n      \t\"path\": \"blah\"\n      }\n    }],\n    \"credits\": [{\n      \"account\": \"http://{{BASE_URL}}/account/dfsp2\",\n      \"amount\": \"50\",\n      \"memo\": {\n      \t\"interledger\": \"blah\",\n      \t\"path\": \"blah\"\n      }\n    }],\n    \"execution_condition\": \"ni:///sha-256;47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU?fpt=preimage-sha-256&cost=0\",\n    \"expires_at\": \"2016-11-16T00:00:01.000Z\"\n  }"
 						},
 						"description": ""
 					},
