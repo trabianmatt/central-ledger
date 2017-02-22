@@ -17,7 +17,7 @@ Test('POST /charges', putTest => {
       code: '003',
       is_active: true,
       payer: 'sender',
-      payee: 'ledger'
+      payee: 'receiver'
     }
 
     Base.createCharge(payload)

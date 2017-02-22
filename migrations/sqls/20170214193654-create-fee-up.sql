@@ -1,0 +1,21 @@
+CREATE TABLE IF NOT EXISTS fees (
+  "feeId" SERIAL NOT NULL,
+  "transferId" UUID NOT NULL,
+  "amount" DECIMAL(10,2) NOT NULL,
+  "payerAccountId" INTEGER NOT NULL,
+  "payeeAccountId" INTEGER NOT NULL,
+  "chargeId" INTEGER NOT NULL,
+  "settlementId" UUID NULL,
+  "createdDate" TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
+);
+
+CREATE INDEX "IDX_FEE_ID" ON fees
+  ("feeId" ASC);
+ALTER TABLE fees ADD CONSTRAINT "PK_FEE_ID" PRIMARY KEY
+  ("feeId");
+CREATE INDEX "IDX_FEE_PAYER_ACCOUNT_ID" ON fees
+  ("payerAccountId" ASC);
+CREATE INDEX "IDX_FEE_PAYEE_ACCOUNT_ID" ON fees
+  ("payeeAccountId" ASC);
+CREATE INDEX "IDX_FEE_CHARGE_ID" ON fees
+  ("chargeId" ASC);

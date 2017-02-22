@@ -1,6 +1,7 @@
 'use strict'
 
 const Model = require('./model')
+const Decimal = require('decimal.js')
 
 const PERCENTAGE = 'percent'
 const FLAT = 'flat'
@@ -9,18 +10,21 @@ function typeExists (rateType) {
   return rateType === PERCENTAGE || rateType === FLAT
 }
 
-function shouldQuote (charge, transaction) {
-  return (transaction.amount >= charge.minimum || !charge.minimum) &&
-         (transaction.amount <= charge.maximum || !charge.maximum) &&
+function filterCharges (charge, amount) {
+  amount = new Decimal(amount)
+  return (!charge.minimum || amount.greaterThanOrEqualTo(charge.minimum)) &&
+         (!charge.maximum || amount.lessThanOrEqualTo(charge.maximum)) &&
          typeExists(charge.rateType)
 }
 
 function quoteAmount (charge, amount) {
   switch (charge.rateType) {
     case PERCENTAGE:
-      return charge.rate * amount
+      const rate = new Decimal(charge.rate)
+      const transferAmount = new Decimal(amount)
+      return rate.times(transferAmount).valueOf()
     case FLAT:
-      return charge.rate
+      return new Decimal(charge.rate).valueOf()
   }
 }
 
@@ -45,14 +49,18 @@ const getAllSenderAsPayer = () => {
   return Model.getAllSenderAsPayer()
 }
 
+const getAllForTransfer = (transfer) => {
+  return getAll().then(charges => charges.filter(charge => filterCharges(charge, transfer.creditAmount)))
+}
+
 const quote = (transaction) => {
-  return getAllSenderAsPayer().then(charges => charges.filter(charge => shouldQuote(charge, transaction))
+  return getAllSenderAsPayer().then(charges => charges.filter(charge => filterCharges(charge, transaction.amount))
                                           .map(charge => chargeQuote(charge, transaction.amount)))
 }
 
 module.exports = {
   create,
   getAll,
-  getAllSenderAsPayer,
+  getAllForTransfer,
   quote
 }

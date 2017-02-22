@@ -15,11 +15,11 @@ const buildCharge = (name, rateType, code) => {
     'code': code,
     'is_active': true,
     'payer': 'sender',
-    'payee': 'ledger'
+    'payee': 'receiver'
   }
 }
 
-Test('return the list of charges in a charge quote', function (assert) {
+Test('return the list of charges in a charge quote', test => {
   const charge1Name = 'a' + Fixtures.generateRandomName()
   const charge2Name = 'b' + Fixtures.generateRandomName()
   const charge3Name = 'c' + Fixtures.generateRandomName()
@@ -41,19 +41,19 @@ Test('return the list of charges in a charge quote', function (assert) {
         .expect(200)
         .expect('Content-Type', /json/)
         .then(res => {
-          assert.equal(2, res.body.length)
+          test.equal(2, res.body.length)
 
-          assert.equal(charge.name, res.body[0].name)
-          assert.equal(Util.formatAmount(charge.rate * amount), res.body[0].amount)
-          assert.equal(charge.charge_type, res.body[0].charge_type)
-          assert.equal(charge.code, res.body[0].code)
+          test.equal(charge.name, res.body[0].name)
+          test.equal(Util.formatAmount(charge.rate * amount), res.body[0].amount)
+          test.equal(charge.charge_type, res.body[0].charge_type)
+          test.equal(charge.code, res.body[0].code)
 
-          assert.equal(charge2.name, res.body[1].name)
-          assert.equal(charge2.rate, res.body[1].amount)
-          assert.equal(charge2.charge_type, res.body[1].charge_type)
-          assert.equal(charge2.code, res.body[1].code)
+          test.equal(charge2.name, res.body[1].name)
+          test.equal(charge2.rate, res.body[1].amount)
+          test.equal(charge2.charge_type, res.body[1].charge_type)
+          test.equal(charge2.code, res.body[1].code)
 
-          assert.end()
+          test.end()
         })
     })
 })

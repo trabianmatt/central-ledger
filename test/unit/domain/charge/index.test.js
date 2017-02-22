@@ -5,6 +5,7 @@ const Sinon = require('sinon')
 const P = require('bluebird')
 const Model = require('../../../../src/domain/charge/model')
 const ChargeService = require('../../../../src/domain/charge')
+const Decimal = require('decimal.js')
 
 function createCharge (name = 'charge', rateType = 'percent', minimum = null, maximum = null) {
   return {
@@ -70,17 +71,23 @@ Test('Charge service', serviceTest => {
     getAllTest.end()
   })
 
-  serviceTest.test('getAllSenderAsPayer should', getAllTest => {
-    getAllTest.test('getAllSenderAsPayer from Model', test => {
-      const all = []
-      Model.getAllSenderAsPayer.returns(P.resolve(all))
-      ChargeService.getAllSenderAsPayer()
-      .then(result => {
-        test.equal(result, all)
-        test.end()
-      })
-    })
+  serviceTest.test('getAllForTransfer should', getAllTest => {
+    getAllTest.test('getAllForTransfer from Model', test => {
+      const charge1 = createCharge('acharge1', 'percent')
+      const charge2 = createCharge('bcharge2', 'flat')
+      const charge3 = createCharge('ccharge3', 'flat', '0.00', '100.00')
+      const charges = [charge1, charge2, charge3]
 
+      Model.getAll.returns(P.resolve(charges))
+      const transfer = {
+        creditAmount: '1.00'
+      }
+      ChargeService.getAllForTransfer(transfer)
+        .then(result => {
+          test.deepEqual(result, charges)
+          test.end()
+        })
+    })
     getAllTest.end()
   })
 
@@ -102,11 +109,11 @@ Test('Charge service', serviceTest => {
         test.equal(result[0].name, charge1.name)
         test.equal(result[0].code, charge1.code)
         test.equal(result[0].charge_type, charge1.chargeType)
-        test.equal(result[0].amount, charge1.rate * amount)
+        test.equal(result[0].amount, new Decimal(charge1.rate * amount).valueOf())
         test.equal(result[1].name, charge2.name)
         test.equal(result[1].code, charge2.code)
         test.equal(result[1].charge_type, charge2.chargeType)
-        test.equal(result[1].amount, charge2.rate)
+        test.equal(result[1].amount, new Decimal(charge2.rate).valueOf())
         test.end()
       })
     })

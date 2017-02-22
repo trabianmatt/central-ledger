@@ -19,7 +19,7 @@ function createChargePayload (name) {
 }
 
 Test('GET /charges', getTest => {
-  getTest.test('should return all charges', function (assert) {
+  getTest.test('should return all charges', test => {
     const charge1Name = 'a' + Fixtures.generateRandomName()
     const charge2Name = 'b' + Fixtures.generateRandomName()
 
@@ -32,13 +32,13 @@ Test('GET /charges', getTest => {
         .expect(200)
         .expect('Content-Type', /json/)
         .then(res => {
-          assert.equal(res.body[0].name, charge1Res.body.name)
-          assert.equal(res.body[0].created, charge1Res.body.created)
-          assert.equal(res.body[0].id, charge1Res.body.id)
-          assert.equal(res.body[1].name, charge2Res.body.name)
-          assert.equal(res.body[1].created, charge2Res.body.created)
-          assert.equal(res.body[1].id, charge2Res.body.id)
-          assert.end()
+          test.equal(res.body[0].name, charge1Res.body.name)
+          test.equal(res.body[0].created, charge1Res.body.created)
+          test.equal(res.body[0].id, charge1Res.body.id)
+          test.equal(res.body[1].name, charge2Res.body.name)
+          test.equal(res.body[1].created, charge2Res.body.created)
+          test.equal(res.body[1].id, charge2Res.body.id)
+          test.end()
         })
     })
   })

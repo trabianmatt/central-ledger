@@ -7,45 +7,45 @@ const Model = require('../../../../src/domain/charge/model')
 function createChargePayload (name) {
   return {
     name,
-    charge_type: 'charge_type',
-    rate_type: 'rate_type',
+    charge_type: 'fee',
+    rate_type: 'flat',
     rate: '1.00',
     minimum: '0.25',
     maximum: '100.00',
     code: '1',
     is_active: true,
-    payer: 'ledger',
+    payer: 'receiver',
     payee: 'sender'
   }
 }
 
-Test('charges model', function (modelTest) {
-  modelTest.test('create should', function (createTest) {
-    createTest.test('create a new charge', function (assert) {
+Test('charges model', modelTest => {
+  modelTest.test('create should', createTest => {
+    createTest.test('create a new charge', test => {
       const chargeName = Fixtures.generateRandomName()
       const payload = createChargePayload(chargeName)
 
       Model.create(payload)
         .then((charge) => {
-          assert.equal(charge.name, payload.name)
-          assert.equal(charge.chargeType, payload.charge_type)
-          assert.equal(charge.rateType, payload.rate_type)
-          assert.equal(charge.rate, payload.rate)
-          assert.equal(charge.minimum, payload.minimum)
-          assert.equal(charge.maximum, payload.maximum)
-          assert.equal(charge.code, payload.code)
-          assert.equal(charge.isActive, payload.is_active)
-          assert.ok(charge.createdDate)
-          assert.ok(charge.chargeId)
-          assert.end()
+          test.equal(charge.name, payload.name)
+          test.equal(charge.chargeType, payload.charge_type)
+          test.equal(charge.rateType, payload.rate_type)
+          test.equal(charge.rate, payload.rate)
+          test.equal(charge.minimum, payload.minimum)
+          test.equal(charge.maximum, payload.maximum)
+          test.equal(charge.code, payload.code)
+          test.equal(charge.isActive, payload.is_active)
+          test.ok(charge.createdDate)
+          test.ok(charge.chargeId)
+          test.end()
         })
     })
 
     createTest.end()
   })
 
-  modelTest.test('getAll should', function (getAllTest) {
-    getAllTest.test('return all charges', function (assert) {
+  modelTest.test('getAll should', getAllTest => {
+    getAllTest.test('return all charges', test => {
       const charge1Name = Fixtures.generateRandomName()
       const charge2Name = Fixtures.generateRandomName()
 
@@ -56,18 +56,18 @@ Test('charges model', function (modelTest) {
         .then(() => Model.create(chargePayload2))
         .then(() => Model.getAll())
         .then((charges) => {
-          assert.ok(charges.length > 0)
-          assert.ok(charges.find(a => a.name === charge1Name))
-          assert.ok(charges.find(a => a.name === charge2Name))
-          assert.end()
+          test.ok(charges.length > 0)
+          test.ok(charges.find(a => a.name === charge1Name))
+          test.ok(charges.find(a => a.name === charge2Name))
+          test.end()
         })
     })
 
     getAllTest.end()
   })
 
-  modelTest.test('getAllSenderAsPayer should', function (getAllTest) {
-    getAllTest.test('return all charges where the sender is the payer', function (assert) {
+  modelTest.test('getAllSenderAsPayer should', getAllTest => {
+    getAllTest.test('return all charges where the sender is the payer', test => {
       const charge1Name = Fixtures.generateRandomName()
       const charge2Name = Fixtures.generateRandomName()
       const charge3Name = Fixtures.generateRandomName()
@@ -76,16 +76,16 @@ Test('charges model', function (modelTest) {
       const chargePayload2 = createChargePayload(charge2Name)
       const chargePayload3 = createChargePayload(charge3Name)
       chargePayload3.payer = 'sender'
-      chargePayload3.payee = 'ledger'
+      chargePayload3.payee = 'receiver'
 
       Model.create(chargePayload1)
         .then(() => Model.create(chargePayload2))
         .then(() => Model.create(chargePayload3))
         .then(() => Model.getAllSenderAsPayer())
         .then((charges) => {
-          assert.ok(charges.length === 1)
-          assert.ok(charges.find(a => a.name === charge3Name))
-          assert.end()
+          test.ok(charges.length === 1)
+          test.ok(charges.find(a => a.name === charge3Name))
+          test.end()
         })
     })
 

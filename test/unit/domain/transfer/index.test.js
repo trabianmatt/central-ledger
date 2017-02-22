@@ -5,7 +5,7 @@ const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const P = require('bluebird')
 const Uuid = require('uuid4')
-const TransfersReadModel = require('../../../../src/domain/transfer/models/transfers-read-model')
+const TransferQueries = require('../../../../src/domain/transfer/queries')
 const SettleableTransfersReadModel = require(`${src}/models/settleable-transfers-read-model`)
 const SettlementsModel = require(`${src}/models/settlements`)
 const Events = require('../../../../src/lib/events')
@@ -32,8 +32,8 @@ Test('Transfer Service tests', serviceTest => {
 
   serviceTest.beforeEach(t => {
     sandbox = Sinon.sandbox.create()
-    sandbox.stub(TransfersReadModel, 'findExpired')
-    sandbox.stub(TransfersReadModel, 'getById')
+    sandbox.stub(TransferQueries, 'findExpired')
+    sandbox.stub(TransferQueries, 'getById')
     sandbox.stub(SettleableTransfersReadModel, 'getSettleableTransfers')
     sandbox.stub(SettlementsModel, 'generateId')
     sandbox.stub(SettlementsModel, 'create')
@@ -59,7 +59,7 @@ Test('Transfer Service tests', serviceTest => {
       const id = Uuid()
       const transfer = {}
       const transferPromise = P.resolve(transfer)
-      TransfersReadModel.getById.withArgs(id).returns(transferPromise)
+      TransferQueries.getById.withArgs(id).returns(transferPromise)
       test.equal(Service.getById(id), transferPromise)
       test.end()
     })
@@ -69,7 +69,7 @@ Test('Transfer Service tests', serviceTest => {
   serviceTest.test('getFulfillment should', getFulfillmentTest => {
     getFulfillmentTest.test('throw TransferNotFoundError if transfer does not exists', test => {
       const id = Uuid()
-      TransfersReadModel.getById.withArgs(id).returns(P.resolve(null))
+      TransferQueries.getById.withArgs(id).returns(P.resolve(null))
       Service.getFulfillment(id)
         .then(() => {
           test.fail('Expected exception')
@@ -86,7 +86,7 @@ Test('Transfer Service tests', serviceTest => {
     getFulfillmentTest.test('throw TransferNotConditionError if transfer does not have execution_condition', test => {
       const id = Uuid()
       const model = { id }
-      TransfersReadModel.getById.withArgs(id).returns(P.resolve(model))
+      TransferQueries.getById.withArgs(id).returns(P.resolve(model))
 
       Service.getFulfillment(id)
       .then(() => {
@@ -104,7 +104,7 @@ Test('Transfer Service tests', serviceTest => {
     getFulfillmentTest.test('throw AlreadyRolledBackError if transfer rejected', test => {
       const id = Uuid()
       const transfer = { id, executionCondition: 'condition', state: TransferState.REJECTED }
-      TransfersReadModel.getById.withArgs(id).returns(P.resolve(transfer))
+      TransferQueries.getById.withArgs(id).returns(P.resolve(transfer))
 
       Service.getFulfillment(id)
       .then(() => {
@@ -122,7 +122,7 @@ Test('Transfer Service tests', serviceTest => {
     getFulfillmentTest.test('throw MissingFulfillmentError if transfer does not have fulfillment', test => {
       const id = Uuid()
       const transfer = { id, executionCondition: 'condition', state: TransferState.EXECUTED }
-      TransfersReadModel.getById.withArgs(id).returns(P.resolve(transfer))
+      TransferQueries.getById.withArgs(id).returns(P.resolve(transfer))
 
       Service.getFulfillment(id)
       .then(() => {
@@ -141,7 +141,7 @@ Test('Transfer Service tests', serviceTest => {
       const id = Uuid()
       const fulfillment = 'fulfillment'
       const transfer = { id, fulfillment, executionCondition: 'condition', state: TransferState.EXECUTED }
-      TransfersReadModel.getById.returns(P.resolve(transfer))
+      TransferQueries.getById.returns(P.resolve(transfer))
       Service.getFulfillment(id)
       .then(result => {
         test.equal(result, fulfillment)
@@ -154,7 +154,7 @@ Test('Transfer Service tests', serviceTest => {
   serviceTest.test('rejectExpired should', rejectTest => {
     rejectTest.test('find expired transfers and reject them', test => {
       let transfers = [{ transferUuid: 1 }, { transferUuid: 2 }]
-      TransfersReadModel.findExpired.returns(P.resolve(transfers))
+      TransferQueries.findExpired.returns(P.resolve(transfers))
       transfers.forEach((x, i) => {
         Commands.reject.onCall(i).returns(P.resolve({ id: x.transferUuid }))
         TransferTranslator.toTransfer.onCall(i).returns({ id: x.transferUuid })

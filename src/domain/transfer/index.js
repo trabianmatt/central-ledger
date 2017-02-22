@@ -1,7 +1,7 @@
 'use strict'
 
 const P = require('bluebird')
-const TransfersReadModel = require('./models/transfers-read-model')
+const TransferQueries = require('./queries')
 const SettleableTransfersReadModel = require('../../models/settleable-transfers-read-model')
 const SettlementsModel = require('../../models/settlements')
 const Commands = require('./commands')
@@ -12,11 +12,11 @@ const Events = require('../../lib/events')
 const Errors = require('../../errors')
 
 const getById = (id) => {
-  return TransfersReadModel.getById(id)
+  return TransferQueries.getById(id)
 }
 
 const getFulfillment = (id) => {
-  return TransfersReadModel.getById(id)
+  return getById(id)
   .then(transfer => {
     if (!transfer) {
       throw new Errors.TransferNotFoundError()
@@ -72,7 +72,7 @@ const fulfill = (fulfillment) => {
 }
 
 const rejectExpired = () => {
-  const rejections = TransfersReadModel.findExpired().then(expired => expired.map(x => expire(x.transferUuid)))
+  const rejections = TransferQueries.findExpired().then(expired => expired.map(x => expire(x.transferUuid)))
   return P.all(rejections).then(rejections => {
     return rejections.map(r => r.id)
   })
