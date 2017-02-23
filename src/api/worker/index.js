@@ -32,7 +32,7 @@ exports.rejectExpiredTransfers = rejectExpiredTransfers
 exports.rejectExpiredTokens = rejectExpiredTokens
 
 exports.register = (server, options, next) => {
-  if (Config.EXPIRES_TIMEOUT) {
+  if (Config.EXPIRES_TIMEOUT && Config.EXPIRES_TIMEOUT > 0) {
     setInterval(this.rejectExpiredTransfers, Config.EXPIRES_TIMEOUT)
   }
   if (Config.TOKEN_EXPIRATION) {

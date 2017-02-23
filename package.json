@@ -24,7 +24,6 @@
     "start": "run-p start:api start:admin",
     "start:api": "CLEDG_HOSTNAME=http://localhost:3000 node src/api/index.js",
     "start:admin": "CLEDG_HOSTNAME=http://localhost:3000 node src/admin/index.js",
-    "ledger-test": "npm install five-bells-condition@3.3.1 && CLEDG_EXPIRES_TIMEOUT=5000 CLEDG_ENABLE_BASIC_AUTH=true npm run start:api",
     "dev": "npm run docker:stop && docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d",
     "test": "npm run test:unit | faucet",
     "pretest": "standard",
@@ -37,6 +36,7 @@
     "test:integration": "./test/integration-runner.sh .env",
     "test:functional": "run-s docker:build test:functional:test-only",
     "test:functional:test-only": "./test/functional-runner.sh docker-compose.yml docker-compose.functional.yml .env",
+    "test:spec": "./test/spec-runner.sh",
     "db:psql": "docker run -it --net centralledger_back --rm postgres:9.4 sh -c 'exec psql -h postgres -p \"$POSTGRES_PORT_5432_TCP_PORT\" -U central_ledger -d postgres'",
     "migrate": "db-migrate up $npm_package_config_db",
     "migrate:reset": "db-migrate reset $npm_package_config_db",
@@ -86,6 +86,7 @@
   "devDependencies": {
     "aws-sdk": "2.16.0",
     "faucet": "0.0.1",
+    "five-bells-ledger-api-tests": "github:interledgerjs/five-bells-ledger-api-tests",
     "istanbul": "0.4.5",
     "npm-run-all": "4.0.1",
     "pre-commit": "1.1.3",

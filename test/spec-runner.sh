@@ -2,19 +2,14 @@
 POSTGRES_USER=${POSTGRES_USER:-postgres}
 POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
 LEDGER_HOST=${HOST_IP:-localhost}
+export CLEDG_HOSTNAME='http://localhost:3000'
+export CLEDG_EXPIRES_TIMEOUT=5000
 export API_IMAGE=${API_IMAGE:-'central-ledger'}
 export ADMIN_IMAGE=${ADMIN_IMAGE:-'central-ledger-admin'}
-export CLEDG_HOSTNAME='http://central-ledger'
-export CLEDG_EXPIRES_TIMEOUT=0
-FUNC_TEST_CMD=${FUNC_TEST_CMD:-tape \'test/functional/**/*.test.js\' | faucet}
-docker_compose_file=$1
-docker_functional_compose_file=$2
-env_file=$3
-
-if [ $# -ne 3 ]; then
-    echo "Usage: $0 docker-compose-file docker-functional-compose-file env-file"
-    exit 1
-fi
+TEST_CMD='node test/spec/index.js'
+docker_compose_file='docker-compose.yml'
+docker_functional_compose_file='docker-compose.functional.yml'
+env_file='.env'
 
 psql() {
 	docker run --rm -i \
@@ -43,7 +38,7 @@ is_admin_up() {
 
 run_test_command()
 {
-  eval "$FUNC_TEST_CMD"
+  eval "$TEST_CMD"
 }
 
 shutdown_and_remove() {
@@ -54,7 +49,7 @@ shutdown_and_remove() {
 source $env_file
 
 >&2 echo "Postgres is starting"
-docker-compose -f $docker_compose_file -f $docker_functional_compose_file up -d postgres > /dev/null 2>&1
+docker-compose -f $docker_compose_file -f $docker_functional_compose_file up -d postgres
 
 until is_psql_up; do
   >&2 echo "Postgres is unavailable - sleeping"
@@ -78,18 +73,8 @@ done
 
 >&2 echo " done"
 
->&2 printf "Central-ledger-admin is building ..."
-docker-compose -f $docker_compose_file -f $docker_functional_compose_file up -d central-ledger-admin
 
->&2 printf "Central-ledger-admin is starting ..."
-until is_admin_up; do
-  >&2 printf "."
-  sleep 5
-done
-
->&2 echo " done"
-
->&2 echo "Functional tests are starting"
+>&2 echo "Spec tests are starting"
 set -o pipefail && run_test_command
 test_exit_code=$?
 
