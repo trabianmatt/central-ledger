@@ -50,7 +50,7 @@
     "docker:clean": "docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.functional.yml down --rmi local"
   },
   "dependencies": {
-    "@leveloneproject/central-services-auth": "^0.4.0",
+    "@leveloneproject/central-services-auth": "0.4.0",
     "@leveloneproject/central-services-error-handling": "0.3.0",
     "@leveloneproject/central-services-shared": "0.3.0",
     "argon2": "0.14.0",
@@ -70,10 +70,9 @@
     "hapi-swagger": "7.4.0",
     "inert": "4.0.2",
     "joi": "10.0.1",
+    "knex": "0.12.6",
     "lodash": "4.17.2",
-    "massive": "2.5.0",
     "moment": "2.16.0",
-    "pg": "6.1.0",
     "rc": "1.1.6",
     "sodium": "1.2.3",
     "urlsafe-base64": "1.0.0",
@@ -82,7 +81,9 @@
     "winston": "2.3.0",
     "ws": "1.1.1"
   },
-  "optionalDependencies": {},
+  "optionalDependencies": {
+    "pg": "6.1.0"
+  },
   "devDependencies": {
     "aws-sdk": "2.16.0",
     "faucet": "0.0.1",

@@ -6,27 +6,34 @@ const Model = require('../../../src/models/settled-transfers')
 const Fixtures = require('../../fixtures')
 const Db = require('../../../src/db')
 
-Test('settled-transfers model', function (modelTest) {
-  modelTest.test('create should', function (createTest) {
-    createTest.test('create a new settledTransfer', function (assert) {
+const getSettledTransfersCount = () => {
+  return Db.connect().then(db => db('settledTransfers').count('*')).then(record => parseInt(record[0].count))
+}
+
+Test('settled-transfers model', modelTest => {
+  modelTest.test('create should', createTest => {
+    createTest.test('create a new settledTransfer', test => {
       let payload = { id: Fixtures.generateTransferId(), settlementId: Uuid() }
       createSettledTransfer(payload)
         .then((settledTransfer) => {
-          assert.end()
+          test.ok(settledTransfer)
+          test.equal(settledTransfer.transferId, payload.id)
+          test.equal(settledTransfer.settlementId, payload.settlementId)
+          test.end()
         })
     })
 
     createTest.end()
   })
 
-  modelTest.test('truncate should', function (truncateTest) {
-    truncateTest.test('truncate settledTransfers table', function (assert) {
+  modelTest.test('truncate should', truncateTest => {
+    truncateTest.test('truncate settledTransfers table', test => {
       Model.truncate()
         .then((executedTransfer) => {
-          Db.connect().then(db => db.settledTransfers.countAsync({}))
+          getSettledTransfersCount()
             .then((result) => {
-              assert.equals(result, '0')
-              assert.end()
+              test.equals(result, 0)
+              test.end()
             })
         })
     })

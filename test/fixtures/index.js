@@ -157,6 +157,10 @@ const getMomentToExpire = (timeToPrepareTransfer = 0.5) => {
   return Moment.utc().add(timeToPrepareTransfer, 'seconds')
 }
 
+const getCurrentUTCTimeInMilliseconds = () => {
+  return new Date().getTime()
+}
+
 module.exports = {
   hostname,
   buildAccountPosition,
@@ -171,5 +175,6 @@ module.exports = {
   generateRandomName,
   generateAccountName,
   generateTransferId,
-  getMomentToExpire
+  getMomentToExpire,
+  getCurrentUTCTimeInMilliseconds
 }

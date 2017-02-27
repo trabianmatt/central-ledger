@@ -2,17 +2,32 @@
 
 const src = '../../../src'
 const Test = require('tapes')(require('tape'))
-const Uuid = require('uuid4')
 const Sinon = require('sinon')
+const P = require('bluebird')
+const Uuid = require('uuid4')
 const Model = require(`${src}/models/settlements`)
 const Db = require(`${src}/db`)
 const Proxyquire = require('proxyquire')
 
 Test('settlements model', function (modelTest) {
   let sandbox
+  let dbConnection
+  let dbMethodsStub
+
+  const settlementsTable = 'settlements'
+
+  let setupDatabase = (methodStubs = dbMethodsStub) => {
+    dbConnection.withArgs(settlementsTable).returns(methodStubs)
+  }
 
   modelTest.beforeEach((t) => {
     sandbox = Sinon.sandbox.create()
+    dbMethodsStub = {
+      insert: sandbox.stub()
+    }
+    sandbox.stub(Db, 'connect')
+    dbConnection = sandbox.stub()
+    Db.connect.returns(P.resolve(dbConnection))
     t.end()
   })
 
@@ -21,32 +36,31 @@ Test('settlements model', function (modelTest) {
     t.end()
   })
 
-  modelTest.test('create should', function (createTest) {
-    createTest.test('invoke runAsync on db', function (assert) {
-      let insertAsync = sandbox.stub().returns(Promise.resolve())
-      let settlements = { insertAsync: insertAsync }
-      sandbox.stub(Db, 'connect').returns(Promise.resolve({ settlements: settlements }))
-
+  modelTest.test('create should', createTest => {
+    createTest.test('insert and return new settlement record', test => {
       let settlementId = Uuid()
+      let settlement = { settlementId: settlementId }
+
+      dbMethodsStub.insert.withArgs({ settlementId: settlementId }, '*').returns(P.resolve([settlement]))
+      setupDatabase()
 
       Model.create(settlementId)
-        .then(() => {
-          assert.ok(insertAsync.calledWith({settlementId: settlementId}))
-          assert.end()
-        }
-        )
+        .then(c => {
+          test.equal(c, settlement)
+          test.end()
+        })
     })
 
     createTest.end()
   })
 
-  modelTest.test('generateId should', function (generateIdTest) {
-    generateIdTest.test('return Uuid', function (assert) {
+  modelTest.test('generateId should', generateIdTest => {
+    generateIdTest.test('return Uuid', test => {
       let expectedUuid = Uuid()
       let model = Proxyquire(`${src}/models/settlements`, { 'uuid4': () => expectedUuid })
 
-      assert.equals(expectedUuid, model.generateId())
-      assert.end()
+      test.equals(expectedUuid, model.generateId())
+      test.end()
     })
 
     generateIdTest.end()

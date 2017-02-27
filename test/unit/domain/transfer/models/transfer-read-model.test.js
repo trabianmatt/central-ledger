@@ -11,17 +11,28 @@ const UrlParser = require(`${src}/lib/urlparser`)
 const TransfersReadModel = require(`${src}/domain/transfer/models/transfers-read-model`)
 const TransferState = require(`${src}/domain/transfer/state`)
 
-function setupTransfersDb (transfers) {
-  let db = { transfers: transfers }
-  Db.connect.returns(P.resolve(db))
-}
-
-Test('transfer model', function (modelTest) {
+Test('transfer model', modelTest => {
   let sandbox
+  let dbConnection
+  let dbMethodsStub
+
+  let transfersTable = 'transfers'
+
+  let setupDatabase = (table = transfersTable, methodStubs = dbMethodsStub) => {
+    dbConnection.withArgs(table).returns(methodStubs)
+  }
 
   modelTest.beforeEach(t => {
     sandbox = Sinon.sandbox.create()
+    dbMethodsStub = {
+      insert: sandbox.stub(),
+      where: sandbox.stub(),
+      update: sandbox.stub(),
+      truncate: sandbox.stub()
+    }
     sandbox.stub(Db, 'connect')
+    dbConnection = sandbox.stub()
+    Db.connect.returns(P.resolve(dbConnection))
     sandbox.stub(UrlParser, 'idFromTransferUri')
     t.end()
   })
@@ -31,7 +42,7 @@ Test('transfer model', function (modelTest) {
     t.end()
   })
 
-  modelTest.test('saveTransfer should', function (saveTransferTest) {
+  modelTest.test('saveTransfer should', saveTransferTest => {
     let transferRecord = {
       transferUuid: Uuid(),
       state: TransferState.PREPARED,
@@ -45,125 +56,88 @@ Test('transfer model', function (modelTest) {
       preparedDate: Moment(1474471273588)
     }
 
-    saveTransferTest.test('insert transfer record', function (assert) {
-      let insertAsync = sandbox.stub()
-      setupTransfersDb({ insertAsync: insertAsync })
+    saveTransferTest.test('insert transfer and return newly created record', test => {
+      let saved = { transferUuid: transferRecord.transferUuid }
+
+      dbMethodsStub.insert.returns(P.resolve([saved]))
+      setupDatabase()
 
       TransfersReadModel.saveTransfer(transferRecord)
-        .then(() => {
-          assert.ok(insertAsync.calledWith(Sinon.match(transferRecord)))
-          assert.end()
-        })
-    })
-
-    saveTransferTest.test('return newly created transfer', function (assert) {
-      let newTransfer = { transferUuid: Uuid() }
-      let insertAsync = sandbox.stub().returns(newTransfer)
-      setupTransfersDb({ insertAsync: insertAsync })
-
-      TransfersReadModel.saveTransfer(transferRecord)
-        .then(t => {
-          assert.equal(t, newTransfer)
-          assert.end()
-        })
-        .catch(err => {
-          assert.fail(err)
+        .then(s => {
+          test.ok(dbMethodsStub.insert.withArgs(transferRecord).calledOnce)
+          test.equal(s, saved)
+          test.end()
         })
     })
 
     saveTransferTest.end()
   })
 
-  modelTest.test('updateTransfer should', function (updateTransferTest) {
-    updateTransferTest.test('update transfer record', function (assert) {
-      let updateAsync = sandbox.stub()
-      setupTransfersDb({ updateAsync: updateAsync })
-
+  modelTest.test('updateTransfer should', updateTransferTest => {
+    updateTransferTest.test('update transfer record', test => {
       let transferId = Uuid()
       let fields = { state: TransferState.EXECUTED, fulfillment: 'oAKAAA' }
+      let updatedTransfer = { transferUuid: transferId }
+
+      let updateStub = sandbox.stub().returns(P.resolve([updatedTransfer]))
+      dbMethodsStub.where.returns({ update: updateStub })
+      setupDatabase()
 
       TransfersReadModel.updateTransfer(transferId, fields)
-        .then(() => {
-          assert.ok(updateAsync.calledWith(Sinon.match({
-            transferUuid: transferId,
-            state: fields.state,
-            fulfillment: fields.fulfillment
-          })))
-          assert.end()
+        .then(u => {
+          test.ok(dbMethodsStub.where.withArgs({ transferUuid: transferId }.calledOnce))
+          test.ok(updateStub.withArgs(fields, '*').calledOnce)
+          test.equal(u, updatedTransfer)
+          test.end()
         })
     })
 
     updateTransferTest.end()
   })
 
-  modelTest.test('truncateTransfers should', function (truncateTest) {
-    truncateTest.test('destroy all transfers records', function (assert) {
-      let destroyAsync = sandbox.stub()
-      setupTransfersDb({ destroyAsync: destroyAsync })
+  modelTest.test('truncateTransfers should', truncateTest => {
+    truncateTest.test('destroy all transfers records', test => {
+      dbMethodsStub.truncate.returns(P.resolve())
+      setupDatabase()
 
       TransfersReadModel.truncateTransfers()
         .then(() => {
-          let destroyAsyncArg = destroyAsync.firstCall.args[0]
-          assert.deepEqual(destroyAsyncArg, {})
-          assert.end()
+          test.ok(dbMethodsStub.truncate.calledOnce)
+          test.end()
         })
     })
 
     truncateTest.end()
   })
 
-  modelTest.test('getByIdShould', function (getByIdTest) {
-    getByIdTest.test('return exception if db.connect throws', function (assert) {
-      let error = new Error()
-      Db.connect.returns(Promise.reject(error))
-
-      TransfersReadModel.getById(Uuid())
-        .then(() => {
-          assert.fail('Should have thrown error')
-          assert.end()
-        })
-        .catch(err => {
-          assert.equal(err, error)
-          assert.end()
-        })
-    })
-
-    getByIdTest.test('return exception if db.getTransferByIdAsync throws', function (assert) {
-      let error = new Error()
-
-      let getTransferByIdAsync = function () { return Promise.reject(error) }
-      let db = { getTransferByIdAsync: getTransferByIdAsync }
-      Db.connect.returns(P.resolve(db))
-
-      TransfersReadModel.getById(Uuid())
-        .then(() => {
-          assert.fail('Should have thrown error')
-          assert.end()
-        })
-        .catch(err => {
-          assert.equal(err, error)
-          assert.end()
-        })
-    })
-
-    getByIdTest.test('find transfer by transferUuid', function (assert) {
+  modelTest.test('getByIdShould', getByIdTest => {
+    getByIdTest.test('find transfer by transferUuid', test => {
       let id = Uuid()
-      let transfer = [{ id: id }]
-      let getTransferByIdAsync = sandbox.stub().returns(Promise.resolve(transfer))
+      let transfer = { id: id }
 
-      let db = { getTransferByIdAsync: getTransferByIdAsync }
-      Db.connect.returns(P.resolve(db))
+      let joinDebitStub = sandbox.stub()
+      let joinCreditStub = sandbox.stub()
+      let selectStub = sandbox.stub()
+
+      dbMethodsStub.where.returns({
+        innerJoin: joinCreditStub.returns({
+          innerJoin: joinDebitStub.returns({
+            select: selectStub.returns({
+              first: sandbox.stub().returns(P.resolve(transfer))
+            })
+          })
+        })
+      })
+      setupDatabase('transfers AS t')
 
       TransfersReadModel.getById(id)
         .then(found => {
-          let getTransferByIdAsyncArg = getTransferByIdAsync.firstCall.args[0]
-          assert.equal(found, transfer[0])
-          assert.equal(getTransferByIdAsyncArg, id)
-          assert.end()
-        })
-        .catch(err => {
-          assert.fail(err)
-          assert.end()
+          test.ok(dbMethodsStub.where.withArgs({ transferUuid: id }).calledOnce)
+          test.ok(joinCreditStub.withArgs('accounts AS ca', 't.creditAccountId', 'ca.accountId').calledOnce)
+          test.ok(joinDebitStub.withArgs('accounts AS da', 't.debitAccountId', 'da.accountId').calledOnce)
+          test.ok(selectStub.withArgs('t.*', 'ca.name AS creditAccountName', 'da.name AS debitAccountName').calledOnce)
+          test.equal(found, transfer)
+          test.end()
         })
     })
 
@@ -171,38 +145,45 @@ Test('transfer model', function (modelTest) {
   })
 
   modelTest.test('findExpired should', findExpiredTest => {
-    findExpiredTest.test('find transfer by state and expires_at', t => {
+    findExpiredTest.test('find transfer by state and expires_at', test => {
       let transfer1 = { id: Uuid() }
       let transfer2 = { id: Uuid() }
+      let expiredTransfers = [transfer1, transfer2]
       let expirationDate = new Date()
-      let findAsync = sandbox.stub().returns(Promise.resolve([ transfer1, transfer2 ]))
-      setupTransfersDb({ findAsync: findAsync })
+
+      let andWhereStub = sandbox.stub().returns(P.resolve(expiredTransfers))
+      dbMethodsStub.where.returns({ andWhere: andWhereStub })
+      setupDatabase()
 
       TransfersReadModel.findExpired(expirationDate)
-      .then(found => {
-        let findAsyncArg = findAsync.firstCall.args[0]
-        t.equal(findAsyncArg.state, TransferState.PREPARED)
-        t.equal(findAsyncArg['expiresAt <'], expirationDate.toISOString())
-        t.end()
-      })
+        .then(found => {
+          test.ok(dbMethodsStub.where.withArgs({ state: TransferState.PREPARED }).calledOnce)
+          test.ok(andWhereStub.withArgs('expiresAt', '<', expirationDate.toISOString()).calledOnce)
+          test.equal(found, expiredTransfers)
+          test.end()
+        })
     })
 
-    findExpiredTest.test('default expires_at date', t => {
+    findExpiredTest.test('default expires_at date', test => {
       let transfer1 = { id: Uuid() }
       let transfer2 = { id: Uuid() }
-      let findAsync = sandbox.stub().returns(Promise.resolve([ transfer1, transfer2 ]))
+      let expiredTransfers = [transfer1, transfer2]
+
       let expirationDate = new Date()
       sandbox.stub(Moment, 'utc')
       Moment.utc.returns(expirationDate)
-      setupTransfersDb({ findAsync: findAsync })
+
+      let andWhereStub = sandbox.stub().returns(P.resolve(expiredTransfers))
+      dbMethodsStub.where.returns({ andWhere: andWhereStub })
+      setupDatabase()
 
       TransfersReadModel.findExpired()
-      .then(found => {
-        let findAsyncArg = findAsync.firstCall.args[0]
-        t.equal(findAsyncArg.state, TransferState.PREPARED)
-        t.equal(findAsyncArg['expiresAt <'], expirationDate.toISOString())
-        t.end()
-      })
+        .then(found => {
+          test.ok(dbMethodsStub.where.withArgs({ state: TransferState.PREPARED }).calledOnce)
+          test.ok(andWhereStub.withArgs('expiresAt', '<', expirationDate.toISOString()).calledOnce)
+          test.equals(found, expiredTransfers)
+          test.end()
+        })
     })
 
     findExpiredTest.end()

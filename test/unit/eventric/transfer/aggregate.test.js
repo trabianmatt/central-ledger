@@ -10,7 +10,7 @@ const Transfer = require(`${src}/eventric/transfer`)
 const TransfersProjection = require(`${src}/domain/transfer/projection`)
 const FeesProjection = require(`${src}/domain/fee/projection`)
 const SettleableTransfersProjection = require(`${src}/eventric/transfer/settleable-transfers-projection`)
-const PostgresStore = require(`${src}/eventric/postgres-store`)
+const KnexStore = require(`${src}/eventric/knex-store`)
 const CryptoConditions = require(`${src}/crypto-conditions`)
 const Errors = require('../../../../src/errors')
 const RejectionType = require(`${src}/domain/transfer/rejection-type`)
@@ -57,7 +57,7 @@ Test('Transfer aggregate', aggregateTest => {
     CryptoConditions.validateCondition.returns(true)
     CryptoConditions.validateFulfillment.returns(true)
     context = Eventric.context('TestContext')
-    PostgresStore.default = {}
+    KnexStore.default = {}
     Transfer.setupContext(context)
     context.initialize()
       .then(_t => t.end())

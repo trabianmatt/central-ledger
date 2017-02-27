@@ -1,25 +1,32 @@
 'use strict'
 
+const _ = require('lodash')
 const Db = require('../db')
 const Uuid = require('uuid4')
 
-class PostgresStore {
+class KnexStore {
   constructor () {
     this._getNextSequenceNumber = this._getNextSequenceNumber.bind(this)
     this._toDomainEvent = this._toDomainEvent.bind(this)
     this._insertDomainEvent = this._insertDomainEvent.bind(this)
-    this._findAsync = this._findAsync.bind(this)
+    this._findDomainEvents = this._findDomainEvents.bind(this)
   }
 
-  _findAsync (criteria, callback) {
+  _findDomainEvents (criteria, callback) {
     Db.connect()
-    .then(db => db[this._tableName].findAsync(criteria))
+    .then(db => {
+      let query = db(this._tableName)
+      _.keys(criteria).forEach(k => {
+        query = query.whereIn(k, criteria[k])
+      })
+      return query
+    })
     .then(results => callback(null, results.map(this._toDomainEvent)))
     .catch(e => callback(e, null))
   }
 
   _getNextSequenceNumber (db, domainEvent) {
-    return db.runAsync(`SELECT MAX("sequenceNumber") FROM "${this._tableName}" WHERE "aggregateId" = $1`, [domainEvent.aggregate.id])
+    return db(this._tableName).max('sequenceNumber').where({ aggregateId: domainEvent.aggregate.id })
       .then(result => {
         if (domainEvent.ensureIsFirstDomainEvent || result[0].max === null) {
           return 1
@@ -41,7 +48,7 @@ class PostgresStore {
   }
 
   _insertDomainEvent (db, sequenceNumber, domainEvent) {
-    return db[this._tableName].insertAsync({
+    return db(this._tableName).insert({
       eventId: Uuid(),
       name: domainEvent.name,
       payload: domainEvent.payload,
@@ -49,7 +56,7 @@ class PostgresStore {
       aggregateName: domainEvent.aggregate.name,
       sequenceNumber: sequenceNumber,
       timestamp: (new Date(domainEvent.timestamp)).toISOString()
-    })
+    }, '*').then(inserted => inserted[0])
   }
 
   initialize (context) {
@@ -62,25 +69,23 @@ class PostgresStore {
 
   saveDomainEvent (domainEvent) {
     return Db.connect()
-    .then(db => this._getNextSequenceNumber(db, domainEvent)
-        .then(sequenceNumber => this._insertDomainEvent(db, sequenceNumber, domainEvent))
-    )
-    .then(result => this._toDomainEvent(result))
+      .then(db => this._getNextSequenceNumber(db, domainEvent).then(sequenceNumber => this._insertDomainEvent(db, sequenceNumber, domainEvent)))
+      .then(result => this._toDomainEvent(result))
   }
 
   findDomainEventsByName (domainEventNames, callback) {
-    this._findAsync({ name: [].concat(domainEventNames) }, callback)
+    this._findDomainEvents({ name: [].concat(domainEventNames) }, callback)
   }
 
   findDomainEventsByAggregateId (aggregateIds, callback) {
-    this._findAsync({ aggregateId: [].concat(aggregateIds) }, callback)
+    this._findDomainEvents({ aggregateId: [].concat(aggregateIds) }, callback)
   }
 
   findDomainEventsByNameAndAggregateId (domainEventNames, aggregateIds, callback) {
-    this._findAsync({ name: [].concat(domainEventNames), aggregateId: [].concat(aggregateIds) }, callback)
+    this._findDomainEvents({ name: [].concat(domainEventNames), aggregateId: [].concat(aggregateIds) }, callback)
   }
 
   destroy () { }
 }
 
-exports.default = PostgresStore
+exports.default = KnexStore

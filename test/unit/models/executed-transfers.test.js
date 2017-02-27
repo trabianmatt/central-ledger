@@ -3,14 +3,30 @@
 const src = '../../../src'
 const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
+const P = require('bluebird')
 const Model = require(`${src}/models/executed-transfers`)
 const Db = require(`${src}/db`)
 
 Test('executed-transfers model', function (modelTest) {
   let sandbox
+  let dbConnection
+  let dbMethodsStub
+
+  const executedTransfersTable = 'executedTransfers'
+
+  let setupDatabase = (methodStubs = dbMethodsStub) => {
+    dbConnection.withArgs(executedTransfersTable).returns(methodStubs)
+  }
 
   modelTest.beforeEach((t) => {
     sandbox = Sinon.sandbox.create()
+    dbMethodsStub = {
+      insert: sandbox.stub(),
+      truncate: sandbox.stub()
+    }
+    sandbox.stub(Db, 'connect')
+    dbConnection = sandbox.stub()
+    Db.connect.returns(P.resolve(dbConnection))
     t.end()
   })
 
@@ -19,35 +35,34 @@ Test('executed-transfers model', function (modelTest) {
     t.end()
   })
 
-  modelTest.test('create should', function (createTest) {
-    createTest.test('invoke runAsync on db', function (assert) {
-      let runAsync = sandbox.stub().returns(Promise.resolve())
-      sandbox.stub(Db, 'connect').returns(Promise.resolve({ runAsync: runAsync }))
-
+  modelTest.test('create should', createTest => {
+    createTest.test('insert and return new record', test => {
       let transfer = { id: '1234' }
+      let created = { transferId: transfer.id }
+
+      dbMethodsStub.insert.withArgs({ transferId: transfer.id }).returns(P.resolve([created]))
+      setupDatabase()
 
       Model.create(transfer)
-        .then(() => {
-          assert.ok(runAsync.calledWith(`INSERT INTO "executedTransfers" ("transferId") VALUES (uuid('${transfer.id}'))`))
-          assert.end()
-        }
-        )
+        .then(c => {
+          test.equal(c, created)
+          test.end()
+        })
     })
 
     createTest.end()
   })
 
-  modelTest.test('truncate should', function (truncateTest) {
-    truncateTest.test('invoke runAsync on db', function (assert) {
-      let runAsync = sandbox.stub().returns(Promise.resolve())
-      sandbox.stub(Db, 'connect').returns(Promise.resolve({ runAsync: runAsync }))
+  modelTest.test('truncate should', truncateTest => {
+    truncateTest.test('truncate table', test => {
+      dbMethodsStub.truncate.returns(P.resolve())
+      setupDatabase()
 
       Model.truncate()
         .then(() => {
-          assert.ok(runAsync.calledWith('TRUNCATE "executedTransfers"'))
-          assert.end()
-        }
-        )
+          test.ok(dbMethodsStub.truncate.calledOnce)
+          test.end()
+        })
     })
 
     truncateTest.end()

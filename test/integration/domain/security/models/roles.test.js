@@ -19,7 +19,6 @@ Test('roles model', rolesTest => {
           test.equal(result.permissions, role.permissions)
           test.end()
         })
-        .catch(test.end)
     })
 
     saveTest.test('save existing role', test => {
@@ -30,14 +29,14 @@ Test('roles model', rolesTest => {
           return result
         })
         .then(updatedRole => {
-          Model.save(updatedRole)
+          return Model.save(updatedRole)
             .then(result => {
               test.equal(result.name, 'new name')
               test.end()
             })
         })
-        .catch(test.end)
     })
+
     saveTest.end()
   })
 
@@ -51,7 +50,6 @@ Test('roles model', rolesTest => {
           test.equal(saved.permissions, role.permissions)
           test.end()
         })
-        .catch(test.end)
     })
 
     getByIdTest.test('return null if no role found', test => {
@@ -60,7 +58,6 @@ Test('roles model', rolesTest => {
           test.notOk(result)
           test.end()
         })
-        .catch(test.end)
     })
 
     getByIdTest.end()
@@ -73,7 +70,6 @@ Test('roles model', rolesTest => {
           test.ok(results.length > 0)
           test.end()
         })
-        .catch(test.end)
     })
 
     getAllTest.end()
@@ -88,11 +84,16 @@ Test('roles model', rolesTest => {
           return Model.getById(roleId)
             .then(r => test.ok(r))
             .then(() => Model.remove(roleId))
-            .then(() => Model.getById(roleId))
+            .then(removed => {
+              test.equal(removed.length, 1)
+              test.equal(removed[0].roleId, roleId)
+              return Model.getById(roleId)
+            })
             .then(r => test.notOk(r))
         })
         .then(test.end)
     })
+
     deleteTest.end()
   })
 

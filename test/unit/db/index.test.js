@@ -3,93 +3,80 @@
 const src = '../../../src'
 const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
-const Massive = require('massive')
-const P = require('bluebird')
+const Proxyquire = require('proxyquire')
 const Config = require(`${src}/lib/config`)
-const Db = require(`${src}/db`)
 
 Test('db', dbTest => {
   let sandbox
+  let knexStub
+  let Db
+
+  let databaseUri = 'postgres://some-data-uri'
+  let oldDatabaseUri
 
   dbTest.beforeEach(t => {
     sandbox = Sinon.sandbox.create()
-    sandbox.stub(Massive, 'connect')
-    sandbox.stub(P, 'promisifyAll')
+    knexStub = sandbox.stub()
+    Db = Proxyquire(`${src}/db`, { knex: knexStub })
     Db.resetConnection()
+    oldDatabaseUri = Config.DATABASE_URI
+    Config.DATABASE_URI = databaseUri
     t.end()
   })
 
   dbTest.afterEach(t => {
     sandbox.restore()
+    Config.DATABASE_URI = oldDatabaseUri
     t.end()
   })
 
   dbTest.test('connect should', connectTest => {
-    connectTest.test('connect using config values', t => {
-      let fakeDb = {}
-      let scriptsDir = `${process.cwd()}/src/db`
-      let databaseUri = 'some-data-uri'
-      let connectStub = Massive.connect
-      connectStub.yields(null, fakeDb)
-      Config.DATABASE_URI = databaseUri
-
+    connectTest.test('connect using config values', assert => {
       Db.connect()
         .then(db => {
-          t.equal(db, fakeDb)
-          t.ok(connectStub.calledOnce)
-          t.equal(connectStub.firstCall.args[0].connectionString, databaseUri)
-          t.equal(connectStub.firstCall.args[0].scripts, scriptsDir)
-          t.end()
+          assert.ok(knexStub.calledOnce)
+          assert.equal(knexStub.firstCall.args[0].client, 'pg')
+          assert.equal(knexStub.firstCall.args[0].connection, databaseUri)
+          assert.end()
         })
     })
 
-    connectTest.test('promisify db', t => {
-      const d = { someFunction: function () {} }
-      Massive.connect.yields(null, d)
+    connectTest.test('throw error for invalid database uri', assert => {
+      Config.DATABASE_URI = 'invalid'
       Db.connect()
-      .then(db => {
-        t.ok(P.promisifyAll.calledWith(d))
-        t.end()
-      })
+        .then(db => {
+          assert.fail('Should have thrown error')
+          assert.end()
+        })
+        .catch(err => {
+          assert.notOk(knexStub.called)
+          assert.equal(err.message, 'Invalid database type in DATABASE_URI')
+          assert.end()
+        })
     })
 
-    connectTest.test('promisify only db object properties', t => {
-      const d = { prop1: {}, prop2: {}, func1: function () {} }
-      Massive.connect.yields(null, d)
+    connectTest.test('throw error for unsupported database type', assert => {
+      Config.DATABASE_URI = 'mysql://some-data-uri'
       Db.connect()
-      .then(db => {
-        t.ok(P.promisifyAll.calledWith(d.prop1))
-        t.ok(P.promisifyAll.calledWith(d.prop2))
-        t.notOk(P.promisifyAll.calledWith(d.func1))
-        t.end()
-      })
+        .then(db => {
+          assert.fail('Should have thrown error')
+          assert.end()
+        })
+        .catch(err => {
+          assert.notOk(knexStub.called)
+          assert.equal(err.message, 'Invalid database type in DATABASE_URI')
+          assert.end()
+        })
     })
 
-    connectTest.test('does not promisify inherited properties', t => {
-      const d = { prop1: { key: 'value' } }
-      const d2 = Object.create(d)
-      d2['prop2'] = { key: 'some-other-value' }
-      Massive.connect.yields(null, d2)
-      Db.connect()
-      .then(db => {
-        t.ok(P.promisifyAll.calledWith(d2.prop2))
-        t.notOk(P.promisifyAll.calledWith(d2.prop1))
-        t.end()
-      })
-    })
-
-    connectTest.test('only create one connection', t => {
-      let d = {}
-      Massive.connect.yields(null, d)
+    connectTest.test('only create one connection', assert => {
       Db.connect()
       .then(db1 => {
         Db.connect()
         .then(db2 => {
-          t.equal(db1, db2)
-          t.ok(P.promisifyAll.calledWith(d))
-          t.ok(P.promisifyAll.calledOnce)
-          t.ok(Massive.connect.calledOnce)
-          t.end()
+          assert.equal(db1, db2)
+          assert.ok(knexStub.calledOnce)
+          assert.end()
         })
       })
     })

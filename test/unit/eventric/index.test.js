@@ -5,7 +5,7 @@ const Sinon = require('sinon')
 const Eventric = require('eventric')
 const P = require('bluebird')
 const Index = require('../../../src/eventric/index')
-const PostgresStore = require('../../../src/eventric/postgres-store')
+const KnexStore = require('../../../src/eventric/knex-store')
 const Transfer = require('../../../src/eventric/transfer')
 
 Test('Eventric index', indexTest => {
@@ -35,7 +35,7 @@ Test('Eventric index', indexTest => {
 
       Index.getContext()
       .then(ctx => {
-        t.ok(Eventric.setStore.calledWith(PostgresStore.default, {}))
+        t.ok(Eventric.setStore.calledWith(KnexStore.default, {}))
         t.ok(Transfer.setupContext.calledWith(stubCtx))
       })
       .then(() => {

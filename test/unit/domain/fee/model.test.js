@@ -9,13 +9,24 @@ const Db = require(`${src}/db`)
 
 Test('fees model', modelTest => {
   let sandbox
+  let dbConnection
+  let dbMethodsStub
 
-  function setupFeesDb (fees) {
-    sandbox.stub(Db, 'connect').returns(P.resolve({ fees: fees }))
+  let feesTable = 'fees'
+
+  let setupDatabase = (methodStubs = dbMethodsStub) => {
+    dbConnection.withArgs(feesTable).returns(methodStubs)
   }
 
   modelTest.beforeEach((t) => {
     sandbox = Sinon.sandbox.create()
+    dbMethodsStub = {
+      insert: sandbox.stub(),
+      where: sandbox.stub()
+    }
+    sandbox.stub(Db, 'connect')
+    dbConnection = sandbox.stub()
+    Db.connect.returns(P.resolve(dbConnection))
     t.end()
   })
 
@@ -27,7 +38,7 @@ Test('fees model', modelTest => {
   modelTest.test('getAllForTransfer should', getAllForTransferTest => {
     getAllForTransferTest.test('return exception if db.connect throws', test => {
       const error = new Error()
-      sandbox.stub(Db, 'connect').returns(P.reject(error))
+      Db.connect.returns(P.reject(error))
 
       Model.getAllForTransfer({transferUuid: '1234'})
         .then(() => {
@@ -39,10 +50,11 @@ Test('fees model', modelTest => {
         })
     })
 
-    getAllForTransferTest.test('return exception if db.findAsync throws', test => {
+    getAllForTransferTest.test('return exception if db query throws', test => {
       const error = new Error()
-      const findAsync = function () { return P.reject(error) }
-      setupFeesDb({ findAsync: findAsync })
+
+      dbMethodsStub.where.returns(P.reject(error))
+      setupDatabase()
 
       Model.getAllForTransfer({transferUuid: '1234'})
         .then(() => {
@@ -59,17 +71,14 @@ Test('fees model', modelTest => {
       const feeId2 = '2'
       const fees = [{ feeId: feeId1 }, { feeId: feeId2 }]
       const transfer = {transferUuid: '1234'}
-      const findAsync = Sinon.stub().returns(P.resolve(fees))
-      setupFeesDb({ findAsync: findAsync })
+
+      dbMethodsStub.where.withArgs({ transferId: transfer.transferUuid }).returns(P.resolve(fees))
+      setupDatabase()
 
       Model.getAllForTransfer(transfer)
         .then((found) => {
           test.equal(found, fees)
-          test.deepEqual(findAsync.firstCall.args[0], {transferId: transfer.transferUuid})
           test.end()
-        })
-        .catch(err => {
-          test.fail(err)
         })
     })
 
@@ -77,9 +86,10 @@ Test('fees model', modelTest => {
   })
 
   modelTest.test('create should', createTest => {
-    createTest.test('save payload as new object', test => {
+    createTest.test('save payload and return newly created fee', test => {
       const transferId = '1'
       const amount = '1.00'
+
       const fee = {
         transferId: transferId,
         amount: amount,
@@ -87,8 +97,6 @@ Test('fees model', modelTest => {
         payeeAccountId: 2,
         chargeId: 3
       }
-      const saveAsync = Sinon.stub().returns(P.resolve(fee))
-      setupFeesDb({ saveAsync: saveAsync })
 
       const payload = {
         transferId: transferId,
@@ -98,29 +106,13 @@ Test('fees model', modelTest => {
         chargeId: 3
       }
 
+      dbMethodsStub.insert.withArgs(payload, '*').returns(P.resolve([fee]))
+      setupDatabase()
+
       Model.create(payload)
-        .then(() => {
-          const saveAsyncArg = saveAsync.firstCall.args[0]
-          test.equal(saveAsyncArg, payload)
-          test.equal(saveAsyncArg.transferId, payload.transferId)
-          test.equal(saveAsyncArg.amount, payload.amount)
+        .then(c => {
+          test.equal(c, fee)
           test.end()
-        })
-    })
-
-    createTest.test('return newly created fee', test => {
-      const feeId = '1'
-      const fee = { feeId }
-      const saveAsync = Sinon.stub().returns(P.resolve(fee))
-      setupFeesDb({ saveAsync: saveAsync })
-
-      Model.create({})
-        .then(s => {
-          test.equal(s, fee)
-          test.end()
-        })
-        .catch(err => {
-          test.fail(err)
         })
     })
 
@@ -133,17 +125,16 @@ Test('fees model', modelTest => {
       const chargeId = '1'
       const amount = '1.00'
       const fee = { transferId, amount, chargeId }
-      const findAsync = Sinon.stub().returns(P.resolve(fee))
-      setupFeesDb({ findAsync: findAsync })
 
       const charge = { chargeId }
       const transfer = { transferUuid: transferId }
 
+      dbMethodsStub.where.withArgs({ transferId: transfer.transferUuid, chargeId: charge.chargeId }).returns({ first: sandbox.stub().returns(P.resolve(fee)) })
+      setupDatabase()
+
       Model.doesExist(charge, transfer)
-        .then(() => {
-          const findAsyncArg = findAsync.firstCall.args[0]
-          test.equal(findAsyncArg.chargeId, charge.chargeId)
-          test.equal(findAsyncArg.transferId, transfer.transferUuid)
+        .then(existing => {
+          test.equal(existing, fee)
           test.end()
         })
     })

@@ -7,15 +7,29 @@ const P = require('bluebird')
 const Model = require(`${src}/domain/account/model`)
 const Db = require(`${src}/db`)
 
-Test('accounts model', function (modelTest) {
+Test('accounts model', modelTest => {
   let sandbox
+  let dbConnection
+  let dbMethodsStub
 
-  function setupAccountsDb (accounts, userCredentials = {}) {
-    sandbox.stub(Db, 'connect').returns(P.resolve({ accounts: accounts, userCredentials: userCredentials }))
+  const accountsTable = 'accounts'
+  const userCredentialsTable = 'userCredentials'
+
+  let setupDatabaseForTable = (tableName, methodStubs = dbMethodsStub) => {
+    dbConnection.withArgs(tableName).returns(methodStubs)
   }
 
   modelTest.beforeEach((t) => {
     sandbox = Sinon.sandbox.create()
+    dbMethodsStub = {
+      insert: sandbox.stub(),
+      update: sandbox.stub(),
+      where: sandbox.stub(),
+      orderBy: sandbox.stub()
+    }
+    sandbox.stub(Db, 'connect')
+    dbConnection = sandbox.stub()
+    Db.connect.returns(P.resolve(dbConnection))
     t.end()
   })
 
@@ -24,288 +38,282 @@ Test('accounts model', function (modelTest) {
     t.end()
   })
 
-  modelTest.test('getAll should', function (getAllTest) {
-    getAllTest.test('return exception if db.connect throws', function (assert) {
+  modelTest.test('getAll should', getAllTest => {
+    getAllTest.test('return exception if db.connect throws', test => {
       const error = new Error()
-      sandbox.stub(Db, 'connect').returns(P.reject(error))
+      Db.connect.returns(P.reject(error))
 
       Model.getAll()
         .then(() => {
-          assert.fail('Should have thrown error')
+          test.fail('Should have thrown error')
         })
         .catch(err => {
-          assert.equal(err, error)
-          assert.end()
+          test.equal(err, error)
+          test.end()
         })
     })
 
-    getAllTest.test('return exception if db.findAsync throws', function (assert) {
+    getAllTest.test('return exception if db query throws', test => {
       const error = new Error()
-      const findAsync = function () { return P.reject(error) }
-      setupAccountsDb({ findAsync: findAsync })
+
+      dbMethodsStub.orderBy.withArgs('name', 'asc').returns(P.reject(error))
+      setupDatabaseForTable(accountsTable)
 
       Model.getAll()
         .then(() => {
-          assert.fail('Should have thrown error')
+          test.fail('Should have thrown error')
         })
         .catch(err => {
-          assert.equal(err, error)
-          assert.end()
+          test.equal(err, error)
+          test.end()
         })
     })
 
-    getAllTest.test('return all accounts ordered by name', function (assert) {
+    getAllTest.test('return all accounts ordered by name', test => {
       const account1Name = 'dfsp1'
       const account2Name = 'dfsp2'
       const accounts = [{ name: account1Name }, { name: account2Name }]
 
-      const findAsync = Sinon.stub().returns(P.resolve(accounts))
-      setupAccountsDb({ findAsync: findAsync })
+      dbMethodsStub.orderBy.withArgs('name', 'asc').returns(P.resolve(accounts))
+      setupDatabaseForTable(accountsTable)
 
       Model.getAll()
         .then((found) => {
-          assert.equal(found, accounts)
-          assert.deepEqual(findAsync.firstCall.args[0], {})
-          assert.equal(findAsync.firstCall.args[1].order, 'name')
-          assert.end()
+          test.equal(found, accounts)
+          test.end()
         })
         .catch(err => {
-          assert.fail(err)
+          test.fail(err)
         })
     })
 
     getAllTest.end()
   })
 
-  modelTest.test('getById should', function (getByIdTest) {
-    getByIdTest.test('return exception if db.connect throws', function (assert) {
+  modelTest.test('getById should', getByIdTest => {
+    getByIdTest.test('return exception if db.connect throws', test => {
       const error = new Error()
-      sandbox.stub(Db, 'connect').returns(P.reject(error))
+      Db.connect.returns(P.reject(error))
 
       Model.getById(1)
         .then(() => {
-          assert.fail('Should have thrown error')
+          test.fail('Should have thrown error')
         })
         .catch(err => {
-          assert.equal(err, error)
-          assert.end()
+          test.equal(err, error)
+          test.end()
         })
     })
 
-    getByIdTest.test('return exception if db.findOneAsync throws', function (assert) {
+    getByIdTest.test('return exception if db query throws', test => {
       const error = new Error()
-      const findOneAsync = function () { return P.reject(error) }
-      setupAccountsDb({ findOneAsync: findOneAsync })
+
+      dbMethodsStub.where.withArgs({ accountId: 1 }).returns({ first: sandbox.stub().returns(P.reject(error)) })
+      setupDatabaseForTable(accountsTable)
 
       Model.getById(1)
         .then(() => {
-          assert.fail('Should have thrown error')
+          test.fail('Should have thrown error')
         })
         .catch(err => {
-          assert.equal(err, error)
-          assert.end()
+          test.equal(err, error)
+          test.end()
         })
     })
 
-    getByIdTest.test('finds account by id', function (assert) {
+    getByIdTest.test('finds account by id', test => {
       const id = 1
       const account = { accountId: id }
-      const findOneAsync = Sinon.stub().returns(P.resolve(account))
-      setupAccountsDb({ findOneAsync: findOneAsync })
+
+      dbMethodsStub.where.withArgs({ accountId: id }).returns({ first: sandbox.stub().returns(P.resolve(account)) })
+      setupDatabaseForTable(accountsTable)
 
       Model.getById(id)
         .then(r => {
-          assert.equal(r, account)
-          assert.equal(findOneAsync.firstCall.args[0].accountId, id)
-          assert.end()
+          test.equal(r, account)
+          test.equal(dbMethodsStub.where.firstCall.args[0].accountId, id)
+          test.end()
         })
         .catch(err => {
-          assert.fail(err)
+          test.fail(err)
         })
     })
 
     getByIdTest.end()
   })
 
-  modelTest.test('getByName should', function (getByNameTest) {
-    getByNameTest.test('return exception if db.connect throws', function (assert) {
+  modelTest.test('getByName should', getByNameTest => {
+    getByNameTest.test('return exception if db.connect throws', test => {
       let error = new Error()
-      sandbox.stub(Db, 'connect').returns(P.reject(error))
+      Db.connect.returns(P.reject(error))
 
       Model.getByName('dfsp1')
         .then(() => {
-          assert.fail('Should have thrown error')
+          test.fail('Should have thrown error')
         })
         .catch(err => {
-          assert.equal(err, error)
-          assert.end()
+          test.equal(err, error)
+          test.end()
         })
     })
 
-    getByNameTest.test('return exception if db.findOneAsync throws', function (assert) {
+    getByNameTest.test('return exception if db query throws', test => {
+      let name = 'dfsp1'
       let error = new Error()
-      let findOneAsync = function () { return P.reject(error) }
-      setupAccountsDb({ findOneAsync: findOneAsync })
 
-      Model.getByName('dfsp1')
+      dbMethodsStub.where.withArgs({ name: name }).returns({ first: sandbox.stub().returns(P.reject(error)) })
+      setupDatabaseForTable(accountsTable)
+
+      Model.getByName(name)
         .then(() => {
-          assert.fail('Should have thrown error')
+          test.fail('Should have thrown error')
         })
         .catch(err => {
-          assert.equal(err, error)
-          assert.end()
+          test.equal(err, error)
+          test.end()
         })
     })
 
-    getByNameTest.test('finds account by name', function (assert) {
+    getByNameTest.test('finds account by name', test => {
       let name = 'dfsp1'
       let account = { name: name }
-      let findOneAsync = Sinon.stub().returns(P.resolve(account))
-      setupAccountsDb({ findOneAsync: findOneAsync })
+
+      dbMethodsStub.where.withArgs({ name: name }).returns({ first: sandbox.stub().returns(P.resolve(account)) })
+      setupDatabaseForTable(accountsTable)
 
       Model.getByName(name)
         .then(r => {
-          assert.equal(r, account)
-          assert.equal(findOneAsync.firstCall.args[0].name, name)
-          assert.end()
+          test.equal(r, account)
+          test.equal(dbMethodsStub.where.firstCall.args[0].name, name)
+          test.end()
         })
         .catch(err => {
-          assert.fail(err)
+          test.fail(err)
         })
     })
 
     getByNameTest.end()
   })
 
-  modelTest.test('update should', function (updateTest) {
-    updateTest.test('return exception if db.connect throws', function (assert) {
+  modelTest.test('update should', updateTest => {
+    updateTest.test('return exception if db.connect throws', test => {
       let error = new Error()
       const id = 1
       const account = { accountId: id }
       const isDisabled = false
-      sandbox.stub(Db, 'connect').returns(P.reject(error))
+      Db.connect.returns(P.reject(error))
 
       Model.update(account, isDisabled)
         .then(() => {
-          assert.fail('Should have thrown error')
+          test.fail('Should have thrown error')
         })
         .catch(err => {
-          assert.equal(err, error)
-          assert.end()
+          test.equal(err, error)
+          test.end()
         })
     })
 
-    updateTest.test('return exception if db.saveAsync throws', function (assert) {
+    updateTest.test('return exception if db query throws', test => {
       let error = new Error()
       const id = 1
       const account = { accountId: id }
       const isDisabled = false
-      let saveAsync = function () { return P.reject(error) }
-      setupAccountsDb({ saveAsync: saveAsync })
+
+      let updateStub = sandbox.stub().returns(P.reject(error))
+      dbMethodsStub.where.withArgs({ accountId: id }).returns({ update: updateStub })
+      setupDatabaseForTable(accountsTable)
 
       Model.update(account, isDisabled)
         .then(() => {
-          assert.fail('Should have thrown error')
+          test.fail('Should have thrown error')
         })
         .catch(err => {
-          assert.equal(err, error)
-          assert.end()
+          test.ok(updateStub.withArgs({ isDisabled: isDisabled }, '*').calledOnce)
+          test.equal(err, error)
+          test.end()
         })
     })
 
-    updateTest.test('update an account', function (assert) {
+    updateTest.test('update an account', test => {
       let name = 'dfsp1'
       const isDisabled = true
       const id = 1
+
       let account = {
         accountId: id,
         name: name,
         isDisabled: false
       }
+
       let updatedAccount = {
         accountId: id,
         name: name,
         isDisabled: isDisabled
       }
-      let saveAsync = Sinon.stub().returns(P.resolve(updatedAccount))
-      setupAccountsDb({ saveAsync: saveAsync })
+
+      let updateStub = sandbox.stub().returns(P.resolve([updatedAccount]))
+
+      dbMethodsStub.where.withArgs({ accountId: id }).returns({ update: updateStub })
+      setupDatabaseForTable(accountsTable)
 
       Model.update(account, isDisabled)
         .then(r => {
-          assert.equal(r, updatedAccount)
-          assert.equal(saveAsync.firstCall.args[0].accountId, account.accountId)
-          assert.equal(saveAsync.firstCall.args[0].isDisabled, isDisabled)
-          assert.end()
+          test.ok(updateStub.withArgs({ isDisabled: isDisabled }, '*').calledOnce)
+          test.equal(r, updatedAccount)
+          test.end()
         })
         .catch(err => {
-          assert.fail(err)
+          test.fail(err)
         })
     })
 
     updateTest.end()
   })
 
-  modelTest.test('create should', function (createTest) {
-    createTest.test('save payload as new object', function (assert) {
+  modelTest.test('create should', createTest => {
+    createTest.test('save payload and return new account', test => {
       let name = 'dfsp1'
-      let account = { name: name }
-      let saveAsyncAccount = Sinon.stub().returns(P.resolve(account))
-      let saveAsyncUserCredentials = Sinon.stub().returns(P.resolve({}))
-      setupAccountsDb({ saveAsync: saveAsyncAccount }, { saveAsync: saveAsyncUserCredentials })
+      let payload = { name: name, hashedPassword: 'hashedPassword' }
+      let insertedAccount = { accountId: 1, name: name }
 
-      let payload = { name: 'dfsp1', hashedPassword: 'hashedPassword' }
+      let insertAccountStub = sandbox.stub().returns(P.resolve([insertedAccount]))
+      setupDatabaseForTable(accountsTable, { insert: insertAccountStub })
+
+      let insertUserCredsStub = sandbox.stub().returns(P.resolve([]))
+      setupDatabaseForTable(userCredentialsTable, { insert: insertUserCredsStub })
 
       Model.create(payload)
-        .then(() => {
-          let saveAsyncArg = saveAsyncAccount.firstCall.args[0]
-          assert.notEqual(saveAsyncArg, payload)
-          assert.equal(saveAsyncArg.name, payload.name)
-          assert.end()
-        })
-    })
-
-    createTest.test('return newly created account', function (t) {
-      let name = 'dfsp1'
-      let account = { name: name, accountId: 1 }
-      let saveAsyncAccount = Sinon.stub().returns(P.resolve(account))
-      let saveAsyncUserCredentials = Sinon.stub().returns(P.resolve({}))
-      setupAccountsDb({ saveAsync: saveAsyncAccount }, { saveAsync: saveAsyncUserCredentials })
-
-      Model.create({})
         .then(s => {
-          t.equal(s, account)
-          t.end()
-        })
-        .catch(err => {
-          t.fail(err)
+          test.comment(JSON.stringify(insertAccountStub.firstCall.args))
+          test.ok(insertAccountStub.withArgs({ name: name }, '*').calledOnce)
+          test.ok(insertUserCredsStub.withArgs({ accountId: insertedAccount.accountId, password: payload.hashedPassword }, '*').calledOnce)
+          test.equal(s, insertedAccount)
+          test.end()
         })
     })
 
     createTest.end()
   })
 
-  modelTest.test('retrieveUserCredentials should', function (createTest) {
-    createTest.test('return user credentials for a given account', function (assert) {
-      let name = 'dfsp1'
-      let accountId = '1234'
-      let password = 'password'
-      let account = { name: name, accountId: accountId }
-      let userCredentials = { accountId: accountId, password: password }
+  modelTest.test('retrieveUserCredentials should', retrieverUserCredsTest => {
+    retrieverUserCredsTest.test('return user credentials for a given account', test => {
+      let account = { name: 'dfsp1', 'accountId': '1234' }
+      let userCredentials = { accountId: account.accountId, password: 'password' }
 
-      const findOneAsync = Sinon.stub().returns(P.resolve(userCredentials))
-      setupAccountsDb({}, { findOneAsync: findOneAsync })
+      dbMethodsStub.where.withArgs({ accountId: account.accountId }).returns({ first: sandbox.stub().returns(P.resolve(userCredentials)) })
+      setupDatabaseForTable(userCredentialsTable)
 
       Model.retrieveUserCredentials(account)
         .then(r => {
-          let findOneAsyncArg = findOneAsync.firstCall.args[0]
-          assert.equal(findOneAsyncArg.accountId, account.accountId)
-          assert.equal(r.accountId, userCredentials.accountId)
-          assert.equal(r.password, userCredentials.password)
-          assert.end()
+          let whereArg = dbMethodsStub.where.firstCall.args[0]
+          test.equal(whereArg.accountId, account.accountId)
+          test.equal(r.accountId, userCredentials.accountId)
+          test.equal(r.password, userCredentials.password)
+          test.end()
         })
     })
 
-    createTest.end()
+    retrieverUserCredsTest.end()
   })
 
   modelTest.end()

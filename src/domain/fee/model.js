@@ -2,20 +2,16 @@
 
 const Db = require('../../db')
 
-exports.create = (fee) => {
-  return Db.connect()
-    .then(db => {
-      return db.fees.saveAsync(
+const feesTable = 'fees'
 
-          fee
-        )
-    })
+exports.create = (fee) => {
+  return Db.connect().then(db => db(feesTable).insert(fee, '*')).then(inserted => inserted[0])
 }
 
 exports.getAllForTransfer = (transfer) => {
-  return Db.connect().then(db => db.fees.findAsync({ transferId: transfer.transferUuid }, {}))
+  return Db.connect().then(db => db(feesTable).where({ transferId: transfer.transferUuid }))
 }
 
 exports.doesExist = (charge, transfer) => {
-  return Db.connect().then(db => db.fees.findAsync({ transferId: transfer.transferUuid, chargeId: charge.chargeId }, {}))
+  return Db.connect().then(db => db(feesTable).where({ transferId: transfer.transferUuid, chargeId: charge.chargeId }).first())
 }

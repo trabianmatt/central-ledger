@@ -17,19 +17,23 @@ let pastDate = () => {
   return d
 }
 
-function createAccounts (accountNames) {
+const getTransfersCount = () => {
+  return Db.connect().then(db => db('transfers').count('*')).then(record => parseInt(record[0].count))
+}
+
+const createAccounts = (accountNames) => {
   return P.all(accountNames.map(name => Account.create({ name: name, password: '1234' }))).then(accounts => _.reduce(accounts, (m, acct) => _.set(m, acct.name, acct.accountId), {}))
 }
 
-function buildReadModelDebitOrCredit (accountName, amount, accountMap) {
+const buildReadModelDebitOrCredit = (accountName, amount, accountMap) => {
   let record = Fixtures.buildDebitOrCredit(accountName, amount)
   record.accountId = accountMap[accountName]
   return record
 }
 
-Test('transfers read model', function (modelTest) {
-  modelTest.test('saveTransfer should', function (saveTransferTest) {
-    saveTransferTest.test('save a transfer to the read model', function (assert) {
+Test('transfers read model', modelTest => {
+  modelTest.test('saveTransfer should', saveTransferTest => {
+    saveTransferTest.test('save a transfer to the read model', test => {
       let debitAccountName = Fixtures.generateAccountName()
       let creditAccountName = Fixtures.generateAccountName()
 
@@ -38,10 +42,10 @@ Test('transfers read model', function (modelTest) {
           let transfer = Fixtures.buildReadModelTransfer(Fixtures.generateTransferId(), buildReadModelDebitOrCredit(debitAccountName, '50', accountMap), buildReadModelDebitOrCredit(creditAccountName, '50', accountMap), TransferState.PREPARED)
           ReadModel.saveTransfer(transfer)
             .then(savedTransfer => {
-              assert.ok(savedTransfer)
-              assert.equal(savedTransfer.transferUuid, transfer.transferUuid)
-              assert.equal(savedTransfer.state, transfer.state)
-              assert.end()
+              test.ok(savedTransfer)
+              test.equal(savedTransfer.transferUuid, transfer.transferUuid)
+              test.equal(savedTransfer.state, transfer.state)
+              test.end()
             })
         })
     })
@@ -49,8 +53,8 @@ Test('transfers read model', function (modelTest) {
     saveTransferTest.end()
   })
 
-  modelTest.test('updateTransfer should', function (updateTransferTest) {
-    updateTransferTest.test('update a transfer in the read model', function (assert) {
+  modelTest.test('updateTransfer should', updateTransferTest => {
+    updateTransferTest.test('update a transfer in the read model', test => {
       let debitAccountName = Fixtures.generateAccountName()
       let creditAccountName = Fixtures.generateAccountName()
 
@@ -64,11 +68,11 @@ Test('transfers read model', function (modelTest) {
               let updatedFields = { state: TransferState.EXECUTED, fulfillment: 'oAKAAA', executedDate: Moment(1474471284081) }
               return ReadModel.updateTransfer(transferId, updatedFields)
                 .then(updatedTransfer => {
-                  assert.equal(updatedTransfer.transferUuid, transferId)
-                  assert.equal(updatedTransfer.state, updatedFields.state)
-                  assert.equal(updatedTransfer.fulfillment, updatedFields.fulfillment)
-                  assert.deepEqual(updatedTransfer.executedDate, updatedFields.executedDate.toDate())
-                  assert.end()
+                  test.equal(updatedTransfer.transferUuid, transferId)
+                  test.equal(updatedTransfer.state, updatedFields.state)
+                  test.equal(updatedTransfer.fulfillment, updatedFields.fulfillment)
+                  test.deepEqual(updatedTransfer.executedDate, updatedFields.executedDate.toDate())
+                  test.end()
                 })
             })
         })
@@ -77,20 +81,17 @@ Test('transfers read model', function (modelTest) {
     updateTransferTest.end()
   })
 
-  modelTest.test('truncateTransfers should', function (truncateTest) {
-    truncateTest.test('delete all records from transfers table', function (assert) {
-      Db.connect().then(db => db.transfers.countAsync())
-        .then(count => {
-          assert.ok(parseInt(count) > 0)
+  modelTest.test('truncateTransfers should', truncateTest => {
+    truncateTest.test('delete all records from transfers table', test => {
+      getTransfersCount()
+        .then(beforeCount => {
+          test.ok(beforeCount > 0)
           ReadModel.truncateTransfers()
             .then(() => {
-              Db.connect()
-                .then(db => {
-                  db.transfers.countAsync()
-                    .then(count => {
-                      assert.equal(parseInt(count), 0)
-                      assert.end()
-                    })
+              getTransfersCount()
+                .then(afterCount => {
+                  test.equal(afterCount, 0)
+                  test.end()
                 })
             })
         })
@@ -99,8 +100,8 @@ Test('transfers read model', function (modelTest) {
     truncateTest.end()
   })
 
-  modelTest.test('getById should', function (getByIdTest) {
-    getByIdTest.test('retrieve transfer from read model by id and set account fields', function (assert) {
+  modelTest.test('getById should', getByIdTest => {
+    getByIdTest.test('retrieve transfer from read model by id and set account fields', test => {
       let debitAccountName = Fixtures.generateAccountName()
       let creditAccountName = Fixtures.generateAccountName()
 
@@ -111,15 +112,15 @@ Test('transfers read model', function (modelTest) {
             .then(saved => {
               ReadModel.getById(saved.transferUuid)
                 .then(found => {
-                  assert.notEqual(found, saved)
-                  assert.notOk(saved.creditAccountName)
-                  assert.notOk(saved.debitAccountName)
-                  assert.equal(found.transferUuid, saved.transferUuid)
-                  assert.equal(found.creditAccountId, accountMap[creditAccountName])
-                  assert.equal(found.creditAccountName, creditAccountName)
-                  assert.equal(found.debitAccountId, accountMap[debitAccountName])
-                  assert.equal(found.debitAccountName, debitAccountName)
-                  assert.end()
+                  test.notEqual(found, saved)
+                  test.notOk(saved.creditAccountName)
+                  test.notOk(saved.debitAccountName)
+                  test.equal(found.transferUuid, saved.transferUuid)
+                  test.equal(found.creditAccountId, accountMap[creditAccountName])
+                  test.equal(found.creditAccountName, creditAccountName)
+                  test.equal(found.debitAccountId, accountMap[debitAccountName])
+                  test.equal(found.debitAccountName, debitAccountName)
+                  test.end()
                 })
             })
         })
@@ -129,27 +130,27 @@ Test('transfers read model', function (modelTest) {
   })
 
   modelTest.test('findExpired should', expiredTest => {
-    expiredTest.test('retrieve prepared transfers with past expires at', t => {
+    expiredTest.test('retrieve prepared transfers with past expires at', test => {
       let debitAccountName = Fixtures.generateAccountName()
       let creditAccountName = Fixtures.generateAccountName()
 
-      let transferId = Fixtures.generateTransferId()
+      let pastTransferId = Fixtures.generateTransferId()
       let futureTransferId = Fixtures.generateTransferId()
 
       createAccounts([debitAccountName, creditAccountName])
         .then(accountMap => {
-          let transfer = Fixtures.buildReadModelTransfer(transferId, buildReadModelDebitOrCredit(debitAccountName, '50', accountMap), buildReadModelDebitOrCredit(creditAccountName, '50', accountMap), TransferState.PREPARED, pastDate())
+          let pastTransfer = Fixtures.buildReadModelTransfer(pastTransferId, buildReadModelDebitOrCredit(debitAccountName, '50', accountMap), buildReadModelDebitOrCredit(creditAccountName, '50', accountMap), TransferState.PREPARED, pastDate())
           let futureTransfer = Fixtures.buildReadModelTransfer(futureTransferId, buildReadModelDebitOrCredit(debitAccountName, '50', accountMap), buildReadModelDebitOrCredit(creditAccountName, '50', accountMap), TransferState.PREPARED)
-          ReadModel.saveTransfer(transfer)
+          ReadModel.saveTransfer(pastTransfer)
             .then(() => ReadModel.saveTransfer(futureTransfer))
             .then(() => {
               ReadModel.findExpired()
                 .then(found => {
-                  t.equal(found.length, 1)
-                  t.equal(found[0].transferUuid, transferId)
-                  t.notOk(found[0].debitAccountName)
-                  t.notOk(found[0].creditAccountName)
-                  t.end()
+                  test.equal(found.length, 1)
+                  test.equal(found[0].transferUuid, pastTransferId)
+                  test.notOk(found[0].debitAccountName)
+                  test.notOk(found[0].creditAccountName)
+                  test.end()
                 })
             })
         })

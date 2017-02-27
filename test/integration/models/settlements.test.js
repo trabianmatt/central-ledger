@@ -3,13 +3,15 @@
 const Test = require('tape')
 const Model = require('../../../src/models/settlements')
 
-Test('settlements model', function (modelTest) {
-  modelTest.test('create should', function (createTest) {
-    createTest.test('create a new settlement', function (assert) {
+Test('settlements model', modelTest => {
+  modelTest.test('create should', createTest => {
+    createTest.test('create a new settlement', test => {
       let settlementId = Model.generateId()
       Model.create(settlementId)
         .then((settlement) => {
-          assert.end()
+          test.ok(settlement)
+          test.equal(settlement.settlementId, settlementId)
+          test.end()
         })
     })
 

@@ -6,32 +6,38 @@ const Fixtures = require('../../fixtures')
 const Db = require(`${src}/db`)
 const Model = require(`${src}/models/executed-transfers`)
 
-Test('executed-transfers model', function (modelTest) {
-  modelTest.test('create should', function (createTest) {
-    createTest.test('create a new executedTransfer', function (assert) {
+const getExecutedTransfersCount = () => {
+  return Db.connect().then(db => db('executedTransfers').count('*')).then(record => parseInt(record[0].count))
+}
+
+Test('executed-transfers model', modelTest => {
+  modelTest.test('create should', createTest => {
+    createTest.test('create a new executedTransfer', test => {
       let payload = { id: Fixtures.generateTransferId() }
       Model.create(payload)
         .then((executedTransfer) => {
-          assert.end()
+          test.ok(executedTransfer)
+          test.equal(executedTransfer.transferId, payload.id)
+          test.end()
         })
     })
 
     createTest.end()
   })
 
-  modelTest.test('truncate should', function (createTest) {
-    createTest.test('truncate executedTransfers table', function (assert) {
+  modelTest.test('truncate should', truncateTest => {
+    truncateTest.test('truncate executedTransfers table', test => {
       Model.truncate()
         .then((executedTransfer) => {
-          Db.connect().then(db => db.executedTransfers.countAsync({}))
+          getExecutedTransfersCount()
             .then((result) => {
-              assert.equals(result, '0')
-              assert.end()
+              test.equals(result, 0)
+              test.end()
             })
         })
     })
 
-    createTest.end()
+    truncateTest.end()
   })
 
   modelTest.end()

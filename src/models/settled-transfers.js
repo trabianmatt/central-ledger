@@ -2,13 +2,14 @@
 
 const Db = require('../db')
 
+const settledTransfersTable = 'settledTransfers'
+
 exports.create = (transfer) => {
   return Db.connect()
-    .then(db => db.runAsync(`INSERT INTO "settledTransfers" ("transferId", "settlementId") VALUES (uuid('${transfer.id}'), uuid('${transfer.settlementId}'))`)
-    )
+    .then(db => db(settledTransfersTable).insert({ transferId: transfer.id, settlementId: transfer.settlementId }, '*')).then(inserted => inserted[0])
 }
 
 exports.truncate = () => {
   return Db.connect()
-    .then(db => db.runAsync('TRUNCATE "settledTransfers"'))
+    .then(db => db(settledTransfersTable).truncate())
 }

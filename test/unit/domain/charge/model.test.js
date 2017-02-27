@@ -9,13 +9,25 @@ const Db = require(`${src}/db`)
 
 Test('charges model', modelTest => {
   let sandbox
+  let dbConnection
+  let dbMethodsStub
 
-  function setupChargesDb (charges) {
-    sandbox.stub(Db, 'connect').returns(P.resolve({ charges: charges }))
+  const chargesTable = 'charges'
+
+  let setupDatabase = (methodStubs = dbMethodsStub) => {
+    dbConnection.withArgs(chargesTable).returns(methodStubs)
   }
 
   modelTest.beforeEach((t) => {
     sandbox = Sinon.sandbox.create()
+    dbMethodsStub = {
+      insert: sandbox.stub(),
+      where: sandbox.stub(),
+      orderBy: sandbox.stub()
+    }
+    sandbox.stub(Db, 'connect')
+    dbConnection = sandbox.stub()
+    Db.connect.returns(P.resolve(dbConnection))
     t.end()
   })
 
@@ -27,7 +39,7 @@ Test('charges model', modelTest => {
   modelTest.test('getAll should', getAllTest => {
     getAllTest.test('return exception if db.connect throws', test => {
       const error = new Error()
-      sandbox.stub(Db, 'connect').returns(P.reject(error))
+      Db.connect.returns(P.reject(error))
 
       Model.getAll()
         .then(() => {
@@ -39,10 +51,11 @@ Test('charges model', modelTest => {
         })
     })
 
-    getAllTest.test('return exception if db.findAsync throws', test => {
+    getAllTest.test('return exception if db query throws', test => {
       const error = new Error()
-      const findAsync = function () { return P.reject(error) }
-      setupChargesDb({ findAsync: findAsync })
+
+      dbMethodsStub.orderBy.withArgs('name', 'asc').returns(P.reject(error))
+      setupDatabase()
 
       Model.getAll()
         .then(() => {
@@ -59,14 +72,12 @@ Test('charges model', modelTest => {
       const charge2Name = 'charge2'
       const charges = [{ name: charge1Name }, { name: charge2Name }]
 
-      const findAsync = Sinon.stub().returns(P.resolve(charges))
-      setupChargesDb({ findAsync: findAsync })
+      dbMethodsStub.orderBy.withArgs('name', 'asc').returns(P.resolve(charges))
+      setupDatabase()
 
       Model.getAll()
         .then((found) => {
           test.equal(found, charges)
-          test.deepEqual(findAsync.firstCall.args[0], {})
-          test.equal(findAsync.firstCall.args[1].order, 'name')
           test.end()
         })
         .catch(err => {
@@ -80,7 +91,7 @@ Test('charges model', modelTest => {
   modelTest.test('getAllSenderAsPayer should', getAllSenderAsPayerTest => {
     getAllSenderAsPayerTest.test('return exception if db.connect throws', test => {
       const error = new Error()
-      sandbox.stub(Db, 'connect').returns(P.reject(error))
+      Db.connect.returns(P.reject(error))
 
       Model.getAllSenderAsPayer()
         .then(() => {
@@ -92,36 +103,35 @@ Test('charges model', modelTest => {
         })
     })
 
-    getAllSenderAsPayerTest.test('return exception if db.findAsync throws', test => {
+    getAllSenderAsPayerTest.test('return exception if db query throws', test => {
       const error = new Error()
-      const findAsync = function () { return P.reject(error) }
-      setupChargesDb({ findAsync: findAsync })
+
+      let orderByStub = sandbox.stub().returns(P.reject(error))
+      dbMethodsStub.where.withArgs({ payer: 'sender' }).returns({ orderBy: orderByStub })
+      setupDatabase()
 
       Model.getAllSenderAsPayer()
         .then(() => {
           test.fail('Should have thrown error')
         })
         .catch(err => {
+          test.ok(orderByStub.withArgs('name', 'asc').calledOnce)
           test.equal(err, error)
           test.end()
         })
     })
 
     getAllSenderAsPayerTest.test('return all charges ordered by name', test => {
-      const charge1Name = 'charge1'
-      const charge2Name = 'charge2'
-      const charge3Name = 'charge3'
-      const charges = [{ name: charge1Name }, { name: charge2Name }, {name: charge3Name}]
-      const findArg = { payer: 'sender' }
+      const charges = [{ name: 'charge1' }, { name: 'charge2' }, { name: 'charge3' }]
 
-      const findAsync = Sinon.stub().returns(P.resolve(charges))
-      setupChargesDb({ findAsync: findAsync })
+      let orderByStub = sandbox.stub().returns(P.resolve(charges))
+      dbMethodsStub.where.withArgs({ payer: 'sender' }).returns({ orderBy: orderByStub })
+      setupDatabase()
 
       Model.getAllSenderAsPayer()
         .then((found) => {
+          test.ok(orderByStub.withArgs('name', 'asc').calledOnce)
           test.equal(found, charges)
-          test.deepEqual(findAsync.firstCall.args[0], findArg)
-          test.equal(findAsync.firstCall.args[1].order, 'name')
           test.end()
         })
         .catch(err => {
@@ -133,36 +143,21 @@ Test('charges model', modelTest => {
   })
 
   modelTest.test('create should', createTest => {
-    createTest.test('save payload as new object', test => {
-      const name = 'charge'
-      const charge = { name }
-      const saveAsync = Sinon.stub().returns(P.resolve(charge))
-      setupChargesDb({ saveAsync: saveAsync })
+    createTest.test('save payload and return new charge', test => {
+      let name = 'charge'
+      let charge = { name }
+
+      dbMethodsStub.insert.returns(P.resolve([charge]))
+      setupDatabase()
 
       const payload = { name }
 
       Model.create(payload)
-        .then(() => {
-          const saveAsyncArg = saveAsync.firstCall.args[0]
-          test.notEqual(saveAsyncArg, payload)
-          test.equal(saveAsyncArg.name, payload.name)
+        .then(created => {
+          const insertArg = dbMethodsStub.insert.firstCall.args[0]
+          test.notEqual(insertArg, payload)
+          test.equal(created, charge)
           test.end()
-        })
-    })
-
-    createTest.test('return newly created charge', test => {
-      const name = 'charge'
-      const charge = { name }
-      const saveAsync = Sinon.stub().returns(P.resolve(charge))
-      setupChargesDb({ saveAsync: saveAsync })
-
-      Model.create({})
-        .then(s => {
-          test.equal(s, charge)
-          test.end()
-        })
-        .catch(err => {
-          test.fail(err)
         })
     })
 

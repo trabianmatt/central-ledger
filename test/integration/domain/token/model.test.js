@@ -63,13 +63,16 @@ Test('Token Model', modelTest => {
 
   modelTest.test('removeExpired should', removeExpiredTest => {
     removeExpiredTest.test('remove all expired tokens', test => {
+      let futureExpiration = Fixtures.getCurrentUTCTimeInMilliseconds() + 60000
+      let pastExpiration = Fixtures.getCurrentUTCTimeInMilliseconds() - 60000
+
       createAccount()
       .then(account1 => {
         return P.all([
-          generateToken(account1, 1582270860498),
-          generateToken(account1, 1582270860498),
-          generateToken(account1, 1),
-          generateToken(account1, 2)
+          generateToken(account1, futureExpiration),
+          generateToken(account1, futureExpiration),
+          generateToken(account1, pastExpiration),
+          generateToken(account1, pastExpiration)
         ])
         .then(([token1, token2, token3, token4]) => {
           return Model.byAccount(account1).then(results => {

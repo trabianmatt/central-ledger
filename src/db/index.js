@@ -1,30 +1,26 @@
 'use strict'
 
-const Massive = require('massive')
-const Config = require(`${process.cwd()}/src/lib/config`)
+const Knex = require('knex')
 const P = require('bluebird')
-const scriptsDir = `${process.cwd()}/src/db`
+const Util = require('../lib/util')
+const Config = require('../lib/config')
 
 let connection
 
-const promisifyChildren = (db) => {
-  for (const prop in db) {
-    if (!db.hasOwnProperty(prop)) {
-      continue
-    }
-    const dbProp = db[prop]
-    if (dbProp instanceof Object && !(dbProp instanceof Array) && !(dbProp instanceof Function)) {
-      P.promisifyAll(dbProp)
-    }
-  }
-}
-
 const getConnection = () => {
   if (!connection) {
-    connection = P.promisify(Massive.connect)({ connectionString: Config.DATABASE_URI, scripts: scriptsDir }).then(db => {
-      P.promisifyAll(db)
-      promisifyChildren(db)
-      return db
+    connection = new P((resolve, reject) => {
+      const knexConfig = {
+        postgres: { client: 'pg' }
+      }
+
+      const dbType = parseDatabaseType(Config.DATABASE_URI)
+      if (!knexConfig[dbType]) {
+        reject(new Error('Invalid database type in DATABASE_URI'))
+      } else {
+        let commonConfig = { connection: Config.DATABASE_URI }
+        resolve(Knex(Util.assign(commonConfig, knexConfig[dbType])))
+      }
     })
   }
   return connection
@@ -32,6 +28,10 @@ const getConnection = () => {
 
 const resetConnection = () => {
   connection = null
+}
+
+const parseDatabaseType = (uri) => {
+  return uri.split(':')[0]
 }
 
 module.exports = {

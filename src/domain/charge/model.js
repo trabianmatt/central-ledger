@@ -2,10 +2,12 @@
 
 const Db = require('../../db')
 
+const chargesTable = 'charges'
+
 exports.create = (charge) => {
   return Db.connect()
     .then(db => {
-      return db.charges.saveAsync(
+      return db(chargesTable).insert(
         {
           name: charge.name,
           chargeType: charge.charge_type,
@@ -17,14 +19,15 @@ exports.create = (charge) => {
           isActive: charge.is_active,
           payer: charge.payer,
           payee: charge.payee
-        })
+        }, '*')
+        .then(inserted => inserted[0])
     })
 }
 
 exports.getAll = () => {
-  return Db.connect().then(db => db.charges.findAsync({}, { order: 'name' }))
+  return Db.connect().then(db => db(chargesTable).orderBy('name', 'asc'))
 }
 
 exports.getAllSenderAsPayer = () => {
-  return Db.connect().then(db => db.charges.findAsync({ payer: 'sender' }, { order: 'name' }))
+  return Db.connect().then(db => db(chargesTable).where({ payer: 'sender' }).orderBy('name', 'asc'))
 }
