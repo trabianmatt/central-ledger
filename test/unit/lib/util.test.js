@@ -24,5 +24,6 @@ Test('util', utilTest => {
     })
     formatAmountTest.end()
   })
+
   utilTest.end()
 })

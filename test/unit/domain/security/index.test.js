@@ -6,7 +6,9 @@ const P = require('bluebird')
 const Uuid = require('uuid4')
 
 const Errors = require('../../../../src/errors')
+const Util = require('../../../../src/lib/util')
 const RolesModel = require('../../../../src/domain/security/models/roles')
+const UsersModel = require('../../../../src/domain/security/models/users')
 const SecurityService = require('../../../../src/domain/security')
 
 Test('SecurityService test', serviceTest => {
@@ -15,6 +17,7 @@ Test('SecurityService test', serviceTest => {
   serviceTest.beforeEach(test => {
     sandbox = Sinon.sandbox.create()
     sandbox.stub(RolesModel)
+    sandbox.stub(UsersModel)
     test.end()
   })
 
@@ -115,7 +118,7 @@ Test('SecurityService test', serviceTest => {
           test.equal(e.message, 'Role does not exist')
           test.end()
         })
-        .catch(e => test.fail('Expected NotFoundError'))
+        .catch(() => test.fail('Expected NotFoundError'))
     })
 
     updateTest.end()
@@ -148,5 +151,204 @@ Test('SecurityService test', serviceTest => {
     deleteTest.end()
   })
 
+  serviceTest.test('getAllUsers should', getAllUsersTest => {
+    getAllUsersTest.test('return users from model', test => {
+      const users = []
+      UsersModel.getAll.returns(P.resolve(users))
+      SecurityService.getAllUsers()
+        .then(results => {
+          test.deepEqual(results, users)
+          test.end()
+        })
+    })
+
+    getAllUsersTest.end()
+  })
+
+  serviceTest.test('getUserById should', getUserByIdTest => {
+    getUserByIdTest.test('return user from model', test => {
+      const userId = Uuid()
+      const user = {}
+      UsersModel.getById.withArgs(userId).returns(P.resolve(user))
+
+      SecurityService.getUserById(userId)
+        .then(result => {
+          test.equal(result, user)
+          test.end()
+        })
+    })
+
+    getUserByIdTest.test('throw not found error if user null', test => {
+      const userId = Uuid()
+      UsersModel.getById.returns(P.resolve(null))
+
+      SecurityService.getUserById(userId)
+        .then(() => test.fail('Expected NotFoundError'))
+        .catch(Errors.NotFoundError, e => {
+          test.equal(e.message, 'User does not exist')
+          test.end()
+        })
+        .catch(() => test.fail('Expected NotFoundError'))
+    })
+    getUserByIdTest.end()
+  })
+
+  serviceTest.test('getUserRoles should', getUsersRolesTest => {
+    getUsersRolesTest.test('return users roles from model', test => {
+      const roles = []
+      const userId = Uuid()
+      RolesModel.getUserRoles.withArgs(userId).returns(P.resolve(roles))
+
+      SecurityService.getUserRoles(userId)
+        .then(result => {
+          test.equal(result, roles)
+          test.end()
+        })
+    })
+
+    getUsersRolesTest.end()
+  })
+
+  serviceTest.test('createUser should', createUserTest => {
+    createUserTest.test('save user to model', test => {
+      const savedUser = {}
+      UsersModel.save.returns(P.resolve(savedUser))
+      const user = {}
+      SecurityService.createUser(user)
+        .then(result => {
+          test.equal(result, savedUser)
+          test.ok(UsersModel.save.calledWith(user))
+          test.end()
+        })
+    })
+    createUserTest.end()
+  })
+
+  serviceTest.test('deleteUser should', deleteUserTest => {
+    deleteUserTest.test('throw NotFoundError if user does not exist', test => {
+      const userId = Uuid()
+      UsersModel.getById.withArgs(userId).returns(P.resolve(null))
+
+      SecurityService.deleteUser(userId)
+        .then(() => test.fail('Expected exception'))
+        .catch(Errors.NotFoundError, e => {
+          test.equal(e.message, 'User does not exist')
+          test.end()
+        })
+        .catch(() => test.fail('Expected NotFoundError'))
+    })
+
+    deleteUserTest.test('remove users roles', test => {
+      const userId = Uuid()
+      UsersModel.getById.returns(P.resolve({}))
+
+      SecurityService.deleteUser(userId)
+        .then(() => {
+          test.ok(RolesModel.removeUserRoles.calledWith(userId))
+          test.end()
+        })
+    })
+
+    deleteUserTest.test('remove user from model', test => {
+      const userId = Uuid()
+      UsersModel.getById.returns(P.resolve({}))
+
+      SecurityService.deleteUser(userId)
+        .then(() => {
+          test.ok(UsersModel.remove.calledWith(userId))
+          test.end()
+        })
+    })
+
+    deleteUserTest.end()
+  })
+
+  serviceTest.test('updateUser should', updateUserTest => {
+    updateUserTest.test('throw not NotFoundError if user does not exist', test => {
+      const userId = Uuid()
+      UsersModel.getById.withArgs(userId).returns(P.resolve(null))
+
+      SecurityService.updateUser(userId, {})
+        .then(() => test.fail('Expected exception'))
+        .catch(Errors.NotFoundError, e => {
+          test.equal(e.message, 'User does not exist')
+          test.end()
+        })
+        .catch(() => test.fail('Expected NotFoundError'))
+    })
+
+    updateUserTest.test('merge details with user and save to model', test => {
+      const userId = Uuid()
+      const user = { lastName: 'SuperUser' }
+      const details = { firstName: 'Dave' }
+      UsersModel.getById.returns(P.resolve(user))
+
+      const expected = Util.merge(user, details)
+      UsersModel.save.returns(P.resolve(expected))
+      SecurityService.updateUser(userId, details)
+        .then(result => {
+          test.deepEqual(result, expected)
+          test.ok(UsersModel.save.calledWith(expected))
+          test.end()
+        })
+    })
+
+    updateUserTest.end()
+  })
+
+  serviceTest.test('updateUserRoles should', updateUserRolesTest => {
+    updateUserRolesTest.test('throw NotFoundError if user does not exist', test => {
+      const userId = Uuid()
+      UsersModel.getById.withArgs(userId).returns(P.resolve(null))
+
+      SecurityService.updateUserRoles(userId, [])
+        .then(() => test.fail('Expected error'))
+        .catch(Errors.NotFoundError, e => {
+          test.equal(e.message, 'User does not exist')
+          test.end()
+        })
+        .catch(() => test.fail('Expected NotFoundError'))
+    })
+
+    updateUserRolesTest.test('remove existing user roles', test => {
+      const userId = Uuid()
+      UsersModel.getById.returns(P.resolve({}))
+
+      SecurityService.updateUserRoles(userId, [])
+        .then(() => {
+          test.ok(RolesModel.removeUserRoles.calledWith(userId))
+          test.end()
+        })
+    })
+
+    updateUserRolesTest.test('add each new role to userRoles', test => {
+      const userId = Uuid()
+      const role1 = Uuid()
+      const role2 = Uuid()
+
+      UsersModel.getById.returns(P.resolve({}))
+
+      SecurityService.updateUserRoles(userId, [ role1, role2 ])
+        .then(() => {
+          test.ok(RolesModel.addUserRole.calledWith({ userId, roleId: role1 }))
+          test.ok(RolesModel.addUserRole.calledWith({ userId, roleId: role2 }))
+          test.end()
+        })
+    })
+
+    updateUserRolesTest.test('return users roles', test => {
+      const userId = Uuid()
+      UsersModel.getById.returns(P.resolve({}))
+      const roles = [{}, {}]
+      RolesModel.getUserRoles.withArgs(userId).returns(P.resolve(roles))
+      SecurityService.updateUserRoles(userId, [])
+        .then(result => {
+          test.deepEqual(result, roles)
+          test.end()
+        })
+    })
+
+    updateUserRolesTest.end()
+  })
   serviceTest.end()
 })

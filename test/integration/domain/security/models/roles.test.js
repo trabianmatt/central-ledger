@@ -2,10 +2,19 @@
 
 const Test = require('tape')
 const Uuid = require('uuid4')
+const Promise = require('bluebird')
 const Fixtures = require('../../../../fixtures')
+const UserModel = require('../../../../../src/domain/security/models/users')
 const Model = require('../../../../../src/domain/security/models/roles')
 
 const createRole = (name = Fixtures.generateRandomName(), permissions = 'test|test2') => ({ name, permissions })
+
+const createUser = (key = Fixtures.generateRandomName()) => ({
+  key,
+  firstName: 'Dave',
+  lastName: 'Super',
+  email: 'superdave@test.com'
+})
 
 Test('roles model', rolesTest => {
   rolesTest.test('save should', saveTest => {
@@ -95,6 +104,46 @@ Test('roles model', rolesTest => {
     })
 
     deleteTest.end()
+  })
+
+  rolesTest.test('addUserRole should', addUserRoleTest => {
+    addUserRoleTest.test('add user role', test => {
+      UserModel.save(createUser())
+      .then(userResult => Model.save(createRole())
+          .then(role => ({ userId: userResult.userId, roleId: role.roleId }))
+      )
+      .then(userRole => {
+        Model.addUserRole(userRole)
+        .then(result => {
+          test.deepEqual(result, userRole)
+          test.end()
+        })
+      })
+    })
+
+    addUserRoleTest.end()
+  })
+
+  rolesTest.test('getUserRoles should', getUserRolesTest => {
+    getUserRolesTest.test('get roles belonging to user', test => {
+      Promise.props({
+        user: UserModel.save(createUser()),
+        role1: Model.save(createRole()),
+        role2: Model.save(createRole()),
+        role3: Model.save(createRole())
+      })
+      .then(result => {
+        const user = result.user
+        Model.addUserRole({ userId: user.userId, roleId: result.role2.roleId })
+          .then(userRole => Model.getUserRoles(user.userId))
+          .then(results => {
+            test.deepEqual(results, [ result.role2 ])
+            test.end()
+          })
+      })
+    })
+
+    getUserRolesTest.end()
   })
 
   rolesTest.end()
