@@ -12,6 +12,7 @@ function typeExists (rateType) {
 
 function filterCharges (charge, amount) {
   amount = new Decimal(amount)
+
   return (!charge.minimum || amount.greaterThanOrEqualTo(charge.minimum)) &&
          (!charge.maximum || amount.lessThanOrEqualTo(charge.maximum)) &&
          typeExists(charge.rateType)

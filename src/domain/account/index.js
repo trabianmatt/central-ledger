@@ -31,15 +31,15 @@ const exists = (accountUri) => {
       resolve(result)
     })
   })
-  .then(name => {
-    return Model.getByName(name)
-      .then(account => {
-        if (account) {
-          return account
-        }
-        throw new ValidationError(`Account ${name} not found`)
-      })
-  })
+    .then(name => {
+      return Model.getByName(name)
+        .then(account => {
+          if (account) {
+            return account
+          }
+          throw new ValidationError(`Account ${name} not found`)
+        })
+    })
 }
 
 const getAll = () => {
@@ -83,9 +83,9 @@ const verifyUserCredentials = (account, userCredentials, password) => {
 
 const verify = (name, password) => {
   return Model.getByName(name)
-  .then(accountExists)
-  .then(account => retrieveUserCredentials(account)
-  .then(userCredentials => verifyUserCredentials(account, userCredentials, password)))
+    .then(accountExists)
+    .then(account => retrieveUserCredentials(account)
+      .then(userCredentials => verifyUserCredentials(account, userCredentials, password)))
 }
 
 module.exports = {

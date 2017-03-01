@@ -12,7 +12,7 @@ Test('POST /charges', putTest => {
       charge_type: 'tax',
       rate_type: 'flat',
       rate: '1.00',
-      minimum: '25.00',
+      minimum: '51.00',
       maximum: '100.00',
       code: '003',
       is_active: true,

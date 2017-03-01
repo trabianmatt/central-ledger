@@ -7,6 +7,7 @@ const P = require('bluebird')
 const Config = require(`${src}/lib/config`)
 const Service = require(`${src}/domain/position`)
 const Account = require(`${src}/domain/account`)
+const Fee = require(`${src}/domain/fee`)
 const SettleableTransfersReadModel = require(`${src}/models/settleable-transfers-read-model`)
 
 Test('Position Service tests', (serviceTest) => {
@@ -23,6 +24,7 @@ Test('Position Service tests', (serviceTest) => {
     sandbox.stub(Account, 'getById')
     sandbox.stub(SettleableTransfersReadModel, 'getSettleableTransfers')
     sandbox.stub(SettleableTransfersReadModel, 'getSettleableTransfersByAccount')
+    sandbox.stub(Fee, 'getSettleableFeesByAccount')
     Account.getAll.returns(P.resolve(accounts))
     t.end()
   })
@@ -55,30 +57,17 @@ Test('Position Service tests', (serviceTest) => {
     }
   }
 
-  serviceTest.test('calculateForAccount should', (calcForAccountTest) => {
-    calcForAccountTest.test('return single position for desired account', (assert) => {
-      let account = accounts[0]
-
-      let transfers = [
-        buildTransfer(accounts[0].name, 3, accounts[1].name, 3),
-        buildTransfer(accounts[0].name, 2, accounts[2].name, 2)
-      ]
-
-      SettleableTransfersReadModel.getSettleableTransfersByAccount.withArgs(account.accountId).returns(P.resolve(transfers))
-
-      let expected = buildPosition(accounts[0].name, '5', '0', '-5')
-      Service.calculateForAccount(account)
-        .then(position => {
-          assert.deepEqual(position, expected)
-          assert.end()
-        })
-    })
-
-    calcForAccountTest.end()
-  })
+  function buildFee (payerAccount, payerAmount, payeeAccount, payeeAmount) {
+    return {
+      payerAccountName: payerAccount,
+      payerAmount: payerAmount,
+      payeeAccountName: payeeAccount,
+      payeeAmount: payeeAmount
+    }
+  }
 
   serviceTest.test('calculateForAllAccounts should', (calcAllTest) => {
-    calcAllTest.test('return no positions if no accounts retrieved', (assert) => {
+    calcAllTest.test('return no positions if no accounts retrieved', (test) => {
       Account.getAll.returns(P.resolve([]))
 
       let transfers = [
@@ -90,10 +79,10 @@ Test('Position Service tests', (serviceTest) => {
       let expected = []
       Service.calculateForAllAccounts()
         .then(positions => {
-          assert.ok(Account.getAll.called)
-          assert.notOk(SettleableTransfersReadModel.getSettleableTransfers.called)
-          assert.deepEqual(positions, expected)
-          assert.end()
+          test.ok(Account.getAll.called)
+          test.notOk(SettleableTransfersReadModel.getSettleableTransfers.called)
+          test.deepEqual(positions, expected)
+          test.end()
         })
     })
 
@@ -142,6 +131,81 @@ Test('Position Service tests', (serviceTest) => {
     })
 
     calcAllTest.end()
+  })
+
+  serviceTest.test('calculateForAccount should', (calcAccountTest) => {
+    calcAccountTest.test('return empty positions for account if no settleable transfers or fees', (test) => {
+      const expected = {
+        account: `${hostname}/accounts/${accounts[0].name}`,
+        fees: {
+          payments: '0',
+          receipts: '0',
+          net: '0'
+        },
+        transfers: {
+          payments: '0',
+          receipts: '0',
+          net: '0'
+        },
+        net: '0'
+      }
+      const account = {
+        name: 'dfsp1',
+        id: 11
+      }
+      SettleableTransfersReadModel.getSettleableTransfersByAccount.returns(P.resolve([]))
+      Fee.getSettleableFeesByAccount.returns(P.resolve([]))
+
+      Service.calculateForAccount(account)
+        .then(positions => {
+          test.ok(SettleableTransfersReadModel.getSettleableTransfersByAccount.called)
+          test.ok(Fee.getSettleableFeesByAccount.called)
+          test.deepEqual(positions, expected)
+          test.end()
+        })
+    })
+
+    calcAccountTest.test('return expected positions if settleable transfers and fees exist', (test) => {
+      let transfers = [
+        buildTransfer(accounts[0].name, 10, accounts[1].name, 10),
+        buildTransfer(accounts[1].name, 5, accounts[0].name, 5)
+      ]
+      let fees = [
+        buildFee(accounts[0].name, 1, accounts[1].name, 1),
+        buildFee(accounts[2].name, 6, accounts[0].name, 6)
+      ]
+
+      SettleableTransfersReadModel.getSettleableTransfersByAccount.returns(P.resolve(transfers))
+      Fee.getSettleableFeesByAccount.returns(P.resolve(fees))
+
+      let expected = {
+        account: `${hostname}/accounts/${accounts[0].name}`,
+        fees: {
+          payments: '1',
+          receipts: '6',
+          net: '5'
+        },
+        transfers: {
+          payments: '10',
+          receipts: '5',
+          net: '-5'
+        },
+        net: '0'
+      }
+      const account = {
+        name: 'dfsp1',
+        id: 11
+      }
+      Service.calculateForAccount(account)
+        .then(positions => {
+          test.ok(SettleableTransfersReadModel.getSettleableTransfersByAccount.calledOnce)
+          test.ok(Fee.getSettleableFeesByAccount.calledOnce)
+          test.deepEqual(positions, expected)
+          test.end()
+        })
+    })
+
+    calcAccountTest.end()
   })
 
   serviceTest.end()

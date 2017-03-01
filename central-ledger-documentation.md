@@ -519,6 +519,52 @@ HTTP/1.1 200 OK
 }
 ```
 
+#### Get net positions for account
+The get current net positions endpoint returns the current net positions for all accounts in the ledger.
+
+##### HTTP Request
+`GET http://central-ledger/positions/dfsp1`
+
+##### Response 200 OK
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Object | Array | [Position objects](#position-object) for the account |
+
+#### Request
+``` http
+GET http://central-ledger/positions/dfsp1 HTTP/1.1
+```
+
+##### Response
+``` http
+HTTP/1.1 200 OK
+{
+  "account": "http://localhost:3000/accounts/dfsp1",
+  "fees": {
+    "payments": "4",
+    "receipts": "0",
+    "net": "-4"
+  },
+  "transfers": {
+    "payments": "40",
+    "receipts": "0",
+    "net": "-40"
+  },
+  "net": "-44"
+}
+```
+
+##### Errors (4xx)
+| Field | Description |
+| ----- | ----------- |
+| NotFoundError | The requested resource could not be found |
+``` http
+{
+  "id": "NotFoundError",
+  "message": "The requested resource could not be found."
+}
+```
+
 #### Get metadata
 The get metada endpoint returns metadata associated with the ledger.
 

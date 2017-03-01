@@ -11,7 +11,7 @@ function createChargePayload (name) {
     chargeType: 'charge_type',
     rateType: 'rate_type',
     rate: '1.00',
-    minimum: '0.25',
+    minimum: '25.00',
     maximum: '100.00',
     code: 1,
     is_active: true

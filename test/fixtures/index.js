@@ -134,6 +134,21 @@ const buildReadModelTransfer = (transferId, debit, credit, state, expiresAt, pre
   }
 }
 
+const buildCharge = (name, rateType, code) => {
+  return {
+    'name': name,
+    'charge_type': 'tax',
+    'rate_type': rateType,
+    'rate': '0.50',
+    'code': code,
+    'minimum': '16.00',
+    'maximum': '100.00',
+    'is_active': true,
+    'payer': 'sender',
+    'payee': 'receiver'
+  }
+}
+
 const findAccountPositions = (positions, accountName) => {
   return positions.find(function (p) {
     return p.account === buildAccountUrl(accountName)
@@ -164,6 +179,7 @@ const getCurrentUTCTimeInMilliseconds = () => {
 module.exports = {
   hostname,
   buildAccountPosition,
+  buildCharge,
   buildDebitOrCredit,
   buildTransfer,
   buildUnconditionalTransfer,

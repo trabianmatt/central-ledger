@@ -40,10 +40,10 @@ Test('Transfer Queries tests', queriesTest => {
       TransferReadModel.findExpired.returns(P.resolve(transfers))
 
       TransferQueries.findExpired()
-      .then(expiredTransfers => {
-        test.deepEqual(expiredTransfers, transfers)
-        test.end()
-      })
+        .then(expiredTransfers => {
+          test.deepEqual(expiredTransfers, transfers)
+          test.end()
+        })
     })
     findExpiredTest.end()
   })

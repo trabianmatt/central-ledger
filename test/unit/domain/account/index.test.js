@@ -34,14 +34,14 @@ Test('Account service', serviceTest => {
       Model.create.returns(P.resolve({ name, accountId, createdDate }))
       Crypto.hash.withArgs(password).returns(P.resolve(hashedPassword))
       AccountService.create({ name, password })
-      .then(account => {
-        test.equal(account.accountId, accountId)
-        test.equal(account.name, name)
-        test.equal(account.createdDate, createdDate)
-        const createArgs = Model.create.firstCall.args
-        test.equal(createArgs[0].hashedPassword, hashedPassword)
-        test.end()
-      })
+        .then(account => {
+          test.equal(account.accountId, accountId)
+          test.equal(account.name, name)
+          test.equal(account.createdDate, createdDate)
+          const createArgs = Model.create.firstCall.args
+          test.equal(createArgs[0].hashedPassword, hashedPassword)
+          test.end()
+        })
     })
 
     createTest.end()
@@ -50,29 +50,29 @@ Test('Account service', serviceTest => {
   serviceTest.test('exists should', existsTest => {
     existsTest.test('reject if url is not parseable url', test => {
       AccountService.exists('not a url')
-      .catch(ValidationError, e => {
-        test.equal(e.message, 'Invalid account URI: not a url')
-        test.end()
-      })
+        .catch(ValidationError, e => {
+          test.equal(e.message, 'Invalid account URI: not a url')
+          test.end()
+        })
     })
 
     existsTest.test('reject if account does not exist', test => {
       Model.getByName.returns(P.resolve(null))
       AccountService.exists('http://central-ledger/accounts/dfsp1')
-      .catch(ValidationError, e => {
-        test.equal(e.message, 'Account dfsp1 not found')
-        test.end()
-      })
+        .catch(ValidationError, e => {
+          test.equal(e.message, 'Account dfsp1 not found')
+          test.end()
+        })
     })
 
     existsTest.test('return error if exists', test => {
       const account = { some_field: 1234 }
       Model.getByName.withArgs('dfsp2').returns(P.resolve(account))
       AccountService.exists('http://central-ledger/accounts/dfsp2')
-      .then(result => {
-        test.equal(result, account)
-        test.end()
-      })
+        .then(result => {
+          test.equal(result, account)
+          test.end()
+        })
     })
 
     existsTest.end()
@@ -83,10 +83,10 @@ Test('Account service', serviceTest => {
       const all = []
       Model.getAll.returns(P.resolve(all))
       AccountService.getAll()
-      .then(result => {
-        test.equal(result, all)
-        test.end()
-      })
+        .then(result => {
+          test.equal(result, all)
+          test.end()
+        })
     })
 
     getAllTest.end()
@@ -98,10 +98,10 @@ Test('Account service', serviceTest => {
       const id = '12345'
       Model.getById.withArgs(id).returns(P.resolve(account))
       AccountService.getById(id)
-      .then(result => {
-        test.equal(result, account)
-        test.end()
-      })
+        .then(result => {
+          test.equal(result, account)
+          test.end()
+        })
     })
 
     getByIdTest.end()
@@ -113,10 +113,10 @@ Test('Account service', serviceTest => {
       const name = '12345'
       Model.getByName.withArgs(name).returns(P.resolve(account))
       AccountService.getByName(name)
-      .then(result => {
-        test.equal(result, account)
-        test.end()
-      })
+        .then(result => {
+          test.equal(result, account)
+          test.end()
+        })
     })
 
     getByNameTest.end()
@@ -142,11 +142,11 @@ Test('Account service', serviceTest => {
       Model.getByName.withArgs(name).returns(P.resolve(account))
       Model.update.withArgs(account, isDisabled).returns(P.resolve(updatedAccount))
       AccountService.update(name, payload)
-      .then(result => {
-        test.equal(result.accountId, account.accountId)
-        test.equal(result.isDisabled, isDisabled)
-        test.end()
-      })
+        .then(result => {
+          test.equal(result.accountId, account.accountId)
+          test.equal(result.isDisabled, isDisabled)
+          test.end()
+        })
     })
 
     updateTest.end()

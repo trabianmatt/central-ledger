@@ -22,7 +22,7 @@ const createGet = (name, credentials = null) => {
 const createPost = payload => {
   return {
     payload: payload || {},
-    server: { log: () => { } }
+    server: { log: () => {} }
   }
 }
 

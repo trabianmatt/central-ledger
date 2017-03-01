@@ -5,7 +5,9 @@ const Decimal = require('decimal.js')
 const UrlParser = require('../../lib/urlparser')
 const PositionCalculator = require('./position-calculator')
 const Account = require('../../domain/account')
+const Fee = require('../../domain/fee')
 const SettleableTransfersReadmodel = require('../../models/settleable-transfers-read-model')
+const P = require('bluebird')
 
 const buildPosition = (payments, receipts, net) => {
   return {
@@ -23,12 +25,22 @@ const buildResponse = (positionMap) => {
   return Array.from(positionMap.keys()).sort().map(p => _.assign({ account: p }, _.forOwn(positionMap.get(p), (value, key, obj) => (obj[key] = value.toString()))))
 }
 
-const calculatePositions = (executedTransfers, positionMap) => {
-  if (executedTransfers.length === 0) {
+const mapFeeToExecuted = (fee) => {
+  return {
+    account: fee.account,
+    debitAmount: fee.payerAmount,
+    creditAmount: fee.payeeAmount,
+    debitAccountName: fee.payerAccountName,
+    creditAccountName: fee.payeeAccountName
+  }
+}
+
+const calculatePositions = (executed, positionMap) => {
+  if (executed.length === 0) {
     return positionMap
   } else {
-    const head = executedTransfers[0]
-    const tail = (executedTransfers.length > 1) ? executedTransfers.slice(1) : []
+    const head = executed[0]
+    const tail = (executed.length > 1) ? executed.slice(1) : []
 
     const addToExistingPositionFor = (key) => {
       if (positionMap.has(key)) {
@@ -50,12 +62,25 @@ const calculatePositions = (executedTransfers, positionMap) => {
 
 exports.calculateForAccount = (account) => {
   const accountUri = UrlParser.toAccountUri(account.name)
-  const positionMap = new Map().set(accountUri, buildEmptyPosition())
+  const transferPositionMap = new Map().set(accountUri, buildEmptyPosition())
+  const feePositionMap = new Map().set(accountUri, buildEmptyPosition())
 
-  return SettleableTransfersReadmodel.getSettleableTransfersByAccount(account.accountId)
-    .then(transfers => calculatePositions(transfers, positionMap))
-    .then(buildResponse)
-    .then(positions => positions.find(x => x.account === accountUri))
+  return P.all([SettleableTransfersReadmodel.getSettleableTransfersByAccount(account.accountId), Fee.getSettleableFeesByAccount(account)]).then(([transfers, fees]) => {
+    const transferPositions = buildResponse(calculatePositions(transfers, transferPositionMap)).find(x => x.account === accountUri)
+    const feePositions = buildResponse(calculatePositions(fees.map(mapFeeToExecuted), feePositionMap)).find(x => x.account === accountUri)
+    const transferAmount = new Decimal(transferPositions.net)
+    const feeAmount = new Decimal(feePositions.net)
+
+    delete transferPositions.account
+    delete feePositions.account
+
+    return {
+      account: accountUri,
+      fees: feePositions,
+      transfers: transferPositions,
+      net: transferAmount.plus(feeAmount).valueOf()
+    }
+  })
 }
 
 exports.calculateForAllAccounts = () => {
