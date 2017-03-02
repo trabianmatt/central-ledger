@@ -29,7 +29,12 @@ const getUserById = (userId) => {
     .then(ensureUserExists)
 }
 
-const getUserRoles = (userId) => RolesModel.getUserRoles(userId)
+const getUserByKey = (key) => {
+  return UsersModel.getByKey(key)
+    .then(ensureUserExists)
+}
+
+const getUserRoles = (userId) => RolesModel.getUserRoles(userId).map(expandRole)
 
 const createRole = (role) => {
   return RolesModel.save(compactRole(role))
@@ -89,6 +94,7 @@ module.exports = {
   deleteUser,
   getAllRoles,
   getUserById,
+  getUserByKey,
   getAllUsers,
   getUserRoles,
   updateRole,

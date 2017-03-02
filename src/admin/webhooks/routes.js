@@ -1,6 +1,8 @@
 'use strict'
 
 const Handler = require('./handler')
+const RouteConfig = require('../route-config')
+const Permissions = require('../../domain/security/permissions')
 const tags = ['api', 'commands']
 
 module.exports = [
@@ -8,27 +10,18 @@ module.exports = [
     method: 'POST',
     path: '/webhooks/reject-expired-transfers',
     handler: Handler.rejectExpired,
-    config: {
-      tags: tags,
-      description: 'Reject expired transfers'
-    }
+    config: RouteConfig.config(tags, Permissions.TRANSFERS_REJECT_EXPIRED)
   },
   {
     method: 'POST',
     path: '/webhooks/reject-expired-tokens',
     handler: Handler.rejectExpiredTokens,
-    config: {
-      tags: tags,
-      description: 'Reject expired tokens'
-    }
+    config: RouteConfig.config(tags, Permissions.TOKENS_REJECT_EXPIRED)
   },
   {
     method: 'POST',
     path: '/webhooks/settle-transfers',
     handler: Handler.settle,
-    config: {
-      tags: tags,
-      description: 'Settle fulfilled transfers'
-    }
+    config: RouteConfig.config(tags, Permissions.TRANSFERS_SETTLE)
   }
 ]

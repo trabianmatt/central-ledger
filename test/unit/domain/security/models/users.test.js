@@ -64,6 +64,22 @@ Test('Users model', modelTest => {
     getByIdTest.end()
   })
 
+  modelTest.test('getByKey should', getByKeyTest => {
+    getByKeyTest.test('select first user by key', test => {
+      const key = Uuid()
+      const user = { firstName: 'Dave' }
+      usersStubs.where.withArgs({ key }).returns({ first: sandbox.stub().returns(P.resolve(user)) })
+
+      Model.getByKey(key)
+        .then(result => {
+          test.equal(result, user)
+          test.end()
+        })
+    })
+
+    getByKeyTest.end()
+  })
+
   modelTest.test('remove should', removeTest => {
     removeTest.test('destroy user in db', test => {
       const userId = Uuid()

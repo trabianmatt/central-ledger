@@ -23,7 +23,7 @@
   "scripts": {
     "start": "run-p start:api start:admin",
     "start:api": "CLEDG_HOSTNAME=http://localhost:3000 node src/api/index.js",
-    "start:admin": "CLEDG_HOSTNAME=http://localhost:3000 node src/admin/index.js",
+    "start:admin": "CLEDG_ENABLE_TOKEN_AUTH=true CLEDG_ADMIN_KEY=admin CLEDG_ADMIN_SECRET=admin CLEDG_HOSTNAME=http://localhost:3000 node src/admin/index.js",
     "dev": "npm run docker:stop && docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d",
     "test": "npm run test:unit | faucet",
     "pretest": "standard",
@@ -69,6 +69,7 @@
     "hapi-swagger": "7.4.0",
     "inert": "4.0.2",
     "joi": "10.0.1",
+    "jsonwebtoken": "7.3.0",
     "knex": "0.12.6",
     "lodash": "4.17.2",
     "moment": "2.16.0",

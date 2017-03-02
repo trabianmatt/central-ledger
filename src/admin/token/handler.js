@@ -1,11 +1,11 @@
 'use strict'
 
-const TokenService = require('../../domain/token')
+const JWT = require('../../domain/security/jwt')
 
-const create = (req, rep) => {
-  TokenService.create(req.auth.credentials)
-    .then(token => rep(token))
-    .catch(e => rep(e))
+const create = (request, reply) => {
+  JWT.create(request.payload.key)
+    .then(token => reply({ token }))
+    .catch(reply)
 }
 
 module.exports = {

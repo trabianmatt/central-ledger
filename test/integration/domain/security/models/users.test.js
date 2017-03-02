@@ -85,5 +85,22 @@ Test('users model', usersTest => {
     getByIdTest.end()
   })
 
+  usersTest.test('getByKey should', getByKeyTest => {
+    getByKeyTest.test('return user', test => {
+      const user = createUser()
+      Model.save(user)
+        .then(result => Model.getByKey(result.key))
+        .then(saved => {
+          test.equal(saved.firstName, user.firstName)
+          test.equal(saved.lastName, user.lastName)
+          test.equal(saved.key, user.key)
+          test.equal(saved.email, user.email)
+          test.ok(saved.createdDate)
+          test.end()
+        })
+    })
+    getByKeyTest.end()
+  })
+
   usersTest.end()
 })

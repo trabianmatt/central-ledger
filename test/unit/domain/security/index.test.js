@@ -193,15 +193,44 @@ Test('SecurityService test', serviceTest => {
     getUserByIdTest.end()
   })
 
+  serviceTest.test('getUserByKey should', getUserByKeyTest => {
+    getUserByKeyTest.test('return user from model', test => {
+      const userKey = 'key'
+      const user = {}
+      UsersModel.getByKey.withArgs(userKey).returns(P.resolve(user))
+
+      SecurityService.getUserByKey(userKey)
+        .then(result => {
+          test.equal(result, user)
+          test.end()
+        })
+    })
+
+    getUserByKeyTest.test('throw not found error if user null', test => {
+      const userKey = 'key'
+      UsersModel.getByKey.returns(P.resolve(null))
+
+      SecurityService.getUserByKey(userKey)
+        .then(() => test.fail('Expected NotFoundError'))
+        .catch(Errors.NotFoundError, e => {
+          test.equal(e.message, 'User does not exist')
+          test.end()
+        })
+        .catch(() => test.fail('Expected NotFoundError'))
+    })
+
+    getUserByKeyTest.end()
+  })
+
   serviceTest.test('getUserRoles should', getUsersRolesTest => {
     getUsersRolesTest.test('return users roles from model', test => {
-      const roles = []
+      const roles = [{ permissions: '' }, { permissions: '' }]
       const userId = Uuid()
       RolesModel.getUserRoles.withArgs(userId).returns(P.resolve(roles))
 
       SecurityService.getUserRoles(userId)
         .then(result => {
-          test.equal(result, roles)
+          test.deepEqual(result, roles)
           test.end()
         })
     })
@@ -313,6 +342,8 @@ Test('SecurityService test', serviceTest => {
     updateUserRolesTest.test('remove existing user roles', test => {
       const userId = Uuid()
       UsersModel.getById.returns(P.resolve({}))
+      const roles = [{ permissions: '' }, { permissions: '' }]
+      RolesModel.getUserRoles.withArgs(userId).returns(P.resolve(roles))
 
       SecurityService.updateUserRoles(userId, [])
         .then(() => {
@@ -327,6 +358,8 @@ Test('SecurityService test', serviceTest => {
       const role2 = Uuid()
 
       UsersModel.getById.returns(P.resolve({}))
+      const roles = [{ permissions: '' }, { permissions: '' }]
+      RolesModel.getUserRoles.withArgs(userId).returns(P.resolve(roles))
 
       SecurityService.updateUserRoles(userId, [ role1, role2 ])
         .then(() => {
@@ -339,7 +372,7 @@ Test('SecurityService test', serviceTest => {
     updateUserRolesTest.test('return users roles', test => {
       const userId = Uuid()
       UsersModel.getById.returns(P.resolve({}))
-      const roles = [{}, {}]
+      const roles = [{ permissions: '' }, { permissions: '' }]
       RolesModel.getUserRoles.withArgs(userId).returns(P.resolve(roles))
       SecurityService.updateUserRoles(userId, [])
         .then(result => {

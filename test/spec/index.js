@@ -12,8 +12,6 @@ process.env.TEST_PASSWORD_1 = Base.account1Password
 process.env.TEST_PASSWORD_2 = Base.account2Password
 process.env.ILP_PLUGIN_TEST_CONFIG = Path.join(__dirname, '../../node_modules/five-bells-ledger-api-tests/index.js')
 
-console.log(process.env.ILP_PLUGIN_TEST_CONFIG)
-
 ChildProcess.execSync('npm test', {
   cwd: Path.join(__dirname, '../../node_modules/ilp-plugin-tests'),
   env: process.env,

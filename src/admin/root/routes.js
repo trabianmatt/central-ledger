@@ -1,5 +1,6 @@
 'use strict'
 
+const RouteConfig = require('../route-config')
 const tags = ['api', 'root']
 
 module.exports = [
@@ -7,10 +8,6 @@ module.exports = [
     method: 'GET',
     path: '/health',
     handler: (request, reply) => reply({ status: 'OK' }).code(200),
-    config: {
-      tags: tags,
-      description: 'Status of ledger',
-      id: 'health'
-    }
+    config: RouteConfig.config(tags, 'Status of ledger admin api')
   }
 ]

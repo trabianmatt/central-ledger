@@ -14,6 +14,14 @@ exports.register.attributes = {
   name: 'admin auth'
 }
 
-exports.tokenAuth = () => {
-  return Config.ENABLE_TOKEN_AUTH ? TokenStrategy.name : false
+exports.tokenAuth = (permission) => {
+  if (!Config.ENABLE_TOKEN_AUTH) {
+    return false
+  }
+
+  if (!permission) {
+    return TokenStrategy.name
+  }
+
+  return { strategy: TokenStrategy.name, scope: permission.key }
 }

@@ -9,6 +9,8 @@ const getAll = () => Db.connection(usersTable).select()
 
 const getById = (userId) => Db.connection(usersTable).where({ userId }).first()
 
+const getByKey = (key) => Db.connection(usersTable).where({ key }).first()
+
 const remove = (userId) => Db.connection(usersTable).where({ userId }).del('*')
 
 const save = (user) => {
@@ -23,6 +25,7 @@ const save = (user) => {
 module.exports = {
   getAll,
   getById,
+  getByKey,
   remove,
   save
 }

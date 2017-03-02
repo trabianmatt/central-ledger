@@ -3,15 +3,15 @@
 const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const P = require('bluebird')
+const JWT = require('../../../../src/domain/security/jwt')
 const Handler = require('../../../../src/admin/token/handler')
-const TokenService = require('../../../../src/domain/token')
 
 Test('token handler', handlerTest => {
   let sandbox
 
   handlerTest.beforeEach(test => {
     sandbox = Sinon.sandbox.create()
-    sandbox.stub(TokenService)
+    sandbox.stub(JWT)
     test.end()
   })
 
@@ -21,18 +21,22 @@ Test('token handler', handlerTest => {
   })
 
   handlerTest.test('create should', createTest => {
-    createTest.test('create token from auth credentials', test => {
-      const token = { token: 'token' }
+    createTest.test('create token from user key', test => {
+      const userKey = 'user-key'
       const account = { accountId: 1 }
-      TokenService.create.withArgs(account).returns(P.resolve(token))
+      const token = 'generated-token'
+      JWT.create.withArgs(userKey).returns(P.resolve(token))
       const request = {
         auth: {
           credentials: account
+        },
+        payload: {
+          key: userKey
         }
       }
 
       const reply = (response) => {
-        test.equal(response, token)
+        test.deepEqual(response, { token })
         test.end()
       }
 
@@ -41,14 +45,14 @@ Test('token handler', handlerTest => {
 
     createTest.test('reply with error if thrown', test => {
       const error = new Error()
-      TokenService.create.returns(P.reject(error))
+      JWT.create.returns(P.reject(error))
 
       const reply = (response) => {
         test.equal(response, error)
         test.end()
       }
 
-      Handler.create({ auth: { credentials: {} } }, reply)
+      Handler.create({ auth: { credentials: {} }, payload: { key: 'key' } }, reply)
     })
 
     createTest.end()
