@@ -47,6 +47,45 @@ Test('Account service', serviceTest => {
     createTest.end()
   })
 
+  serviceTest.test('createLedgerAccount should', createLedgerAccountTest => {
+    createLedgerAccountTest.test('check if a ledger account exists and add it if it does not', test => {
+      const name = 'LedgerName'
+      const password = 'LedgerPassword'
+      const accountId = Uuid()
+      const createdDate = new Date()
+      const hashedPassword = 'hashed password'
+      Model.create.returns(P.resolve({ name, accountId, createdDate }))
+      Model.getByName.returns(P.resolve(null))
+      Crypto.hash.returns(P.resolve(hashedPassword))
+      AccountService.createLedgerAccount({ name, password })
+        .then(account => {
+          test.equal(account.accountId, accountId)
+          test.equal(account.name, name)
+          test.equal(account.createdDate, createdDate)
+          const createArgs = Model.create.firstCall.args
+          test.equal(createArgs[0].hashedPassword, hashedPassword)
+          test.end()
+        })
+    })
+
+    createLedgerAccountTest.test('check if a ledger account exists and return if it does', test => {
+      const name = 'LedgerName'
+      const password = 'LedgerPassword'
+      const accountId = Uuid()
+      const createdDate = new Date()
+      Model.getByName.returns(P.resolve({ name, accountId, createdDate }))
+      AccountService.createLedgerAccount({ name, password })
+        .then(account => {
+          test.equal(account.accountId, accountId)
+          test.equal(account.name, name)
+          test.equal(account.createdDate, createdDate)
+          test.end()
+        })
+    })
+
+    createLedgerAccountTest.end()
+  })
+
   serviceTest.test('exists should', existsTest => {
     existsTest.test('reject if url is not parseable url', test => {
       AccountService.exists('not a url')

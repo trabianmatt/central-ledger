@@ -17,11 +17,11 @@ let assertValidationError = (promise, assert, message) => {
     assert.fail('fail fail fail')
     assert.end()
   })
-  .catch(e => {
-    assert.ok(e instanceof ValidationError)
-    assert.equal(e.message, message)
-    assert.end()
-  })
+    .catch(e => {
+      assert.ok(e instanceof ValidationError)
+      assert.equal(e.message, message)
+      assert.end()
+    })
 }
 
 Test('transfer validator', (test) => {
@@ -88,6 +88,7 @@ Test('transfer validator', (test) => {
     Config.AMOUNT.SCALE = allowedScale
     Config.AMOUNT.PRECISION = allowedPrecision
     Config.HOSTNAME = hostname
+    Config.LEDGER_ACCOUNT_NAME = 'LEDGER_ACCOUNT_NAME'
     t.end()
   })
 
@@ -95,6 +96,7 @@ Test('transfer validator', (test) => {
     sandbox.restore()
     Config.AMOUNT.PRECISION = originalPrecision
     Config.HOSTNAME = originalHostName
+    Config.LEDGER_ACCOUNT_NAME = 'LEDGER_ACCOUNT_NAME'
     t.end()
   })
 
@@ -137,6 +139,26 @@ Test('transfer validator', (test) => {
     transfer.debits[0].account = accountUri
     UrlParser.nameFromAccountUri.withArgs(accountUri).returns(badAccountName)
     Account.getByName.withArgs(badAccountName).returns(P.resolve(null))
+    assertValidationError(Validator.validate(transfer, transferId), assert, `Account ${badAccountName} not found`)
+  })
+
+  test.test('reject if transfer.credits.account name is the ledger account name', assert => {
+    let badAccountName = Config.LEDGER_ACCOUNT_NAME
+    let accountUri = 'some-debit-account'
+    let transfer = goodTransfer()
+    transfer.credits[0].account = accountUri
+    UrlParser.nameFromAccountUri.withArgs(accountUri).returns(badAccountName)
+    Account.getByName.withArgs(badAccountName).returns(P.resolve({}))
+    assertValidationError(Validator.validate(transfer, transferId), assert, `Account ${badAccountName} not found`)
+  })
+
+  test.test('reject if transfer.debits.account name is the ledger account name', assert => {
+    let badAccountName = Config.LEDGER_ACCOUNT_NAME
+    let accountUri = 'some-debit-account'
+    let transfer = goodTransfer()
+    transfer.debits[0].account = accountUri
+    UrlParser.nameFromAccountUri.withArgs(accountUri).returns(badAccountName)
+    Account.getByName.withArgs(badAccountName).returns(P.resolve({}))
     assertValidationError(Validator.validate(transfer, transferId), assert, `Account ${badAccountName} not found`)
   })
 
@@ -210,22 +232,22 @@ Test('transfer validator', (test) => {
   test.test('return transfer if all checks pass', assert => {
     let transfer = goodTransfer()
     Validator.validate(transfer, transferId)
-    .then(t => {
-      assert.ok(Account.getByName.calledTwice)
-      assert.equal(t, transfer)
-      assert.end()
-    })
+      .then(t => {
+        assert.ok(Account.getByName.calledTwice)
+        assert.equal(t, transfer)
+        assert.end()
+      })
   })
 
   test.test('return unconditional transfer if all checks pass', assert => {
     const transfer = goodTransfer()
     transfer.execution_condition = null
     Validator.validate(transfer, transferId)
-    .then(t => {
-      assert.ok(Account.getByName.calledTwice)
-      assert.equal(t, transfer)
-      assert.end()
-    })
+      .then(t => {
+        assert.ok(Account.getByName.calledTwice)
+        assert.equal(t, transfer)
+        assert.end()
+      })
   })
 
   test.test('call Account.getByName once if same account name', assert => {
@@ -233,11 +255,11 @@ Test('transfer validator', (test) => {
     transfer.debits[0].account = transfer.credits[0].account
 
     Validator.validate(transfer, transferId)
-    .then(t => {
-      assert.ok(Account.getByName.calledOnce)
-      assert.equal(t, transfer)
-      assert.end()
-    })
+      .then(t => {
+        assert.ok(Account.getByName.calledOnce)
+        assert.equal(t, transfer)
+        assert.end()
+      })
   })
 
   test.end()

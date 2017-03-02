@@ -6,8 +6,10 @@ const P = require('bluebird')
 const Model = require('../../../../src/domain/fee/model')
 const FeeService = require('../../../../src/domain/fee')
 const Charges = require('../../../../src/domain/charge')
+const Account = require('../../../../src/domain/account')
 const TransferQueries = require('../../../../src/domain/transfer/queries')
 const Util = require('../../../../src/lib/util')
+const Config = require('../../../../src/lib/config')
 
 const createFee = (transfer, charge) => {
   return {
@@ -29,12 +31,15 @@ Test('Fee service', serviceTest => {
     sandbox.stub(Model, 'getAllForTransfer')
     sandbox.stub(Model, 'getSettleableFeesByAccount')
     sandbox.stub(Charges, 'getAllForTransfer')
+    sandbox.stub(Account, 'getByName')
     sandbox.stub(TransferQueries, 'getById')
+    Config.LEDGER_ACCOUNT_NAME = 'LEDGER_ACCOUNT_NAME'
     test.end()
   })
 
   serviceTest.afterEach(test => {
     sandbox.restore()
+    Config.LEDGER_ACCOUNT_NAME = 'LEDGER_ACCOUNT_NAME'
     test.end()
   })
 
@@ -58,6 +63,15 @@ Test('Fee service', serviceTest => {
         payer: 'sender',
         payee: 'receiver'
       }
+      const charge3 = {
+        name: 'charge3',
+        chargeId: '3',
+        chargeType: 'fee',
+        rateType: 'flat',
+        rate: '1.00',
+        payer: 'sender',
+        payee: 'ledger'
+      }
       const transfer = {
         transferUuid: '012',
         debitAccountId: '1',
@@ -67,22 +81,32 @@ Test('Fee service', serviceTest => {
       }
       const fee = createFee(transfer, charge)
       const fee2 = createFee(transfer, charge2)
+
+      const ledgerAccountId = '4'
+      const fee3 = createFee(transfer, charge3)
+      fee3.payeeAccountId = ledgerAccountId
+
       const event = {
         aggregate: {
           id: '012'
         }
       }
 
-      Charges.getAllForTransfer.returns(P.resolve([charge, charge2]))
+      const account = {
+        accountId: ledgerAccountId
+      }
+
+      Charges.getAllForTransfer.returns(P.resolve([charge, charge2, charge3]))
       TransferQueries.getById.returns(P.resolve(transfer))
-      Model.create.returns(P.resolve({}))
+      Model.create.returns(P.resolve(fee))
       Model.doesExist.returns(P.resolve(null))
+      Account.getByName.withArgs(Config.LEDGER_ACCOUNT_NAME).returns(P.resolve(account))
       FeeService.generateFeesForTransfer(event)
-        .then(() => {
-          const firstCallArgs = Model.create.firstCall.args
-          test.deepEqual(firstCallArgs[0], fee)
-          const secondCallArgs = Model.create.secondCall.args
-          test.deepEqual(secondCallArgs[0], fee2)
+        .then(result => {
+          test.deepEqual(Model.create.firstCall.args[0], fee)
+          test.deepEqual(Model.create.secondCall.args[0], fee2)
+          test.deepEqual(Model.create.thirdCall.args[0], fee3)
+          test.deepEqual(result, [fee, fee, fee])
           test.end()
         })
     })

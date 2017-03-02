@@ -22,6 +22,16 @@ const create = (payload) => {
     })
 }
 
+const createLedgerAccount = (name, password) => {
+  return Model.getByName(name)
+    .then(account => {
+      if (!account) {
+        return create({ name, password })
+      }
+      return account
+    })
+}
+
 const exists = (accountUri) => {
   return new P((resolve, reject) => {
     UrlParser.nameFromAccountUri(accountUri, (err, result) => {
@@ -90,6 +100,7 @@ const verify = (name, password) => {
 
 module.exports = {
   create,
+  createLedgerAccount,
   exists,
   getAll,
   getById,

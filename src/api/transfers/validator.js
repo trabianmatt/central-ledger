@@ -63,18 +63,22 @@ exports.validate = (transfer, transferId) => {
     const credit = validateEntry(transfer.credits[0])
     const debit = validateEntry(transfer.debits[0])
 
+    if (debit.accountName === Config.LEDGER_ACCOUNT_NAME || credit.accountName === Config.LEDGER_ACCOUNT_NAME) {
+      throw new ValidationError(`Account ${Config.LEDGER_ACCOUNT_NAME} not found`)
+    }
+
     return Array.from(new Set([credit.accountName, debit.accountName]))
   })
-  .then(accountNames => {
-    return P.all(accountNames.map(n => {
-      return Account.getByName(n).then(a => {
-        if (a) {
-          return a
-        } else {
-          throw new ValidationError(`Account ${n} not found`)
-        }
-      })
-    }))
-  })
-  .then(() => transfer)
+    .then(accountNames => {
+      return P.all(accountNames.map(n => {
+        return Account.getByName(n).then(a => {
+          if (a) {
+            return a
+          } else {
+            throw new ValidationError(`Account ${n} not found`)
+          }
+        })
+      }))
+    })
+    .then(() => transfer)
 }

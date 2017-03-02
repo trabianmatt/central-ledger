@@ -5,6 +5,7 @@ const Base = require('../../base')
 const Fixtures = require('../../../fixtures')
 const TransferState = require('../../../../src/domain/transfer/state')
 const Moment = require('moment')
+const Config = require('../../../../src/lib/config')
 const amount = '50.00'
 
 const prepareTransfer = (transferId, transfer) => {
@@ -41,23 +42,23 @@ Test('PUT /transfers', putTest => {
     const transfer = Fixtures.buildUnconditionalTransfer(transferId, Fixtures.buildDebitOrCredit(Base.account1Name, amount, { interledger: 'blah', path: 'blah' }), Fixtures.buildDebitOrCredit(Base.account2Name, amount, { interledger: 'blah', path: 'blah' }))
 
     prepareTransfer(transferId, transfer)
-    .expect(201)
-    .expect('Content-Type', /json/)
-    .then(res => {
-      test.equal(res.body.id, transfer.id)
-      test.equal(res.body.ledger, transfer.ledger)
-      test.equal(res.body.debits[0].account, transfer.debits[0].account)
-      test.equal(res.body.debits[0].amount, amount)
-      test.equal(res.body.credits[0].account, transfer.credits[0].account)
-      test.equal(res.body.credits[0].amount, amount)
-      test.equal(res.body.hasOwnProperty('execution_condition'), false)
-      test.equal(res.body.hasOwnProperty('expires_at'), false)
-      test.equal(res.body.state, TransferState.EXECUTED)
-      test.ok(res.body.timeline.prepared_at)
-      test.ok(res.body.timeline.executed_at)
-      test.equal(res.body.timeline.hasOwnProperty('rejected_at'), false)
-      test.end()
-    })
+      .expect(201)
+      .expect('Content-Type', /json/)
+      .then(res => {
+        test.equal(res.body.id, transfer.id)
+        test.equal(res.body.ledger, transfer.ledger)
+        test.equal(res.body.debits[0].account, transfer.debits[0].account)
+        test.equal(res.body.debits[0].amount, amount)
+        test.equal(res.body.credits[0].account, transfer.credits[0].account)
+        test.equal(res.body.credits[0].amount, amount)
+        test.equal(res.body.hasOwnProperty('execution_condition'), false)
+        test.equal(res.body.hasOwnProperty('expires_at'), false)
+        test.equal(res.body.state, TransferState.EXECUTED)
+        test.ok(res.body.timeline.prepared_at)
+        test.ok(res.body.timeline.executed_at)
+        test.equal(res.body.timeline.hasOwnProperty('rejected_at'), false)
+        test.end()
+      })
   })
 
   putTest.test('should not throw error on optimistic transfer with repeat id', test => {
@@ -65,18 +66,18 @@ Test('PUT /transfers', putTest => {
     const transfer = Fixtures.buildUnconditionalTransfer(transferId, Fixtures.buildDebitOrCredit(Base.account1Name, amount, { interledger: 'blah', path: 'blah' }), Fixtures.buildDebitOrCredit(Base.account2Name, amount, { interledger: 'blah', path: 'blah' }))
 
     Base.prepareTransfer(transferId, transfer)
-    .then(() =>
-      prepareTransfer(transferId, transfer)
-      .expect(200)
-      .expect('Content-Type', /json/)
-      .then(res => {
-        test.equal(res.body.id, transfer.id)
-        test.equal(res.body.state, TransferState.EXECUTED)
-        test.ok(res.body.timeline.prepared_at)
-        test.ok(res.body.timeline.executed_at)
-        test.end()
-      })
-    )
+      .then(() =>
+        prepareTransfer(transferId, transfer)
+          .expect(200)
+          .expect('Content-Type', /json/)
+          .then(res => {
+            test.equal(res.body.id, transfer.id)
+            test.equal(res.body.state, TransferState.EXECUTED)
+            test.ok(res.body.timeline.prepared_at)
+            test.ok(res.body.timeline.executed_at)
+            test.end()
+          })
+      )
   })
 
   putTest.test('should return transfer details when preparing existing transfer', test => {
@@ -86,23 +87,23 @@ Test('PUT /transfers', putTest => {
     Base.prepareTransfer(transferId, transfer)
       .then(() => {
         prepareTransfer(transferId, transfer)
-        .expect(200)
-        .expect('Content-Type', /json/)
-        .then(res => {
-          test.equal(res.body.id, transfer.id)
-          test.equal(res.body.ledger, transfer.ledger)
-          test.equal(res.body.debits[0].account, transfer.debits[0].account)
-          test.equal(res.body.debits[0].amount, amount)
-          test.equal(res.body.credits[0].account, transfer.credits[0].account)
-          test.equal(res.body.credits[0].amount, amount)
-          test.equal(res.body.execution_condition, transfer.execution_condition)
-          test.equal(res.body.expires_at, transfer.expires_at)
-          test.equal(res.body.state, TransferState.PREPARED)
-          test.ok(res.body.timeline.prepared_at)
-          test.equal(res.body.timeline.hasOwnProperty('executed_at'), false)
-          test.equal(res.body.timeline.hasOwnProperty('rejected_at'), false)
-          test.end()
-        })
+          .expect(200)
+          .expect('Content-Type', /json/)
+          .then(res => {
+            test.equal(res.body.id, transfer.id)
+            test.equal(res.body.ledger, transfer.ledger)
+            test.equal(res.body.debits[0].account, transfer.debits[0].account)
+            test.equal(res.body.debits[0].amount, amount)
+            test.equal(res.body.credits[0].account, transfer.credits[0].account)
+            test.equal(res.body.credits[0].amount, amount)
+            test.equal(res.body.execution_condition, transfer.execution_condition)
+            test.equal(res.body.expires_at, transfer.expires_at)
+            test.equal(res.body.state, TransferState.PREPARED)
+            test.ok(res.body.timeline.prepared_at)
+            test.equal(res.body.timeline.hasOwnProperty('executed_at'), false)
+            test.equal(res.body.timeline.hasOwnProperty('rejected_at'), false)
+            test.end()
+          })
       })
   })
 
@@ -157,6 +158,44 @@ Test('PUT /transfers', putTest => {
           .then(res => {
             test.equal(res.body.id, 'ValidationError')
             test.equal(res.body.message, `expires_at date: ${expiredDate.toISOString()} has already expired.`)
+            test.end()
+          })
+      })
+  })
+
+  putTest.test('return error when preparing transfer with ledger account as sender', test => {
+    const transferId = Fixtures.generateTransferId()
+    Config.LEDGER_ACCOUNT_NAME = 'LedgerAccountName'
+    const transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(Config.LEDGER_ACCOUNT_NAME, amount), Fixtures.buildDebitOrCredit(Base.account2Name, amount))
+
+    Base.prepareTransfer(transferId, transfer)
+      .then(() => Base.fulfillTransfer(transferId, 'oAKAAA'))
+      .then(() => {
+        prepareTransfer(transferId, transfer)
+          .expect(422)
+          .expect('Content-Type', /json/)
+          .then(res => {
+            test.equal(res.body.id, 'ValidationError')
+            test.equal(res.body.message, `Account ${Config.LEDGER_ACCOUNT_NAME} not found`)
+            test.end()
+          })
+      })
+  })
+
+  putTest.test('return error when preparing transfer with ledger account as receiver', test => {
+    const transferId = Fixtures.generateTransferId()
+    Config.LEDGER_ACCOUNT_NAME = 'LedgerAccountName'
+    const transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(Base.account1Name, amount), Fixtures.buildDebitOrCredit(Config.LEDGER_ACCOUNT_NAME, amount))
+
+    Base.prepareTransfer(transferId, transfer)
+      .then(() => Base.fulfillTransfer(transferId, 'oAKAAA'))
+      .then(() => {
+        prepareTransfer(transferId, transfer)
+          .expect(422)
+          .expect('Content-Type', /json/)
+          .then(res => {
+            test.equal(res.body.id, 'ValidationError')
+            test.equal(res.body.message, `Account ${Config.LEDGER_ACCOUNT_NAME} not found`)
             test.end()
           })
       })
