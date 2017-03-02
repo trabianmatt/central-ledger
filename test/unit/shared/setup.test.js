@@ -19,9 +19,9 @@ Test('setup', setupTest => {
     sandbox = Sinon.sandbox.create()
     sandbox.stub(Hapi, 'Server')
     sandbox.stub(Plugins, 'registerPlugins')
-    sandbox.stub(Db)
     sandbox.stub(Migrator)
     sandbox.stub(Eventric)
+    Db.connect = sandbox.stub()
     test.end()
   })
 

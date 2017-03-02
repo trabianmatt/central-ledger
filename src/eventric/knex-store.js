@@ -13,20 +13,19 @@ class KnexStore {
   }
 
   _findDomainEvents (criteria, callback) {
-    Db.connect()
-    .then(db => {
-      let query = db(this._tableName)
-      _.keys(criteria).forEach(k => {
-        query = query.whereIn(k, criteria[k])
-      })
-      return query
+    let query = Db.connection(this._tableName)
+
+    _.keys(criteria).forEach(k => {
+      query = query.whereIn(k, criteria[k])
     })
-    .then(results => callback(null, results.map(this._toDomainEvent)))
-    .catch(e => callback(e, null))
+
+    return query
+      .then(results => callback(null, results.map(this._toDomainEvent)))
+      .catch(e => callback(e, null))
   }
 
-  _getNextSequenceNumber (db, domainEvent) {
-    return db(this._tableName).max('sequenceNumber').where({ aggregateId: domainEvent.aggregate.id })
+  _getNextSequenceNumber (domainEvent) {
+    return Db.connection(this._tableName).max('sequenceNumber').where({ aggregateId: domainEvent.aggregate.id })
       .then(result => {
         if (domainEvent.ensureIsFirstDomainEvent || result[0].max === null) {
           return 1
@@ -47,8 +46,8 @@ class KnexStore {
     }
   }
 
-  _insertDomainEvent (db, sequenceNumber, domainEvent) {
-    return db(this._tableName).insert({
+  _insertDomainEvent (sequenceNumber, domainEvent) {
+    return Db.connection(this._tableName).insert({
       eventId: Uuid(),
       name: domainEvent.name,
       payload: domainEvent.payload,
@@ -68,8 +67,7 @@ class KnexStore {
   }
 
   saveDomainEvent (domainEvent) {
-    return Db.connect()
-      .then(db => this._getNextSequenceNumber(db, domainEvent).then(sequenceNumber => this._insertDomainEvent(db, sequenceNumber, domainEvent)))
+    return this._getNextSequenceNumber(domainEvent).then(sequenceNumber => this._insertDomainEvent(sequenceNumber, domainEvent))
       .then(result => this._toDomainEvent(result))
   }
 

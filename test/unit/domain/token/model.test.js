@@ -9,25 +9,22 @@ const Time = require('../../../../src/lib/time')
 
 Test('tokens model', function (modelTest) {
   let sandbox
-  let dbConnection
-  let dbMethodsStub
+  let tokensStubs
 
   let tokensTable = 'tokens'
-
-  let setupDatabase = (methodStubs = dbMethodsStub) => {
-    dbConnection.withArgs(tokensTable).returns(methodStubs)
-  }
 
   modelTest.beforeEach((t) => {
     sandbox = Sinon.sandbox.create()
     sandbox.stub(Time, 'getCurrentUTCTimeInMilliseconds')
-    dbMethodsStub = {
+
+    tokensStubs = {
       insert: sandbox.stub(),
       where: sandbox.stub()
     }
-    sandbox.stub(Db, 'connect')
-    dbConnection = sandbox.stub()
-    Db.connect.returns(P.resolve(dbConnection))
+
+    Db.connection = sandbox.stub()
+    Db.connection.withArgs(tokensTable).returns(tokensStubs)
+
     t.end()
   })
 
@@ -41,12 +38,11 @@ Test('tokens model', function (modelTest) {
       const payload = { accountId: 1, token: 'token', expiration: new Date().getTime() }
       const created = { tokenId: 1 }
 
-      dbMethodsStub.insert.returns(P.resolve([created]))
-      setupDatabase()
+      tokensStubs.insert.returns(P.resolve([created]))
 
       Model.create(payload)
         .then(c => {
-          let insertArgs = dbMethodsStub.insert.firstCall.args
+          let insertArgs = tokensStubs.insert.firstCall.args
           test.notEqual(insertArgs[0], payload)
           test.equal(insertArgs[0].accountId, payload.accountId)
           test.equal(insertArgs[0].token, payload.token)
@@ -65,8 +61,7 @@ Test('tokens model', function (modelTest) {
       const account = { accountId: 1 }
       const tokens = [ { accountId: account.accountId, token: 'token1' }, { accountId: account.accountId, token: 'token2' } ]
 
-      dbMethodsStub.where.withArgs({ accountId: account.accountId }).returns(P.resolve(tokens))
-      setupDatabase()
+      tokensStubs.where.withArgs({ accountId: account.accountId }).returns(P.resolve(tokens))
 
       Model.byAccount(account)
         .then(results => {
@@ -86,8 +81,7 @@ Test('tokens model', function (modelTest) {
       const expiredTokens = [ { accountId: 1, token: 'token', expiration: 1 } ]
 
       let delStub = sandbox.stub().returns(P.resolve(expiredTokens))
-      dbMethodsStub.where.withArgs('expiration', '<=', currentTime).returns({ del: delStub })
-      setupDatabase()
+      tokensStubs.where.withArgs('expiration', '<=', currentTime).returns({ del: delStub })
 
       Model.removeExpired()
         .then(removed => {

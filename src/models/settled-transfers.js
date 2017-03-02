@@ -5,11 +5,9 @@ const Db = require('../db')
 const settledTransfersTable = 'settledTransfers'
 
 exports.create = (transfer) => {
-  return Db.connect()
-    .then(db => db(settledTransfersTable).insert({ transferId: transfer.id, settlementId: transfer.settlementId }, '*')).then(inserted => inserted[0])
+  return Db.connection(settledTransfersTable).insert({ transferId: transfer.id, settlementId: transfer.settlementId }, '*').then(inserted => inserted[0])
 }
 
 exports.truncate = () => {
-  return Db.connect()
-    .then(db => db(settledTransfersTable).truncate())
+  return Db.connection(settledTransfersTable).truncate()
 }

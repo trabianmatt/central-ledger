@@ -5,19 +5,18 @@ const Db = require('../../../db')
 
 const usersTable = 'users'
 
-const getAll = () => Db.connect().then(db => db(usersTable).select())
+const getAll = () => Db.connection(usersTable).select()
 
-const getById = (userId) => Db.connect().then(db => db(usersTable).where({ userId }).first())
+const getById = (userId) => Db.connection(usersTable).where({ userId }).first()
 
-const remove = (userId) => Db.connect().then(db => db(usersTable).where({ userId }).del('*'))
+const remove = (userId) => Db.connection(usersTable).where({ userId }).del('*')
 
 const save = (user) => {
-  const connect = Db.connect()
   if (!user.userId) {
     user.userId = Uuid()
-    return connect.then(db => db(usersTable).insert(user, '*')).then(inserted => inserted[0])
+    return Db.connection(usersTable).insert(user, '*').then(inserted => inserted[0])
   } else {
-    return connect.then(db => db(usersTable).where({ userId: user.userId }).update(user, '*')).then(updated => updated[0])
+    return Db.connection(usersTable).where({ userId: user.userId }).update(user, '*').then(updated => updated[0])
   }
 }
 

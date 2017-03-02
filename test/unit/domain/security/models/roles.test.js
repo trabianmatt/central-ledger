@@ -9,7 +9,6 @@ const RolesModel = require('../../../../../src/domain/security/models/roles')
 
 Test('Roles model', modelTest => {
   let sandbox
-  let dbConnection
   let rolesStubs
   let userRolesStubs
 
@@ -18,6 +17,7 @@ Test('Roles model', modelTest => {
 
   modelTest.beforeEach(test => {
     sandbox = Sinon.sandbox.create()
+
     rolesStubs = {
       insert: sandbox.stub(),
       where: sandbox.stub(),
@@ -28,11 +28,11 @@ Test('Roles model', modelTest => {
       where: sandbox.stub(),
       select: sandbox.stub()
     }
-    sandbox.stub(Db, 'connect')
-    dbConnection = sandbox.stub()
-    dbConnection.withArgs(rolesTable).returns(rolesStubs)
-    dbConnection.withArgs(userRolesTable).returns(userRolesStubs)
-    Db.connect.returns(P.resolve(dbConnection))
+
+    Db.connection = sandbox.stub()
+    Db.connection.withArgs(rolesTable).returns(rolesStubs)
+    Db.connection.withArgs(userRolesTable).returns(userRolesStubs)
+
     test.end()
   })
 
@@ -165,7 +165,7 @@ Test('Roles model', modelTest => {
 
       rolesStubs.innerJoin = joinStub
 
-      dbConnection.withArgs('roles AS r').returns(rolesStubs)
+      Db.connection.withArgs('roles AS r').returns(rolesStubs)
 
       RolesModel.getUserRoles(userId)
         .then(results => {

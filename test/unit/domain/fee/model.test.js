@@ -9,27 +9,27 @@ const Db = require(`${src}/db`)
 
 Test('fees model', modelTest => {
   let sandbox
-  let dbConnection
-  let dbMethodsStub
+  let feesStubs
+  let executedTransfersStubs
 
   let feesTable = 'fees'
   let executedTransfersTable = 'executedTransfers AS et'
 
-  let setupDatabase = (methodStubs = dbMethodsStub) => {
-    dbConnection.withArgs(feesTable).returns(methodStubs)
-    dbConnection.withArgs(executedTransfersTable).returns(methodStubs)
-  }
-
   modelTest.beforeEach((t) => {
     sandbox = Sinon.sandbox.create()
-    dbMethodsStub = {
+
+    feesStubs = {
       insert: sandbox.stub(),
-      where: sandbox.stub(),
+      where: sandbox.stub()
+    }
+    executedTransfersStubs = {
       leftJoin: sandbox.stub()
     }
-    sandbox.stub(Db, 'connect')
-    dbConnection = sandbox.stub()
-    Db.connect.returns(P.resolve(dbConnection))
+
+    Db.connection = sandbox.stub()
+    Db.connection.withArgs(feesTable).returns(feesStubs)
+    Db.connection.withArgs(executedTransfersTable).returns(executedTransfersStubs)
+
     t.end()
   })
 
@@ -39,25 +39,10 @@ Test('fees model', modelTest => {
   })
 
   modelTest.test('getAllForTransfer should', getAllForTransferTest => {
-    getAllForTransferTest.test('return exception if db.connect throws', test => {
-      const error = new Error()
-      Db.connect.returns(P.reject(error))
-
-      Model.getAllForTransfer({ transferUuid: '1234' })
-        .then(() => {
-          test.fail('Should have thrown error')
-        })
-        .catch(err => {
-          test.equal(err, error)
-          test.end()
-        })
-    })
-
     getAllForTransferTest.test('return exception if db query throws', test => {
       const error = new Error()
 
-      dbMethodsStub.where.returns(P.reject(error))
-      setupDatabase()
+      feesStubs.where.returns(P.reject(error))
 
       Model.getAllForTransfer({ transferUuid: '1234' })
         .then(() => {
@@ -75,8 +60,7 @@ Test('fees model', modelTest => {
       const fees = [{ feeId: feeId1 }, { feeId: feeId2 }]
       const transfer = { transferUuid: '1234' }
 
-      dbMethodsStub.where.withArgs({ transferId: transfer.transferUuid }).returns(P.resolve(fees))
-      setupDatabase()
+      feesStubs.where.withArgs({ transferId: transfer.transferUuid }).returns(P.resolve(fees))
 
       Model.getAllForTransfer(transfer)
         .then((found) => {
@@ -109,8 +93,7 @@ Test('fees model', modelTest => {
         chargeId: 3
       }
 
-      dbMethodsStub.insert.withArgs(payload, '*').returns(P.resolve([fee]))
-      setupDatabase()
+      feesStubs.insert.withArgs(payload, '*').returns(P.resolve([fee]))
 
       Model.create(payload)
         .then(c => {
@@ -132,8 +115,7 @@ Test('fees model', modelTest => {
       const charge = { chargeId }
       const transfer = { transferUuid: transferId }
 
-      dbMethodsStub.where.withArgs({ transferId: transfer.transferUuid, chargeId: charge.chargeId }).returns({ first: sandbox.stub().returns(P.resolve(fee)) })
-      setupDatabase()
+      feesStubs.where.withArgs({ transferId: transfer.transferUuid, chargeId: charge.chargeId }).returns({ first: sandbox.stub().returns(P.resolve(fee)) })
 
       Model.doesExist(charge, transfer)
         .then(existing => {
@@ -168,7 +150,7 @@ Test('fees model', modelTest => {
       groupStub.where = groupWhereStub.returns({ orWhere: groupOrWhereStub })
       whereStub.callsArgWith(0, groupStub)
 
-      dbMethodsStub.leftJoin.returns({
+      executedTransfersStubs.leftJoin.returns({
         innerJoin: joinFeesStub.returns({
           innerJoin: joinPayerStub.returns({
             innerJoin: joinPayeeStub.returns({
@@ -182,11 +164,9 @@ Test('fees model', modelTest => {
         })
       })
 
-      setupDatabase()
-
       Model.getSettleableFeesByAccount(account)
         .then(foundFee => {
-          test.ok(dbMethodsStub.leftJoin.withArgs('settledTransfers AS st', 'et.transferId', 'st.transferId').calledOnce)
+          test.ok(executedTransfersStubs.leftJoin.withArgs('settledTransfers AS st', 'et.transferId', 'st.transferId').calledOnce)
           test.ok(joinFeesStub.withArgs('fees AS f', 'f.transferId', 'et.transferId').calledOnce)
           test.ok(joinPayerStub.withArgs('accounts AS pe', 'f.payeeAccountId', 'pe.accountId').calledOnce)
           test.ok(joinPayeeStub.withArgs('accounts AS pr', 'f.payerAccountId', 'pr.accountId').calledOnce)

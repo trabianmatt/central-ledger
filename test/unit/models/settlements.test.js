@@ -11,23 +11,20 @@ const Proxyquire = require('proxyquire')
 
 Test('settlements model', function (modelTest) {
   let sandbox
-  let dbConnection
-  let dbMethodsStub
+  let settlementsStubs
 
   const settlementsTable = 'settlements'
 
-  let setupDatabase = (methodStubs = dbMethodsStub) => {
-    dbConnection.withArgs(settlementsTable).returns(methodStubs)
-  }
-
   modelTest.beforeEach((t) => {
     sandbox = Sinon.sandbox.create()
-    dbMethodsStub = {
+
+    settlementsStubs = {
       insert: sandbox.stub()
     }
-    sandbox.stub(Db, 'connect')
-    dbConnection = sandbox.stub()
-    Db.connect.returns(P.resolve(dbConnection))
+
+    Db.connection = sandbox.stub()
+    Db.connection.withArgs(settlementsTable).returns(settlementsStubs)
+
     t.end()
   })
 
@@ -41,8 +38,7 @@ Test('settlements model', function (modelTest) {
       let settlementId = Uuid()
       let settlement = { settlementId: settlementId }
 
-      dbMethodsStub.insert.withArgs({ settlementId: settlementId }, '*').returns(P.resolve([settlement]))
-      setupDatabase()
+      settlementsStubs.insert.withArgs({ settlementId: settlementId }, '*').returns(P.resolve([settlement]))
 
       Model.create(settlementId)
         .then(c => {

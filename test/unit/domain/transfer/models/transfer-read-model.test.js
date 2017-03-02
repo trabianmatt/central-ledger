@@ -13,26 +13,23 @@ const TransferState = require(`${src}/domain/transfer/state`)
 
 Test('transfer model', modelTest => {
   let sandbox
-  let dbConnection
-  let dbMethodsStub
+  let transfersStubs
 
   let transfersTable = 'transfers'
 
-  let setupDatabase = (table = transfersTable, methodStubs = dbMethodsStub) => {
-    dbConnection.withArgs(table).returns(methodStubs)
-  }
-
   modelTest.beforeEach(t => {
     sandbox = Sinon.sandbox.create()
-    dbMethodsStub = {
+
+    transfersStubs = {
       insert: sandbox.stub(),
       where: sandbox.stub(),
       update: sandbox.stub(),
       truncate: sandbox.stub()
     }
-    sandbox.stub(Db, 'connect')
-    dbConnection = sandbox.stub()
-    Db.connect.returns(P.resolve(dbConnection))
+
+    Db.connection = sandbox.stub()
+    Db.connection.withArgs(transfersTable).returns(transfersStubs)
+
     sandbox.stub(UrlParser, 'idFromTransferUri')
     t.end()
   })
@@ -59,12 +56,11 @@ Test('transfer model', modelTest => {
     saveTransferTest.test('insert transfer and return newly created record', test => {
       let saved = { transferUuid: transferRecord.transferUuid }
 
-      dbMethodsStub.insert.returns(P.resolve([saved]))
-      setupDatabase()
+      transfersStubs.insert.returns(P.resolve([saved]))
 
       TransfersReadModel.saveTransfer(transferRecord)
         .then(s => {
-          test.ok(dbMethodsStub.insert.withArgs(transferRecord).calledOnce)
+          test.ok(transfersStubs.insert.withArgs(transferRecord).calledOnce)
           test.equal(s, saved)
           test.end()
         })
@@ -80,12 +76,11 @@ Test('transfer model', modelTest => {
       let updatedTransfer = { transferUuid: transferId }
 
       let updateStub = sandbox.stub().returns(P.resolve([updatedTransfer]))
-      dbMethodsStub.where.returns({ update: updateStub })
-      setupDatabase()
+      transfersStubs.where.returns({ update: updateStub })
 
       TransfersReadModel.updateTransfer(transferId, fields)
         .then(u => {
-          test.ok(dbMethodsStub.where.withArgs({ transferUuid: transferId }.calledOnce))
+          test.ok(transfersStubs.where.withArgs({ transferUuid: transferId }.calledOnce))
           test.ok(updateStub.withArgs(fields, '*').calledOnce)
           test.equal(u, updatedTransfer)
           test.end()
@@ -97,12 +92,11 @@ Test('transfer model', modelTest => {
 
   modelTest.test('truncateTransfers should', truncateTest => {
     truncateTest.test('destroy all transfers records', test => {
-      dbMethodsStub.truncate.returns(P.resolve())
-      setupDatabase()
+      transfersStubs.truncate.returns(P.resolve())
 
       TransfersReadModel.truncateTransfers()
         .then(() => {
-          test.ok(dbMethodsStub.truncate.calledOnce)
+          test.ok(transfersStubs.truncate.calledOnce)
           test.end()
         })
     })
@@ -119,7 +113,7 @@ Test('transfer model', modelTest => {
       let joinCreditStub = sandbox.stub()
       let selectStub = sandbox.stub()
 
-      dbMethodsStub.where.returns({
+      transfersStubs.where.returns({
         innerJoin: joinCreditStub.returns({
           innerJoin: joinDebitStub.returns({
             select: selectStub.returns({
@@ -128,11 +122,12 @@ Test('transfer model', modelTest => {
           })
         })
       })
-      setupDatabase('transfers AS t')
+
+      Db.connection.withArgs('transfers AS t').returns(transfersStubs)
 
       TransfersReadModel.getById(id)
         .then(found => {
-          test.ok(dbMethodsStub.where.withArgs({ transferUuid: id }).calledOnce)
+          test.ok(transfersStubs.where.withArgs({ transferUuid: id }).calledOnce)
           test.ok(joinCreditStub.withArgs('accounts AS ca', 't.creditAccountId', 'ca.accountId').calledOnce)
           test.ok(joinDebitStub.withArgs('accounts AS da', 't.debitAccountId', 'da.accountId').calledOnce)
           test.ok(selectStub.withArgs('t.*', 'ca.name AS creditAccountName', 'da.name AS debitAccountName').calledOnce)
@@ -152,12 +147,11 @@ Test('transfer model', modelTest => {
       let expirationDate = new Date()
 
       let andWhereStub = sandbox.stub().returns(P.resolve(expiredTransfers))
-      dbMethodsStub.where.returns({ andWhere: andWhereStub })
-      setupDatabase()
+      transfersStubs.where.returns({ andWhere: andWhereStub })
 
       TransfersReadModel.findExpired(expirationDate)
         .then(found => {
-          test.ok(dbMethodsStub.where.withArgs({ state: TransferState.PREPARED }).calledOnce)
+          test.ok(transfersStubs.where.withArgs({ state: TransferState.PREPARED }).calledOnce)
           test.ok(andWhereStub.withArgs('expiresAt', '<', expirationDate.toISOString()).calledOnce)
           test.equal(found, expiredTransfers)
           test.end()
@@ -174,12 +168,11 @@ Test('transfer model', modelTest => {
       Moment.utc.returns(expirationDate)
 
       let andWhereStub = sandbox.stub().returns(P.resolve(expiredTransfers))
-      dbMethodsStub.where.returns({ andWhere: andWhereStub })
-      setupDatabase()
+      transfersStubs.where.returns({ andWhere: andWhereStub })
 
       TransfersReadModel.findExpired()
         .then(found => {
-          test.ok(dbMethodsStub.where.withArgs({ state: TransferState.PREPARED }).calledOnce)
+          test.ok(transfersStubs.where.withArgs({ state: TransferState.PREPARED }).calledOnce)
           test.ok(andWhereStub.withArgs('expiresAt', '<', expirationDate.toISOString()).calledOnce)
           test.equals(found, expiredTransfers)
           test.end()

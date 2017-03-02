@@ -6,34 +6,30 @@ const accountsTable = 'accounts'
 const userCredentialsTable = 'userCredentials'
 
 exports.getById = (id) => {
-  return Db.connect().then(db => db(accountsTable).where({ accountId: id }).first())
+  return Db.connection(accountsTable).where({ accountId: id }).first()
 }
 
 exports.getByName = (name) => {
-  return Db.connect().then(db => db(accountsTable).where({ name: name }).first())
+  return Db.connection(accountsTable).where({ name: name }).first()
 }
 
 exports.retrieveUserCredentials = (account) => {
-  return Db.connect().then(db => db(userCredentialsTable).where({ accountId: account.accountId }).first())
+  return Db.connection(userCredentialsTable).where({ accountId: account.accountId }).first()
 }
 
 exports.getAll = () => {
-  return Db.connect().then(db => db(accountsTable).orderBy('name', 'asc'))
+  return Db.connection(accountsTable).orderBy('name', 'asc')
 }
 
 exports.update = (account, isDisabled) => {
-  return Db.connect()
-  .then(db => db(accountsTable).where({ accountId: account.accountId }).update({ isDisabled: isDisabled }, '*'))
-  .then(updated => updated[0])
+  return Db.connection(accountsTable).where({ accountId: account.accountId }).update({ isDisabled: isDisabled }, '*')
+    .then(updated => updated[0])
 }
 
 exports.create = (account) => {
-  return Db.connect()
-    .then(db => {
-      return db(accountsTable).insert({ name: account.name }, '*')
-        .then(insertedAccount => {
-          return db(userCredentialsTable).insert({ accountId: insertedAccount[0].accountId, password: account.hashedPassword }, '*')
-            .then(() => insertedAccount[0])
-        })
+  return Db.connection(accountsTable).insert({ name: account.name }, '*')
+    .then(insertedAccount => {
+      return Db.connection(userCredentialsTable).insert({ accountId: insertedAccount[0].accountId, password: account.hashedPassword }, '*')
+        .then(() => insertedAccount[0])
     })
 }

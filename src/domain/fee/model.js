@@ -5,23 +5,19 @@ const Db = require('../../db')
 const feesTable = 'fees'
 
 exports.create = (fee) => {
-  return Db.connect().then(db => db(feesTable).insert(fee, '*')).then(inserted => inserted[0])
+  return Db.connection(feesTable).insert(fee, '*').then(inserted => inserted[0])
 }
 
 exports.getAllForTransfer = (transfer) => {
-  return Db.connect().then(db => db(feesTable).where({ transferId: transfer.transferUuid }))
+  return Db.connection(feesTable).where({ transferId: transfer.transferUuid })
 }
 
 exports.doesExist = (charge, transfer) => {
-  return Db.connect().then(db => db(feesTable).where({ transferId: transfer.transferUuid, chargeId: charge.chargeId }).first())
+  return Db.connection(feesTable).where({ transferId: transfer.transferUuid, chargeId: charge.chargeId }).first()
 }
 
 exports.getSettleableFeesByAccount = (account) => {
-  return Db.connect().then(db => buildSettleableFeesQuery(db, account))
-}
-
-const buildSettleableFeesQuery = (db, account) => {
-  return db('executedTransfers AS et')
+  return Db.connection('executedTransfers AS et')
     .leftJoin('settledTransfers AS st', 'et.transferId', 'st.transferId')
     .innerJoin('fees AS f', 'f.transferId', 'et.transferId')
     .innerJoin('accounts AS pe', 'f.payeeAccountId', 'pe.accountId')

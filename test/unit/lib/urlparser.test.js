@@ -53,7 +53,7 @@ Test('accountNameFromTransfersRoute', accountNameFromTransfersRouteTest => {
   accountNameFromTransfersRouteTest.test('return null if not url', t => {
     UrlParser.accountNameFromTransfersRoute('fjdklsjfld')
     .catch(e => {
-      t.equal(e, 'no match')
+      t.equal(e.message, 'No matching account found in url')
       t.end()
     })
   })

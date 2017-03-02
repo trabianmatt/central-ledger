@@ -39,7 +39,6 @@ Test('users model', usersTest => {
           return result
         })
         .then(existing => {
-          console.log(existing.userId)
           Model.save(existing)
             .then(result => {
               test.equal(result.firstName, 'Another name')
@@ -57,7 +56,7 @@ Test('users model', usersTest => {
       const user2 = createUser()
 
       Model.save(user1)
-      .then(Model.save(user2))
+      .then(() => Model.save(user2))
       .then(() => Model.getAll())
       .then(results => {
         test.ok(results.length >= 2)

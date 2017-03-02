@@ -3,15 +3,15 @@
 const Db = require('../db')
 
 exports.getSettleableTransfers = () => {
-  return Db.connect().then(db => buildSettleableTransfersQuery(db))
+  return buildSettleableTransfersQuery()
 }
 
 exports.getSettleableTransfersByAccount = (accountId) => {
-  return Db.connect().then(db => buildSettleableTransfersQuery(db).andWhere(q => q.where('t.creditAccountId', accountId).orWhere('t.debitAccountId', accountId)))
+  return buildSettleableTransfersQuery().andWhere(q => q.where('t.creditAccountId', accountId).orWhere('t.debitAccountId', accountId))
 }
 
-const buildSettleableTransfersQuery = (db) => {
-  return db('executedTransfers AS et')
+const buildSettleableTransfersQuery = () => {
+  return Db.connection('executedTransfers AS et')
     .leftJoin('settledTransfers AS st', 'et.transferId', 'st.transferId')
     .innerJoin('transfers AS t', 'et.transferId', 't.transferUuid')
     .innerJoin('accounts AS ca', 't.creditAccountId', 'ca.accountId')

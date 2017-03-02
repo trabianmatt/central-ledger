@@ -9,24 +9,21 @@ const Db = require(`${src}/db`)
 
 Test('settled-transfers model', function (modelTest) {
   let sandbox
-  let dbConnection
-  let dbMethodsStub
+  let settledTransfersStubs
 
   let settledTransfersTable = 'settledTransfers'
 
-  let setupDatabase = (methodStubs = dbMethodsStub) => {
-    dbConnection.withArgs(settledTransfersTable).returns(methodStubs)
-  }
-
   modelTest.beforeEach((t) => {
     sandbox = Sinon.sandbox.create()
-    dbMethodsStub = {
+
+    settledTransfersStubs = {
       insert: sandbox.stub(),
       truncate: sandbox.stub()
     }
-    sandbox.stub(Db, 'connect')
-    dbConnection = sandbox.stub()
-    Db.connect.returns(P.resolve(dbConnection))
+
+    Db.connection = sandbox.stub()
+    Db.connection.withArgs(settledTransfersTable).returns(settledTransfersStubs)
+
     t.end()
   })
 
@@ -40,8 +37,7 @@ Test('settled-transfers model', function (modelTest) {
       let transfer = { id: '1234', settlementId: 'abc' }
       let created = { transferId: transfer.id, settlementId: transfer.settlementId }
 
-      dbMethodsStub.insert.withArgs({ transferId: transfer.id, settlementId: transfer.settlementId }).returns(P.resolve([created]))
-      setupDatabase()
+      settledTransfersStubs.insert.withArgs({ transferId: transfer.id, settlementId: transfer.settlementId }).returns(P.resolve([created]))
 
       Model.create(transfer)
         .then(c => {
@@ -55,12 +51,11 @@ Test('settled-transfers model', function (modelTest) {
 
   modelTest.test('truncate should', truncateTest => {
     truncateTest.test('truncate table', test => {
-      dbMethodsStub.truncate.returns(P.resolve())
-      setupDatabase()
+      settledTransfersStubs.truncate.returns(P.resolve())
 
       Model.truncate()
         .then(() => {
-          test.ok(dbMethodsStub.truncate.calledOnce)
+          test.ok(settledTransfersStubs.truncate.calledOnce)
           test.end()
         })
     })

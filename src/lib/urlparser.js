@@ -23,7 +23,7 @@ const accountNameFromTransfersRoute = (url) => {
     if (matches) {
       resolve(matches[1])
     } else {
-      reject('no match')
+      reject(new Error('No matching account found in url'))
     }
   })
 }

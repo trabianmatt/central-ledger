@@ -10,5 +10,5 @@ exports.generateId = () => {
 }
 
 exports.create = (id) => {
-  return Db.connect().then(db => db(settlementsTable).insert({ settlementId: id }, '*')).then(inserted => inserted[0])
+  return Db.connection(settlementsTable).insert({ settlementId: id }, '*').then(inserted => inserted[0])
 }

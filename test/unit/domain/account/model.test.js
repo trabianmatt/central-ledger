@@ -9,27 +9,30 @@ const Db = require(`${src}/db`)
 
 Test('accounts model', modelTest => {
   let sandbox
-  let dbConnection
-  let dbMethodsStub
+  let accountsStubs
+  let userCredentialsStubs
 
   const accountsTable = 'accounts'
   const userCredentialsTable = 'userCredentials'
 
-  let setupDatabaseForTable = (tableName, methodStubs = dbMethodsStub) => {
-    dbConnection.withArgs(tableName).returns(methodStubs)
-  }
-
   modelTest.beforeEach((t) => {
     sandbox = Sinon.sandbox.create()
-    dbMethodsStub = {
+
+    accountsStubs = {
       insert: sandbox.stub(),
       update: sandbox.stub(),
       where: sandbox.stub(),
       orderBy: sandbox.stub()
     }
-    sandbox.stub(Db, 'connect')
-    dbConnection = sandbox.stub()
-    Db.connect.returns(P.resolve(dbConnection))
+    userCredentialsStubs = {
+      insert: sandbox.stub(),
+      where: sandbox.stub()
+    }
+
+    Db.connection = sandbox.stub()
+    Db.connection.withArgs(accountsTable).returns(accountsStubs)
+    Db.connection.withArgs(userCredentialsTable).returns(userCredentialsStubs)
+
     t.end()
   })
 
@@ -39,25 +42,10 @@ Test('accounts model', modelTest => {
   })
 
   modelTest.test('getAll should', getAllTest => {
-    getAllTest.test('return exception if db.connect throws', test => {
-      const error = new Error()
-      Db.connect.returns(P.reject(error))
-
-      Model.getAll()
-        .then(() => {
-          test.fail('Should have thrown error')
-        })
-        .catch(err => {
-          test.equal(err, error)
-          test.end()
-        })
-    })
-
     getAllTest.test('return exception if db query throws', test => {
       const error = new Error()
 
-      dbMethodsStub.orderBy.withArgs('name', 'asc').returns(P.reject(error))
-      setupDatabaseForTable(accountsTable)
+      accountsStubs.orderBy.withArgs('name', 'asc').returns(P.reject(error))
 
       Model.getAll()
         .then(() => {
@@ -74,8 +62,7 @@ Test('accounts model', modelTest => {
       const account2Name = 'dfsp2'
       const accounts = [{ name: account1Name }, { name: account2Name }]
 
-      dbMethodsStub.orderBy.withArgs('name', 'asc').returns(P.resolve(accounts))
-      setupDatabaseForTable(accountsTable)
+      accountsStubs.orderBy.withArgs('name', 'asc').returns(P.resolve(accounts))
 
       Model.getAll()
         .then((found) => {
@@ -91,25 +78,10 @@ Test('accounts model', modelTest => {
   })
 
   modelTest.test('getById should', getByIdTest => {
-    getByIdTest.test('return exception if db.connect throws', test => {
-      const error = new Error()
-      Db.connect.returns(P.reject(error))
-
-      Model.getById(1)
-        .then(() => {
-          test.fail('Should have thrown error')
-        })
-        .catch(err => {
-          test.equal(err, error)
-          test.end()
-        })
-    })
-
     getByIdTest.test('return exception if db query throws', test => {
       const error = new Error()
 
-      dbMethodsStub.where.withArgs({ accountId: 1 }).returns({ first: sandbox.stub().returns(P.reject(error)) })
-      setupDatabaseForTable(accountsTable)
+      accountsStubs.where.withArgs({ accountId: 1 }).returns({ first: sandbox.stub().returns(P.reject(error)) })
 
       Model.getById(1)
         .then(() => {
@@ -125,13 +97,12 @@ Test('accounts model', modelTest => {
       const id = 1
       const account = { accountId: id }
 
-      dbMethodsStub.where.withArgs({ accountId: id }).returns({ first: sandbox.stub().returns(P.resolve(account)) })
-      setupDatabaseForTable(accountsTable)
+      accountsStubs.where.withArgs({ accountId: id }).returns({ first: sandbox.stub().returns(P.resolve(account)) })
 
       Model.getById(id)
         .then(r => {
           test.equal(r, account)
-          test.equal(dbMethodsStub.where.firstCall.args[0].accountId, id)
+          test.equal(accountsStubs.where.firstCall.args[0].accountId, id)
           test.end()
         })
         .catch(err => {
@@ -143,26 +114,11 @@ Test('accounts model', modelTest => {
   })
 
   modelTest.test('getByName should', getByNameTest => {
-    getByNameTest.test('return exception if db.connect throws', test => {
-      let error = new Error()
-      Db.connect.returns(P.reject(error))
-
-      Model.getByName('dfsp1')
-        .then(() => {
-          test.fail('Should have thrown error')
-        })
-        .catch(err => {
-          test.equal(err, error)
-          test.end()
-        })
-    })
-
     getByNameTest.test('return exception if db query throws', test => {
       let name = 'dfsp1'
       let error = new Error()
 
-      dbMethodsStub.where.withArgs({ name: name }).returns({ first: sandbox.stub().returns(P.reject(error)) })
-      setupDatabaseForTable(accountsTable)
+      accountsStubs.where.withArgs({ name: name }).returns({ first: sandbox.stub().returns(P.reject(error)) })
 
       Model.getByName(name)
         .then(() => {
@@ -178,13 +134,12 @@ Test('accounts model', modelTest => {
       let name = 'dfsp1'
       let account = { name: name }
 
-      dbMethodsStub.where.withArgs({ name: name }).returns({ first: sandbox.stub().returns(P.resolve(account)) })
-      setupDatabaseForTable(accountsTable)
+      accountsStubs.where.withArgs({ name: name }).returns({ first: sandbox.stub().returns(P.resolve(account)) })
 
       Model.getByName(name)
         .then(r => {
           test.equal(r, account)
-          test.equal(dbMethodsStub.where.firstCall.args[0].name, name)
+          test.equal(accountsStubs.where.firstCall.args[0].name, name)
           test.end()
         })
         .catch(err => {
@@ -196,23 +151,6 @@ Test('accounts model', modelTest => {
   })
 
   modelTest.test('update should', updateTest => {
-    updateTest.test('return exception if db.connect throws', test => {
-      let error = new Error()
-      const id = 1
-      const account = { accountId: id }
-      const isDisabled = false
-      Db.connect.returns(P.reject(error))
-
-      Model.update(account, isDisabled)
-        .then(() => {
-          test.fail('Should have thrown error')
-        })
-        .catch(err => {
-          test.equal(err, error)
-          test.end()
-        })
-    })
-
     updateTest.test('return exception if db query throws', test => {
       let error = new Error()
       const id = 1
@@ -220,8 +158,7 @@ Test('accounts model', modelTest => {
       const isDisabled = false
 
       let updateStub = sandbox.stub().returns(P.reject(error))
-      dbMethodsStub.where.withArgs({ accountId: id }).returns({ update: updateStub })
-      setupDatabaseForTable(accountsTable)
+      accountsStubs.where.withArgs({ accountId: id }).returns({ update: updateStub })
 
       Model.update(account, isDisabled)
         .then(() => {
@@ -252,9 +189,7 @@ Test('accounts model', modelTest => {
       }
 
       let updateStub = sandbox.stub().returns(P.resolve([updatedAccount]))
-
-      dbMethodsStub.where.withArgs({ accountId: id }).returns({ update: updateStub })
-      setupDatabaseForTable(accountsTable)
+      accountsStubs.where.withArgs({ accountId: id }).returns({ update: updateStub })
 
       Model.update(account, isDisabled)
         .then(r => {
@@ -276,17 +211,13 @@ Test('accounts model', modelTest => {
       let payload = { name: name, hashedPassword: 'hashedPassword' }
       let insertedAccount = { accountId: 1, name: name }
 
-      let insertAccountStub = sandbox.stub().returns(P.resolve([insertedAccount]))
-      setupDatabaseForTable(accountsTable, { insert: insertAccountStub })
-
-      let insertUserCredsStub = sandbox.stub().returns(P.resolve([]))
-      setupDatabaseForTable(userCredentialsTable, { insert: insertUserCredsStub })
+      accountsStubs.insert.returns(P.resolve([insertedAccount]))
+      userCredentialsStubs.insert.returns(P.resolve([]))
 
       Model.create(payload)
         .then(s => {
-          test.comment(JSON.stringify(insertAccountStub.firstCall.args))
-          test.ok(insertAccountStub.withArgs({ name: name }, '*').calledOnce)
-          test.ok(insertUserCredsStub.withArgs({ accountId: insertedAccount.accountId, password: payload.hashedPassword }, '*').calledOnce)
+          test.ok(accountsStubs.insert.withArgs({ name: name }, '*').calledOnce)
+          test.ok(userCredentialsStubs.insert.withArgs({ accountId: insertedAccount.accountId, password: payload.hashedPassword }, '*').calledOnce)
           test.equal(s, insertedAccount)
           test.end()
         })
@@ -300,12 +231,11 @@ Test('accounts model', modelTest => {
       let account = { name: 'dfsp1', 'accountId': '1234' }
       let userCredentials = { accountId: account.accountId, password: 'password' }
 
-      dbMethodsStub.where.withArgs({ accountId: account.accountId }).returns({ first: sandbox.stub().returns(P.resolve(userCredentials)) })
-      setupDatabaseForTable(userCredentialsTable)
+      userCredentialsStubs.where.withArgs({ accountId: account.accountId }).returns({ first: sandbox.stub().returns(P.resolve(userCredentials)) })
 
       Model.retrieveUserCredentials(account)
         .then(r => {
-          let whereArg = dbMethodsStub.where.firstCall.args[0]
+          let whereArg = userCredentialsStubs.where.firstCall.args[0]
           test.equal(whereArg.accountId, account.accountId)
           test.equal(r.accountId, userCredentials.accountId)
           test.equal(r.password, userCredentials.password)

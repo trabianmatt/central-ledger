@@ -10,7 +10,6 @@ const Db = require(`${src}/db`)
 
 Test('knex store test', storeTest => {
   let sandbox
-  let dbConnection
   let dbMethodsStub
 
   let createDomainEvent = (payload = {}) => {
@@ -41,7 +40,7 @@ Test('knex store test', storeTest => {
     let store = new KnexStore()
     return P.resolve(store.initialize({ name: contextName }))
       .then(ctx => {
-        dbConnection.withArgs(ctx._tableName).returns(dbMethodsStub)
+        Db.connection.withArgs(ctx._tableName).returns(dbMethodsStub)
         return ctx
       })
   }
@@ -59,10 +58,7 @@ Test('knex store test', storeTest => {
       whereIn: sandbox.stub(),
       max: sandbox.stub()
     }
-    sandbox.stub(Db, 'connect')
-    dbConnection = sandbox.stub()
-    Db.connect.returns(P.resolve(dbConnection))
-    sandbox.stub()
+    Db.connection = sandbox.stub()
     t.end()
   })
 
@@ -94,7 +90,7 @@ Test('knex store test', storeTest => {
       let domainEvent = createDomainEvent()
       setSequenceNumber(domainEvent.aggregate.id, -12)
 
-      createStore().then(store => store._getNextSequenceNumber(dbConnection, domainEvent))
+      createStore().then(store => store._getNextSequenceNumber(domainEvent))
       .then(result => {
         test.equal(result, 1)
         test.end()
@@ -107,7 +103,7 @@ Test('knex store test', storeTest => {
 
       setSequenceNumber(domainEvent.aggregate.id, null)
 
-      createStore().then(s => s._getNextSequenceNumber(dbConnection, domainEvent))
+      createStore().then(s => s._getNextSequenceNumber(domainEvent))
       .then(result => {
         test.equal(result, 1)
         test.end()
@@ -121,7 +117,7 @@ Test('knex store test', storeTest => {
       let maxSequenceNumber = 100
       setSequenceNumber(domainEvent.aggregate.id, maxSequenceNumber)
 
-      createStore().then(s => s._getNextSequenceNumber(dbConnection, domainEvent))
+      createStore().then(s => s._getNextSequenceNumber(domainEvent))
       .then(result => {
         test.equal(result, maxSequenceNumber + 1)
         test.end()
@@ -245,19 +241,6 @@ Test('knex store test', storeTest => {
       createStore().then(s => s.findDomainEventsByName('somename', cb))
     })
 
-    findByNameTest.test('return error if db.connect throws error', test => {
-      let error = new Error()
-      Db.connect.returns(P.reject(error))
-
-      let cb = (err, result) => {
-        test.equal(err, error)
-        test.notOk(result)
-        test.end()
-      }
-
-      createStore().then(s => s.findDomainEventsByName('somename', cb))
-    })
-
     findByNameTest.end()
   })
 
@@ -299,19 +282,6 @@ Test('knex store test', storeTest => {
     findByAggregateIdTest.test('return error if db.whereIn throws error', test => {
       let error = new Error()
       dbMethodsStub.whereIn.returns(P.reject(error))
-
-      let cb = (err, result) => {
-        test.equal(err, error)
-        test.notOk(result)
-        test.end()
-      }
-
-      createStore().then(s => s.findDomainEventsByAggregateId(Uuid(), cb))
-    })
-
-    findByAggregateIdTest.test('return error if db.connect throws error', test => {
-      let error = new Error()
-      Db.connect.returns(P.reject(error))
 
       let cb = (err, result) => {
         test.equal(err, error)
@@ -379,19 +349,6 @@ Test('knex store test', storeTest => {
       }
 
       createStore().then(s => s.findDomainEventsByNameAndAggregateId(name, id, cb))
-    })
-
-    findByNameAndAggregateIdTest.test('return error if db.connect throws error', test => {
-      let error = new Error()
-      Db.connect.returns(P.reject(error))
-
-      let cb = (err, result) => {
-        test.equal(err, error)
-        test.notOk(result)
-        test.end()
-      }
-
-      createStore().then(s => s.findDomainEventsByNameAndAggregateId('name', Uuid(), cb))
     })
 
     findByNameAndAggregateIdTest.end()

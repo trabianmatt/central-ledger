@@ -9,22 +9,22 @@ const Model = require('../../../../../src/domain/security/models/users')
 
 Test('Users model', modelTest => {
   let sandbox
-  let dbConnection
-  let dbMethodsStub
+  let usersStubs
 
   const usersTable = 'users'
 
   modelTest.beforeEach(test => {
     sandbox = Sinon.sandbox.create()
-    dbMethodsStub = {
+
+    usersStubs = {
       insert: sandbox.stub(),
       where: sandbox.stub(),
       select: sandbox.stub()
     }
-    sandbox.stub(Db, 'connect')
-    dbConnection = sandbox.stub()
-    dbConnection.withArgs(usersTable).returns(dbMethodsStub)
-    Db.connect.returns(P.resolve(dbConnection))
+
+    Db.connection = sandbox.stub()
+    Db.connection.withArgs(usersTable).returns(usersStubs)
+
     test.end()
   })
 
@@ -36,7 +36,7 @@ Test('Users model', modelTest => {
   modelTest.test('getAll should', getAllTest => {
     getAllTest.test('find all users in db', test => {
       const users = [{}, {}]
-      dbMethodsStub.select.returns(P.resolve(users))
+      usersStubs.select.returns(P.resolve(users))
 
       Model.getAll()
         .then(result => {
@@ -52,7 +52,7 @@ Test('Users model', modelTest => {
     getByIdTest.test('select first user by id', test => {
       const userId = Uuid()
       const user = { firstName: 'Dave' }
-      dbMethodsStub.where.withArgs({ userId }).returns({ first: sandbox.stub().returns(P.resolve(user)) })
+      usersStubs.where.withArgs({ userId }).returns({ first: sandbox.stub().returns(P.resolve(user)) })
 
       Model.getById(userId)
         .then(result => {
@@ -68,7 +68,7 @@ Test('Users model', modelTest => {
     removeTest.test('destroy user in db', test => {
       const userId = Uuid()
 
-      dbMethodsStub.where.withArgs({ userId }).returns({ del: sandbox.stub().returns(P.resolve(1)) })
+      usersStubs.where.withArgs({ userId }).returns({ del: sandbox.stub().returns(P.resolve(1)) })
 
       Model.remove(userId)
         .then(result => {
@@ -83,7 +83,7 @@ Test('Users model', modelTest => {
   modelTest.test('save should', saveTest => {
     saveTest.test('insert user in db if userId not defined', test => {
       const user = { firstName: 'Dave' }
-      dbMethodsStub.insert.withArgs(sandbox.match(user), '*').returns(P.resolve([user]))
+      usersStubs.insert.withArgs(sandbox.match(user), '*').returns(P.resolve([user]))
 
       Model.save(user)
         .then(result => {
@@ -97,7 +97,7 @@ Test('Users model', modelTest => {
       const user = { userId }
 
       const updateStub = sandbox.stub().returns(P.resolve([user]))
-      dbMethodsStub.where.withArgs(user).returns({ update: updateStub })
+      usersStubs.where.withArgs(user).returns({ update: updateStub })
 
       Model.save(user)
         .then(result => {

@@ -11,32 +11,28 @@ Test('db', dbTest => {
   let knexStub
   let Db
 
-  let databaseUri = 'postgres://some-data-uri'
-  let oldDatabaseUri
+  let goodDatabaseUri = 'postgres://some-data-uri'
 
   dbTest.beforeEach(t => {
     sandbox = Sinon.sandbox.create()
-    knexStub = sandbox.stub()
+    knexStub = sandbox.stub().returns({})
     Db = Proxyquire(`${src}/db`, { knex: knexStub })
-    Db.resetConnection()
-    oldDatabaseUri = Config.DATABASE_URI
-    Config.DATABASE_URI = databaseUri
     t.end()
   })
 
   dbTest.afterEach(t => {
     sandbox.restore()
-    Config.DATABASE_URI = oldDatabaseUri
     t.end()
   })
 
   dbTest.test('connect should', connectTest => {
     connectTest.test('connect using config values', assert => {
+      Config.DATABASE_URI = goodDatabaseUri
       Db.connect()
         .then(db => {
           assert.ok(knexStub.calledOnce)
           assert.equal(knexStub.firstCall.args[0].client, 'pg')
-          assert.equal(knexStub.firstCall.args[0].connection, databaseUri)
+          assert.equal(knexStub.firstCall.args[0].connection, goodDatabaseUri)
           assert.end()
         })
     })
@@ -50,7 +46,7 @@ Test('db', dbTest => {
         })
         .catch(err => {
           assert.notOk(knexStub.called)
-          assert.equal(err.message, 'Invalid database type in DATABASE_URI')
+          assert.equal(err.message, 'Invalid database type in database URI')
           assert.end()
         })
     })
@@ -64,12 +60,13 @@ Test('db', dbTest => {
         })
         .catch(err => {
           assert.notOk(knexStub.called)
-          assert.equal(err.message, 'Invalid database type in DATABASE_URI')
+          assert.equal(err.message, 'Invalid database type in database URI')
           assert.end()
         })
     })
 
     connectTest.test('only create one connection', assert => {
+      Config.DATABASE_URI = goodDatabaseUri
       Db.connect()
       .then(db1 => {
         Db.connect()

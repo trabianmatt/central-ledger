@@ -7,7 +7,7 @@ const Db = require(`${src}/db`)
 const Model = require(`${src}/models/executed-transfers`)
 
 const getExecutedTransfersCount = () => {
-  return Db.connect().then(db => db('executedTransfers').count('*')).then(record => parseInt(record[0].count))
+  return Db.connection('executedTransfers').count('*').then(record => parseInt(record[0].count))
 }
 
 Test('executed-transfers model', modelTest => {

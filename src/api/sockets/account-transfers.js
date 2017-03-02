@@ -11,14 +11,14 @@ const sendNotFoundAndClose = (socket, message) => {
 
 const initialize = (socket, uri, socketManager) => {
   return UrlParser.accountNameFromTransfersRoute(uri)
-  .then(result => UrlParser.toAccountUri(result))
-  .then(accountUri => {
-    return AccountService.exists(accountUri)
-      .then(socketManager.add(socket, accountUri))
-  })
-  .catch(err => {
-    sendNotFoundAndClose(socket, err.message || 'The requested account does not exist')
-  })
+    .then(result => UrlParser.toAccountUri(result))
+    .then(accountUri => {
+      return AccountService.exists(accountUri)
+        .then(account => socketManager.add(socket, accountUri))
+    })
+    .catch(err => {
+      sendNotFoundAndClose(socket, err.message || 'The requested account does not exist')
+    })
 }
 
 module.exports = {

@@ -9,23 +9,20 @@ const Db = require(`${src}/db`)
 
 Test('settleable-transfers-read-model', function (modelTest) {
   let sandbox
-  let dbConnection
-  let dbMethodsStub
+  let executedTransfersStubs
 
   let executedTransfersTable = 'executedTransfers AS et'
 
-  let setupDatabase = (methodStubs = dbMethodsStub) => {
-    dbConnection.withArgs(executedTransfersTable).returns(methodStubs)
-  }
-
   modelTest.beforeEach((t) => {
     sandbox = Sinon.sandbox.create()
-    dbMethodsStub = {
+
+    executedTransfersStubs = {
       leftJoin: sandbox.stub()
     }
-    sandbox.stub(Db, 'connect')
-    dbConnection = sandbox.stub()
-    Db.connect.returns(P.resolve(dbConnection))
+
+    Db.connection = sandbox.stub()
+    Db.connection.withArgs(executedTransfersTable).returns(executedTransfersStubs)
+
     t.end()
   })
 
@@ -44,7 +41,7 @@ Test('settleable-transfers-read-model', function (modelTest) {
       let whereNullStub = sandbox.stub()
       let distinctStub = sandbox.stub()
 
-      dbMethodsStub.leftJoin.returns({
+      executedTransfersStubs.leftJoin.returns({
         innerJoin: joinTransfersStub.returns({
           innerJoin: joinCreditStub.returns({
             innerJoin: joinDebitStub.returns({
@@ -55,11 +52,10 @@ Test('settleable-transfers-read-model', function (modelTest) {
           })
         })
       })
-      setupDatabase()
 
       Model.getSettleableTransfers()
         .then(found => {
-          test.ok(dbMethodsStub.leftJoin.withArgs('settledTransfers AS st', 'et.transferId', 'st.transferId').calledOnce)
+          test.ok(executedTransfersStubs.leftJoin.withArgs('settledTransfers AS st', 'et.transferId', 'st.transferId').calledOnce)
           test.ok(joinTransfersStub.withArgs('transfers AS t', 'et.transferId', 't.transferUuid').calledOnce)
           test.ok(joinCreditStub.withArgs('accounts AS ca', 't.creditAccountId', 'ca.accountId').calledOnce)
           test.ok(joinDebitStub.withArgs('accounts AS da', 't.debitAccountId', 'da.accountId').calledOnce)
@@ -92,7 +88,7 @@ Test('settleable-transfers-read-model', function (modelTest) {
       groupStub.where = groupWhereStub.returns({ orWhere: groupOrWhereStub })
       andWhereStub.callsArgWith(0, groupStub)
 
-      dbMethodsStub.leftJoin.returns({
+      executedTransfersStubs.leftJoin.returns({
         innerJoin: joinTransfersStub.returns({
           innerJoin: joinCreditStub.returns({
             innerJoin: joinDebitStub.returns({
@@ -105,11 +101,10 @@ Test('settleable-transfers-read-model', function (modelTest) {
           })
         })
       })
-      setupDatabase()
 
       Model.getSettleableTransfersByAccount(accountId)
         .then(found => {
-          test.ok(dbMethodsStub.leftJoin.withArgs('settledTransfers AS st', 'et.transferId', 'st.transferId').calledOnce)
+          test.ok(executedTransfersStubs.leftJoin.withArgs('settledTransfers AS st', 'et.transferId', 'st.transferId').calledOnce)
           test.ok(joinTransfersStub.withArgs('transfers AS t', 'et.transferId', 't.transferUuid').calledOnce)
           test.ok(joinCreditStub.withArgs('accounts AS ca', 't.creditAccountId', 'ca.accountId').calledOnce)
           test.ok(joinDebitStub.withArgs('accounts AS da', 't.debitAccountId', 'da.accountId').calledOnce)

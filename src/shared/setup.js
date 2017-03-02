@@ -29,7 +29,6 @@ const createServer = (port, modules) => {
   })
 }
 
-// Migrations must run before connecting to the database, due to the way Massive loads all database objects on initialization.
 // Eventric.getContext is called to replay all events through projections (creating the read-model) before starting the server.
 const initialize = (port, modules = [], loadEventric = false) => {
   return runMigrations()
