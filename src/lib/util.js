@@ -27,6 +27,18 @@ const formatAmount = (amount) => {
   return Number(amount).toFixed(Config.AMOUNT.SCALE).toString()
 }
 
+const parseJson = (value) => {
+  if (typeof value !== 'string') {
+    return value
+  }
+
+  try {
+    return JSON.parse(value)
+  } catch (e) {
+    return value
+  }
+}
+
 const squish = (array) => {
   return _.join(array, '|')
 }
@@ -42,6 +54,7 @@ module.exports = {
   merge,
   mergeAndOmitNil,
   omitNil,
+  parseJson,
   pick,
   squish
 }

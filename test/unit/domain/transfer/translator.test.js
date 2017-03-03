@@ -17,14 +17,18 @@ Test('TransferTranslator', transferTranslatorTest => {
           {
             'account': 'http://central-ledger/accounts/bob',
             'amount': 50,
-            'memo': null
+            'memo': {
+              'some_property': 'value'
+            }
           }
         ],
         'debits': [
           {
             'account': 'http://central-ledger/accounts/alice',
             'amount': 50,
-            'memo': null
+            'memo': {
+              'some_property': 'value'
+            }
           }
         ],
         'execution_condition': executionCondition,
@@ -44,12 +48,18 @@ Test('TransferTranslator', transferTranslatorTest => {
         credits: [
           {
             account: 'http://central-ledger/accounts/bob',
-            amount: '50.00'
+            amount: '50.00',
+            memo: {
+              'some_property': 'value'
+            }
           }
         ],
         debits: [
           { account: 'http://central-ledger/accounts/alice',
-            amount: '50.00'
+            amount: '50.00',
+            memo: {
+              'some_property': 'value'
+            }
           }
         ],
         execution_condition: executionCondition,
@@ -83,7 +93,7 @@ Test('TransferTranslator', transferTranslatorTest => {
         'state': 'prepared',
         'ledger': 'http://central-ledger',
         'debitAmount': 50.00,
-        'debitMemo': null,
+        'debitMemo': '{"source_transfer_id":"f17f52d9-e8b2-4bff-9f01-18c4d388c27a","source_transfer_amount":"12.00","source_transfer_ledger":"levelone.dfsp1."}',
         'creditAmount': 50.00,
         'creditMemo': null,
         'executionCondition': executionCondition,
@@ -113,7 +123,12 @@ Test('TransferTranslator', transferTranslatorTest => {
         ],
         debits: [
           { account: 'http://central-ledger/accounts/alice',
-            amount: '50.00'
+            amount: '50.00',
+            memo: {
+              'source_transfer_id': 'f17f52d9-e8b2-4bff-9f01-18c4d388c27a',
+              'source_transfer_amount': '12.00',
+              'source_transfer_ledger': 'levelone.dfsp1.'
+            }
           }
         ],
         execution_condition: executionCondition,

@@ -25,5 +25,47 @@ Test('util', utilTest => {
     formatAmountTest.end()
   })
 
+  utilTest.test('parseJson should', parseJsonTest => {
+    parseJsonTest.test('return null if value null', test => {
+      const value = null
+      test.notOk(Util.parseJson(value))
+      test.end()
+    })
+    parseJsonTest.test('return value if value not string', test => {
+      const value = {}
+      test.equal(Util.parseJson(value), value)
+      test.end()
+    })
+
+    parseJsonTest.test('return value if number', test => {
+      const value = 1000
+      test.equal(Util.parseJson(value), value)
+      test.end()
+    })
+
+    parseJsonTest.test('return value if string that is not json', test => {
+      const value = 'some really long string'
+      test.equal(Util.parseJson(value), value)
+      test.end()
+    })
+
+    parseJsonTest.test('return object if value is json string', test => {
+      const obj = {
+        prop1: 'test',
+        prop2: {
+          'date_time': new Date().toDateString(),
+          'number': 1000
+        }
+      }
+      const value = JSON.stringify(obj)
+
+      const result = Util.parseJson(value)
+      test.notEqual(result, value)
+      test.deepEqual(result, obj)
+      test.end()
+    })
+    parseJsonTest.end()
+  })
+
   utilTest.end()
 })

@@ -11,9 +11,16 @@ const amount = '50.00'
 Test('GET /transfers/:id', getTest => {
   getTest.test('should return prepared transfer details', test => {
     const transferId = Fixtures.generateTransferId()
-    const transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(Base.account1Name, amount), Fixtures.buildDebitOrCredit(Base.account2Name, amount))
+    const memo = {
+      prop1: 'value',
+      prop2: {
+        nested: 'value'
+      }
+    }
+    const transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(Base.account1Name, amount, memo), Fixtures.buildDebitOrCredit(Base.account2Name, amount, memo))
 
     Base.prepareTransfer(transferId, transfer)
+    .delay(500)
     .then(() => {
       Base.getTransfer(transferId)
         .expect(200)
@@ -23,8 +30,10 @@ Test('GET /transfers/:id', getTest => {
           test.equal(res.body.ledger, transfer.ledger)
           test.equal(res.body.debits[0].account, transfer.debits[0].account)
           test.equal(res.body.debits[0].amount, amount)
+          test.deepEqual(res.body.debits[0].memo, memo)
           test.equal(res.body.credits[0].account, transfer.credits[0].account)
           test.equal(res.body.credits[0].amount, amount)
+          test.deepEqual(res.body.credits[0].memo, memo)
           test.equal(res.body.execution_condition, transfer.execution_condition)
           test.equal(res.body.expires_at, transfer.expires_at)
           test.equal(res.body.state, TransferState.PREPARED)

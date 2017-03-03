@@ -15,7 +15,8 @@ const prepareTransfer = (transferId, transfer) => {
 Test('PUT /transfers', putTest => {
   putTest.test('should prepare a transfer', test => {
     const transferId = Fixtures.generateTransferId()
-    const transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(Base.account1Name, amount, { interledger: 'blah', path: 'blah' }), Fixtures.buildDebitOrCredit(Base.account2Name, amount, { interledger: 'blah', path: 'blah' }))
+    const memo = { interledger: 'blah', path: 'blah' }
+    const transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(Base.account1Name, amount), Fixtures.buildDebitOrCredit(Base.account2Name, amount, memo))
 
     prepareTransfer(transferId, transfer)
       .expect(201)
@@ -25,8 +26,10 @@ Test('PUT /transfers', putTest => {
         test.equal(res.body.ledger, transfer.ledger)
         test.equal(res.body.debits[0].account, transfer.debits[0].account)
         test.equal(res.body.debits[0].amount, amount)
+        test.equal(res.body.debits[0].hasOwnProperty('memo'), false)
         test.equal(res.body.credits[0].account, transfer.credits[0].account)
         test.equal(res.body.credits[0].amount, amount)
+        test.deepEqual(res.body.credits[0].memo, memo)
         test.equal(res.body.execution_condition, transfer.execution_condition)
         test.equal(res.body.expires_at, transfer.expires_at)
         test.equal(res.body.state, TransferState.PREPARED)
@@ -39,7 +42,8 @@ Test('PUT /transfers', putTest => {
 
   putTest.test('should prepare and execute unconditional transfer', test => {
     const transferId = Fixtures.generateTransferId()
-    const transfer = Fixtures.buildUnconditionalTransfer(transferId, Fixtures.buildDebitOrCredit(Base.account1Name, amount, { interledger: 'blah', path: 'blah' }), Fixtures.buildDebitOrCredit(Base.account2Name, amount, { interledger: 'blah', path: 'blah' }))
+    const memo = { interledger: 'blah', path: 'blah' }
+    const transfer = Fixtures.buildUnconditionalTransfer(transferId, Fixtures.buildDebitOrCredit(Base.account1Name, amount, memo), Fixtures.buildDebitOrCredit(Base.account2Name, amount))
 
     prepareTransfer(transferId, transfer)
       .expect(201)
@@ -49,8 +53,10 @@ Test('PUT /transfers', putTest => {
         test.equal(res.body.ledger, transfer.ledger)
         test.equal(res.body.debits[0].account, transfer.debits[0].account)
         test.equal(res.body.debits[0].amount, amount)
+        test.deepEqual(res.body.debits[0].memo, memo)
         test.equal(res.body.credits[0].account, transfer.credits[0].account)
         test.equal(res.body.credits[0].amount, amount)
+        test.equal(res.body.credits[0].hasOwnProperty('memo'), false)
         test.equal(res.body.hasOwnProperty('execution_condition'), false)
         test.equal(res.body.hasOwnProperty('expires_at'), false)
         test.equal(res.body.state, TransferState.EXECUTED)
