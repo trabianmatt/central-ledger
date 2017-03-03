@@ -11,8 +11,6 @@ Test('tokens model', function (modelTest) {
   let sandbox
   let tokensStubs
 
-  let tokensTable = 'tokens'
-
   modelTest.beforeEach((t) => {
     sandbox = Sinon.sandbox.create()
     sandbox.stub(Time, 'getCurrentUTCTimeInMilliseconds')
@@ -22,8 +20,7 @@ Test('tokens model', function (modelTest) {
       where: sandbox.stub()
     }
 
-    Db.connection = sandbox.stub()
-    Db.connection.withArgs(tokensTable).returns(tokensStubs)
+    Db.tokens = sandbox.stub().returns(tokensStubs)
 
     t.end()
   })

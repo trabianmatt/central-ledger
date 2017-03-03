@@ -12,16 +12,14 @@ Test('Roles model', modelTest => {
   let rolesStubs
   let userRolesStubs
 
-  const rolesTable = 'roles'
-  const userRolesTable = 'userRoles'
-
   modelTest.beforeEach(test => {
     sandbox = Sinon.sandbox.create()
 
     rolesStubs = {
       insert: sandbox.stub(),
       where: sandbox.stub(),
-      select: sandbox.stub()
+      select: sandbox.stub(),
+      innerJoin: sandbox.stub()
     }
     userRolesStubs = {
       insert: sandbox.stub(),
@@ -29,9 +27,8 @@ Test('Roles model', modelTest => {
       select: sandbox.stub()
     }
 
-    Db.connection = sandbox.stub()
-    Db.connection.withArgs(rolesTable).returns(rolesStubs)
-    Db.connection.withArgs(userRolesTable).returns(userRolesStubs)
+    Db.roles = sandbox.stub().returns(rolesStubs)
+    Db.userRoles = sandbox.stub().returns(userRolesStubs)
 
     test.end()
   })
@@ -155,23 +152,19 @@ Test('Roles model', modelTest => {
       const userId = Uuid()
       const roles = [{}, {}]
 
-      const joinStub = sandbox.stub()
       const whereStub = sandbox.stub()
       const selectStub = sandbox.stub()
 
-      selectStub.withArgs('r.*').returns(P.resolve(roles))
+      selectStub.returns(P.resolve(roles))
       whereStub.returns({ select: selectStub })
-      joinStub.returns({ where: whereStub })
-
-      rolesStubs.innerJoin = joinStub
-
-      Db.connection.withArgs('roles AS r').returns(rolesStubs)
+      rolesStubs.innerJoin.returns({ where: whereStub })
 
       RolesModel.getUserRoles(userId)
         .then(results => {
           test.equal(results, roles)
-          test.ok(joinStub.calledWith('userRoles as ur', 'r.roleId', 'ur.roleId'))
+          test.ok(rolesStubs.innerJoin.calledWith('userRoles as ur', 'roles.roleId', 'ur.roleId'))
           test.ok(whereStub.calledWith('ur.userId', userId))
+          test.ok(selectStub.calledWith('roles.*'))
           test.end()
         })
     })

@@ -3,10 +3,8 @@
 const Db = require('../../db')
 const Time = require('../../lib/time')
 
-const tokensTable = 'tokens'
-
 const create = ({ accountId, token, expiration }) => {
-  return Db.connection(tokensTable).insert({
+  return Db.tokens().insert({
     accountId,
     token,
     expiration
@@ -15,11 +13,11 @@ const create = ({ accountId, token, expiration }) => {
 }
 
 const byAccount = ({ accountId }) => {
-  return Db.connection(tokensTable).where({ accountId: accountId })
+  return Db.tokens().where({ accountId: accountId })
 }
 
 const removeExpired = () => {
-  return Db.connection(tokensTable).where('expiration', '<=', Time.getCurrentUTCTimeInMilliseconds()).del('*')
+  return Db.tokens().where('expiration', '<=', Time.getCurrentUTCTimeInMilliseconds()).del('*')
 }
 
 module.exports = {

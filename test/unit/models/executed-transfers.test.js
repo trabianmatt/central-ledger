@@ -11,8 +11,6 @@ Test('executed-transfers model', function (modelTest) {
   let sandbox
   let executedTransfersStubs
 
-  const executedTransfersTable = 'executedTransfers'
-
   modelTest.beforeEach((t) => {
     sandbox = Sinon.sandbox.create()
 
@@ -21,8 +19,7 @@ Test('executed-transfers model', function (modelTest) {
       truncate: sandbox.stub()
     }
 
-    Db.connection = sandbox.stub()
-    Db.connection.withArgs(executedTransfersTable).returns(executedTransfersStubs)
+    Db.executedTransfers = sandbox.stub().returns(executedTransfersStubs)
 
     t.end()
   })

@@ -13,8 +13,6 @@ Test('settlements model', function (modelTest) {
   let sandbox
   let settlementsStubs
 
-  const settlementsTable = 'settlements'
-
   modelTest.beforeEach((t) => {
     sandbox = Sinon.sandbox.create()
 
@@ -22,8 +20,7 @@ Test('settlements model', function (modelTest) {
       insert: sandbox.stub()
     }
 
-    Db.connection = sandbox.stub()
-    Db.connection.withArgs(settlementsTable).returns(settlementsStubs)
+    Db.settlements = sandbox.stub().returns(settlementsStubs)
 
     t.end()
   })

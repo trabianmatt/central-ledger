@@ -2,24 +2,22 @@
 
 const Db = require('../../db')
 
-const feesTable = 'fees'
-
 exports.create = (fee) => {
-  return Db.connection(feesTable).insert(fee, '*').then(inserted => inserted[0])
+  return Db.fees().insert(fee, '*').then(inserted => inserted[0])
 }
 
 exports.getAllForTransfer = (transfer) => {
-  return Db.connection(feesTable).where({ transferId: transfer.transferUuid })
+  return Db.fees().where({ transferId: transfer.transferUuid })
 }
 
 exports.doesExist = (charge, transfer) => {
-  return Db.connection(feesTable).where({ transferId: transfer.transferUuid, chargeId: charge.chargeId }).first()
+  return Db.fees().where({ transferId: transfer.transferUuid, chargeId: charge.chargeId }).first()
 }
 
 exports.getSettleableFeesByAccount = (account) => {
-  return Db.connection('executedTransfers AS et')
-    .leftJoin('settledTransfers AS st', 'et.transferId', 'st.transferId')
-    .innerJoin('fees AS f', 'f.transferId', 'et.transferId')
+  return Db.executedTransfers()
+    .leftJoin('settledTransfers AS st', 'executedTransfers.transferId', 'st.transferId')
+    .innerJoin('fees AS f', 'f.transferId', 'executedTransfers.transferId')
     .innerJoin('accounts AS pe', 'f.payeeAccountId', 'pe.accountId')
     .innerJoin('accounts AS pr', 'f.payerAccountId', 'pr.accountId')
     .whereNull('st.transferId')

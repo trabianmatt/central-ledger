@@ -15,8 +15,6 @@ Test('transfer model', modelTest => {
   let sandbox
   let transfersStubs
 
-  let transfersTable = 'transfers'
-
   modelTest.beforeEach(t => {
     sandbox = Sinon.sandbox.create()
 
@@ -27,8 +25,7 @@ Test('transfer model', modelTest => {
       truncate: sandbox.stub()
     }
 
-    Db.connection = sandbox.stub()
-    Db.connection.withArgs(transfersTable).returns(transfersStubs)
+    Db.transfers = sandbox.stub().returns(transfersStubs)
 
     sandbox.stub(UrlParser, 'idFromTransferUri')
     t.end()
@@ -123,14 +120,12 @@ Test('transfer model', modelTest => {
         })
       })
 
-      Db.connection.withArgs('transfers AS t').returns(transfersStubs)
-
       TransfersReadModel.getById(id)
         .then(found => {
           test.ok(transfersStubs.where.withArgs({ transferUuid: id }).calledOnce)
-          test.ok(joinCreditStub.withArgs('accounts AS ca', 't.creditAccountId', 'ca.accountId').calledOnce)
-          test.ok(joinDebitStub.withArgs('accounts AS da', 't.debitAccountId', 'da.accountId').calledOnce)
-          test.ok(selectStub.withArgs('t.*', 'ca.name AS creditAccountName', 'da.name AS debitAccountName').calledOnce)
+          test.ok(joinCreditStub.withArgs('accounts AS ca', 'transfers.creditAccountId', 'ca.accountId').calledOnce)
+          test.ok(joinDebitStub.withArgs('accounts AS da', 'transfers.debitAccountId', 'da.accountId').calledOnce)
+          test.ok(selectStub.withArgs('transfers.*', 'ca.name AS creditAccountName', 'da.name AS debitAccountName').calledOnce)
           test.equal(found, transfer)
           test.end()
         })

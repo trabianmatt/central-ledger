@@ -26,13 +26,17 @@ Test('db', dbTest => {
   })
 
   dbTest.test('connect should', connectTest => {
-    connectTest.test('connect using config values', assert => {
+    connectTest.test('connect using config values and setup table properties', assert => {
       Config.DATABASE_URI = goodDatabaseUri
       Db.connect()
         .then(db => {
           assert.ok(knexStub.calledOnce)
           assert.equal(knexStub.firstCall.args[0].client, 'pg')
           assert.equal(knexStub.firstCall.args[0].connection, goodDatabaseUri)
+          Db.tables.forEach(tbl => {
+            assert.ok(Db[tbl])
+          })
+          assert.notOk(Db.tableNotExists)
           assert.end()
         })
     })

@@ -11,8 +11,6 @@ Test('Users model', modelTest => {
   let sandbox
   let usersStubs
 
-  const usersTable = 'users'
-
   modelTest.beforeEach(test => {
     sandbox = Sinon.sandbox.create()
 
@@ -22,8 +20,7 @@ Test('Users model', modelTest => {
       select: sandbox.stub()
     }
 
-    Db.connection = sandbox.stub()
-    Db.connection.withArgs(usersTable).returns(usersStubs)
+    Db.users = sandbox.stub().returns(usersStubs)
 
     test.end()
   })

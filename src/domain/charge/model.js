@@ -2,10 +2,8 @@
 
 const Db = require('../../db')
 
-const chargesTable = 'charges'
-
 exports.create = (charge) => {
-  return Db.connection(chargesTable).insert({
+  return Db.charges().insert({
     name: charge.name,
     chargeType: charge.charge_type,
     rateType: charge.rate_type,
@@ -21,9 +19,9 @@ exports.create = (charge) => {
 }
 
 exports.getAll = () => {
-  return Db.connection(chargesTable).orderBy('name', 'asc')
+  return Db.charges().orderBy('name', 'asc')
 }
 
 exports.getAllSenderAsPayer = () => {
-  return Db.connection(chargesTable).where({ payer: 'sender' }).orderBy('name', 'asc')
+  return Db.charges().where({ payer: 'sender' }).orderBy('name', 'asc')
 }

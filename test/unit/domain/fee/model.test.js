@@ -12,9 +12,6 @@ Test('fees model', modelTest => {
   let feesStubs
   let executedTransfersStubs
 
-  let feesTable = 'fees'
-  let executedTransfersTable = 'executedTransfers AS et'
-
   modelTest.beforeEach((t) => {
     sandbox = Sinon.sandbox.create()
 
@@ -26,9 +23,8 @@ Test('fees model', modelTest => {
       leftJoin: sandbox.stub()
     }
 
-    Db.connection = sandbox.stub()
-    Db.connection.withArgs(feesTable).returns(feesStubs)
-    Db.connection.withArgs(executedTransfersTable).returns(executedTransfersStubs)
+    Db.fees = sandbox.stub().returns(feesStubs)
+    Db.executedTransfers = sandbox.stub().returns(executedTransfersStubs)
 
     t.end()
   })
@@ -166,8 +162,8 @@ Test('fees model', modelTest => {
 
       Model.getSettleableFeesByAccount(account)
         .then(foundFee => {
-          test.ok(executedTransfersStubs.leftJoin.withArgs('settledTransfers AS st', 'et.transferId', 'st.transferId').calledOnce)
-          test.ok(joinFeesStub.withArgs('fees AS f', 'f.transferId', 'et.transferId').calledOnce)
+          test.ok(executedTransfersStubs.leftJoin.withArgs('settledTransfers AS st', 'executedTransfers.transferId', 'st.transferId').calledOnce)
+          test.ok(joinFeesStub.withArgs('fees AS f', 'f.transferId', 'executedTransfers.transferId').calledOnce)
           test.ok(joinPayerStub.withArgs('accounts AS pe', 'f.payeeAccountId', 'pe.accountId').calledOnce)
           test.ok(joinPayeeStub.withArgs('accounts AS pr', 'f.payerAccountId', 'pr.accountId').calledOnce)
           test.ok(whereNullStub.withArgs('st.transferId').calledOnce)

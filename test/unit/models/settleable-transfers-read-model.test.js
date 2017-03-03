@@ -11,8 +11,6 @@ Test('settleable-transfers-read-model', function (modelTest) {
   let sandbox
   let executedTransfersStubs
 
-  let executedTransfersTable = 'executedTransfers AS et'
-
   modelTest.beforeEach((t) => {
     sandbox = Sinon.sandbox.create()
 
@@ -20,8 +18,7 @@ Test('settleable-transfers-read-model', function (modelTest) {
       leftJoin: sandbox.stub()
     }
 
-    Db.connection = sandbox.stub()
-    Db.connection.withArgs(executedTransfersTable).returns(executedTransfersStubs)
+    Db.executedTransfers = sandbox.stub().returns(executedTransfersStubs)
 
     t.end()
   })
@@ -55,12 +52,12 @@ Test('settleable-transfers-read-model', function (modelTest) {
 
       Model.getSettleableTransfers()
         .then(found => {
-          test.ok(executedTransfersStubs.leftJoin.withArgs('settledTransfers AS st', 'et.transferId', 'st.transferId').calledOnce)
-          test.ok(joinTransfersStub.withArgs('transfers AS t', 'et.transferId', 't.transferUuid').calledOnce)
+          test.ok(executedTransfersStubs.leftJoin.withArgs('settledTransfers AS st', 'executedTransfers.transferId', 'st.transferId').calledOnce)
+          test.ok(joinTransfersStub.withArgs('transfers AS t', 'executedTransfers.transferId', 't.transferUuid').calledOnce)
           test.ok(joinCreditStub.withArgs('accounts AS ca', 't.creditAccountId', 'ca.accountId').calledOnce)
           test.ok(joinDebitStub.withArgs('accounts AS da', 't.debitAccountId', 'da.accountId').calledOnce)
           test.ok(whereNullStub.withArgs('st.transferId').calledOnce)
-          test.ok(distinctStub.withArgs('et.transferId AS transferId', 'ca.name AS creditAccountName', 'da.name AS debitAccountName', 't.creditAmount AS creditAmount', 't.debitAmount AS debitAmount').calledOnce)
+          test.ok(distinctStub.withArgs('executedTransfers.transferId AS transferId', 'ca.name AS creditAccountName', 'da.name AS debitAccountName', 't.creditAmount AS creditAmount', 't.debitAmount AS debitAmount').calledOnce)
           test.equal(found, settleableTransfers)
           test.end()
         })
@@ -104,12 +101,12 @@ Test('settleable-transfers-read-model', function (modelTest) {
 
       Model.getSettleableTransfersByAccount(accountId)
         .then(found => {
-          test.ok(executedTransfersStubs.leftJoin.withArgs('settledTransfers AS st', 'et.transferId', 'st.transferId').calledOnce)
-          test.ok(joinTransfersStub.withArgs('transfers AS t', 'et.transferId', 't.transferUuid').calledOnce)
+          test.ok(executedTransfersStubs.leftJoin.withArgs('settledTransfers AS st', 'executedTransfers.transferId', 'st.transferId').calledOnce)
+          test.ok(joinTransfersStub.withArgs('transfers AS t', 'executedTransfers.transferId', 't.transferUuid').calledOnce)
           test.ok(joinCreditStub.withArgs('accounts AS ca', 't.creditAccountId', 'ca.accountId').calledOnce)
           test.ok(joinDebitStub.withArgs('accounts AS da', 't.debitAccountId', 'da.accountId').calledOnce)
           test.ok(whereNullStub.withArgs('st.transferId').calledOnce)
-          test.ok(distinctStub.withArgs('et.transferId AS transferId', 'ca.name AS creditAccountName', 'da.name AS debitAccountName', 't.creditAmount AS creditAmount', 't.debitAmount AS debitAmount').calledOnce)
+          test.ok(distinctStub.withArgs('executedTransfers.transferId AS transferId', 'ca.name AS creditAccountName', 'da.name AS debitAccountName', 't.creditAmount AS creditAmount', 't.debitAmount AS debitAmount').calledOnce)
           test.ok(groupWhereStub.withArgs('t.creditAccountId', accountId).calledOnce)
           test.ok(groupOrWhereStub.withArgs('t.debitAccountId', accountId).calledOnce)
           test.equal(found, settleableTransfers)

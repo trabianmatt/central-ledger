@@ -3,34 +3,31 @@
 const Uuid = require('uuid4')
 const Db = require('../../../db')
 
-const rolesTable = 'roles'
-const userRolesTable = 'userRoles'
-
-const remove = (roleId) => Db.connection(rolesTable).where({ roleId: roleId }).del('*')
+const remove = (roleId) => Db.roles().where({ roleId: roleId }).del('*')
 
 const save = (role) => {
   if (!role.roleId) {
     role.roleId = Uuid()
-    return Db.connection(rolesTable).insert(role, '*').then(inserted => inserted[0])
+    return Db.roles().insert(role, '*').then(inserted => inserted[0])
   } else {
-    return Db.connection(rolesTable).where({ roleId: role.roleId }).update(role, '*').then(updated => updated[0])
+    return Db.roles().where({ roleId: role.roleId }).update(role, '*').then(updated => updated[0])
   }
 }
 
-const getAll = () => Db.connection(rolesTable).select()
+const getAll = () => Db.roles().select()
 
-const getById = (roleId) => Db.connection(rolesTable).where({ roleId: roleId }).first()
+const getById = (roleId) => Db.roles().where({ roleId: roleId }).first()
 
-const addUserRole = (userRole) => Db.connection(userRolesTable).insert(userRole, '*').then(inserted => inserted[0])
+const addUserRole = (userRole) => Db.userRoles().insert(userRole, '*').then(inserted => inserted[0])
 
 const getUserRoles = (userId) => {
-  return Db.connection(`${rolesTable} AS r`)
-    .innerJoin('userRoles as ur', 'r.roleId', 'ur.roleId')
+  return Db.roles()
+    .innerJoin('userRoles as ur', 'roles.roleId', 'ur.roleId')
     .where('ur.userId', userId)
-    .select('r.*')
+    .select('roles.*')
 }
 
-const removeUserRoles = (userId) => Db.connection(userRolesTable).where({ userId }).del('*')
+const removeUserRoles = (userId) => Db.userRoles().where({ userId }).del('*')
 
 module.exports = {
   addUserRole,

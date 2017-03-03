@@ -11,8 +11,6 @@ Test('charges model', modelTest => {
   let sandbox
   let chargesStubs
 
-  const chargesTable = 'charges'
-
   modelTest.beforeEach((t) => {
     sandbox = Sinon.sandbox.create()
     chargesStubs = {
@@ -21,8 +19,7 @@ Test('charges model', modelTest => {
       orderBy: sandbox.stub()
     }
 
-    Db.connection = sandbox.stub()
-    Db.connection.withArgs(chargesTable).returns(chargesStubs)
+    Db.charges = sandbox.stub().returns(chargesStubs)
 
     t.end()
   })

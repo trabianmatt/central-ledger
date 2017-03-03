@@ -11,8 +11,6 @@ Test('settled-transfers model', function (modelTest) {
   let sandbox
   let settledTransfersStubs
 
-  let settledTransfersTable = 'settledTransfers'
-
   modelTest.beforeEach((t) => {
     sandbox = Sinon.sandbox.create()
 
@@ -21,8 +19,7 @@ Test('settled-transfers model', function (modelTest) {
       truncate: sandbox.stub()
     }
 
-    Db.connection = sandbox.stub()
-    Db.connection.withArgs(settledTransfersTable).returns(settledTransfersStubs)
+    Db.settledTransfers = sandbox.stub().returns(settledTransfersStubs)
 
     t.end()
   })
