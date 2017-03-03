@@ -1,9 +1,13 @@
+'use strict'
+
 const Handler = require('./handler')
 const Joi = require('joi')
 const Permissions = require('../../domain/security/permissions')
 const RouteConfig = require('../route-config')
 
 const tags = ['api', 'accounts']
+const nameValidator = Joi.string().token().max(256).required().description('Name of the account')
+const passwordValidator = Joi.string().token().max(256).required().description('Password for the account')
 
 module.exports = [
   {
@@ -11,6 +15,17 @@ module.exports = [
     path: '/accounts',
     handler: Handler.getAll,
     config: RouteConfig.config(tags, Permissions.ACCOUNTS_LIST)
+  },
+  {
+    method: 'POST',
+    path: '/accounts',
+    handler: Handler.create,
+    config: RouteConfig.config(tags, Permissions.ACCOUNTS_CREATE, {
+      payload: {
+        name: nameValidator,
+        password: passwordValidator
+      }
+    })
   },
   {
     method: 'PUT',

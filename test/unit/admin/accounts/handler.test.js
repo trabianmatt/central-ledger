@@ -4,6 +4,8 @@ const Sinon = require('sinon')
 const Test = require('tapes')(require('tape'))
 const P = require('bluebird')
 const Config = require('../../../../src/lib/config')
+const Errors = require('../../../../src/errors')
+const UrlParser = require('../../../../src/lib/urlparser')
 const Handler = require('../../../../src/admin/accounts/handler')
 const Account = require('../../../../src/domain/account')
 
@@ -16,8 +18,7 @@ Test('accounts handler', handlerTest => {
     sandbox = Sinon.sandbox.create()
     originalHostName = Config.HOSTNAME
     Config.HOSTNAME = hostname
-    sandbox.stub(Account, 'getAll')
-    sandbox.stub(Account, 'update')
+    sandbox.stub(Account)
     t.end()
   })
 
@@ -122,6 +123,44 @@ Test('accounts handler', handlerTest => {
     })
 
     updateAccountTest.end()
+  })
+
+  handlerTest.test('create should', createTest => {
+    createTest.test('return created account', test => {
+      const payload = { name: 'dfsp1', password: 'dfsp1' }
+      const account = { name: payload.name, createdDate: 'today', isDisabled: true }
+      Account.getByName.returns(P.resolve(null))
+      Account.create.withArgs(payload).returns(P.resolve(account))
+      const accountId = UrlParser.toAccountUri(account.name)
+      const reply = (response) => {
+        test.equal(response.id, accountId)
+        test.equal(response.is_disabled, account.isDisabled)
+        test.equal(response.created, account.createdDate)
+        return {
+          code: (statusCode) => {
+            test.equal(statusCode, 201)
+            test.end()
+          }
+        }
+      }
+
+      Handler.create({ payload }, reply)
+    })
+
+    createTest.test('return RecordExistsError if name already registered', test => {
+      const payload = { name: 'dfsp1', password: 'dfsp1' }
+      Account.getByName.returns(P.resolve({}))
+
+      const reply = response => {
+        test.ok(response instanceof Errors.RecordExistsError)
+        test.equal(response.message, 'The account has already been registered')
+        test.end()
+      }
+
+      Handler.create({ payload }, reply)
+    })
+
+    createTest.end()
   })
 
   handlerTest.end()
