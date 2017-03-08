@@ -33,6 +33,7 @@ Test('charges handler', handlerTest => {
     Config.HOSTNAME = hostname
     sandbox.stub(Charge, 'getAll')
     sandbox.stub(Charge, 'create')
+    sandbox.stub(Charge, 'getByName')
     t.end()
   })
 
@@ -112,6 +113,7 @@ Test('charges handler', handlerTest => {
         payee: 'sender'
       }
 
+      Charge.getByName.withArgs(payload.name).returns(P.resolve(null))
       Charge.create.withArgs(payload).returns(P.resolve(charge))
 
       const reply = response => {
@@ -133,7 +135,7 @@ Test('charges handler', handlerTest => {
         }
       }
 
-      Handler.create({payload}, reply)
+      Handler.create({ payload }, reply)
     })
 
     createTest.test('reply with error if Charge services throws', test => {
@@ -152,13 +154,14 @@ Test('charges handler', handlerTest => {
         payee: 'sender'
       }
 
+      Charge.getByName.withArgs(payload.name).returns(P.resolve(null))
       Charge.create.withArgs(payload).returns(P.reject(error))
 
       const reply = (e) => {
         test.equal(e, error)
         test.end()
       }
-      Handler.create({payload}, reply)
+      Handler.create({ payload }, reply)
     })
 
     createTest.test('reply with validation error if payer and payee match', test => {
@@ -179,6 +182,7 @@ Test('charges handler', handlerTest => {
         payee: 'ledger'
       }
 
+      Charge.getByName.withArgs(payload.name).returns(P.resolve(null))
       Charge.create.withArgs(payload).returns(P.resolve(charge))
 
       const reply = (e) => {
@@ -186,7 +190,35 @@ Test('charges handler', handlerTest => {
         test.equal(e.payload.message, 'Payer and payee should be set to \'sender\', \'receiver\', or \'ledger\' and should not have the same value.')
         test.end()
       }
-      Handler.create({payload}, reply)
+      Handler.create({ payload }, reply)
+    })
+
+    createTest.test('reply with already exists error if a charge with the given name already exists', test => {
+      const charge = createCharge('charge')
+      charge.payer = 'sender'
+      charge.payee = 'receiver'
+
+      const payload = {
+        name: 'charge',
+        chargeType: 'tax',
+        rateType: 'flat',
+        rate: '1.00',
+        minimum: '1.00',
+        maximum: '100.00',
+        code: '001',
+        is_active: true,
+        payer: 'sender',
+        payee: 'receiver'
+      }
+
+      Charge.getByName.withArgs(payload.name).returns(P.resolve(charge))
+
+      const reply = (e) => {
+        test.equal(e.name, 'RecordExistsError')
+        test.equal(e.payload.message, 'The charge has already been created')
+        test.end()
+      }
+      Handler.create({ payload }, reply)
     })
 
     createTest.end()

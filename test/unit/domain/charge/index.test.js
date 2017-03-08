@@ -48,13 +48,27 @@ Test('Charge service', serviceTest => {
       }
       Model.create.returns(P.resolve({}))
       ChargeService.create(charge)
-      .then(() => {
-        test.ok(Model.create.calledWith(charge))
-        test.end()
-      })
+        .then(() => {
+          test.ok(Model.create.calledWith(charge))
+          test.end()
+        })
     })
 
     createTest.end()
+  })
+
+  serviceTest.test('getByName should', getByNameTest => {
+    getByNameTest.test('getByName from Model', test => {
+      const charge = {}
+      Model.getByName.returns(P.resolve(charge))
+      ChargeService.getByName()
+        .then(result => {
+          test.equal(result, charge)
+          test.end()
+        })
+    })
+
+    getByNameTest.end()
   })
 
   serviceTest.test('getAll should', getAllTest => {
@@ -62,10 +76,10 @@ Test('Charge service', serviceTest => {
       const all = []
       Model.getAll.returns(P.resolve(all))
       ChargeService.getAll()
-      .then(result => {
-        test.equal(result, all)
-        test.end()
-      })
+        .then(result => {
+          test.equal(result, all)
+          test.end()
+        })
     })
 
     getAllTest.end()
@@ -104,18 +118,18 @@ Test('Charge service', serviceTest => {
       }
       Model.getAllSenderAsPayer.returns(P.resolve(charges))
       ChargeService.quote(transaction)
-      .then(result => {
-        test.equal(result.length, 2)
-        test.equal(result[0].name, charge1.name)
-        test.equal(result[0].code, charge1.code)
-        test.equal(result[0].charge_type, charge1.chargeType)
-        test.equal(result[0].amount, new Decimal(charge1.rate * amount).valueOf())
-        test.equal(result[1].name, charge2.name)
-        test.equal(result[1].code, charge2.code)
-        test.equal(result[1].charge_type, charge2.chargeType)
-        test.equal(result[1].amount, new Decimal(charge2.rate).valueOf())
-        test.end()
-      })
+        .then(result => {
+          test.equal(result.length, 2)
+          test.equal(result[0].name, charge1.name)
+          test.equal(result[0].code, charge1.code)
+          test.equal(result[0].charge_type, charge1.chargeType)
+          test.equal(result[0].amount, new Decimal(charge1.rate * amount).valueOf())
+          test.equal(result[1].name, charge2.name)
+          test.equal(result[1].code, charge2.code)
+          test.equal(result[1].charge_type, charge2.chargeType)
+          test.equal(result[1].amount, new Decimal(charge2.rate).valueOf())
+          test.end()
+        })
     })
 
     getAllTest.end()

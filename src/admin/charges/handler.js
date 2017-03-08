@@ -1,13 +1,15 @@
 'use strict'
 
-const P = require('bluebird')
 const Charges = require('../../domain/charge')
 const Errors = require('../../errors')
 
 const validateRequest = (request) => {
-  return P.resolve().then(() => {
+  return Charges.getByName(request.payload.name).then(charge => {
     if (request.payload.payer === request.payload.payee) {
       throw new Errors.ValidationError('Payer and payee should be set to \'sender\', \'receiver\', or \'ledger\' and should not have the same value.')
+    }
+    if (charge) {
+      throw new Errors.RecordExistsError('The charge has already been created')
     }
     return request
   })

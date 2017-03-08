@@ -65,6 +65,42 @@ Test('charges model', modelTest => {
     getAllTest.end()
   })
 
+  modelTest.test('getByName should', getByNameTest => {
+    getByNameTest.test('return exception if db query throws', test => {
+      const error = new Error()
+      const name = 'charge1'
+
+      chargesStubs.where.withArgs({ name: name }).returns({ first: sandbox.stub().returns(P.reject(error)) })
+
+      Model.getByName(name)
+        .then(() => {
+          test.fail('Should have thrown error')
+        })
+        .catch(err => {
+          test.equal(err, error)
+          test.end()
+        })
+    })
+
+    getByNameTest.test('returns a charge with the given name', test => {
+      const name = 'charge1'
+      const charge = { name }
+
+      chargesStubs.where.withArgs({ name: name }).returns({ first: sandbox.stub().returns(P.resolve(charge)) })
+
+      Model.getByName(name)
+        .then((found) => {
+          test.equal(found, charge)
+          test.end()
+        })
+        .catch(err => {
+          test.fail(err)
+        })
+    })
+
+    getByNameTest.end()
+  })
+
   modelTest.test('getAllSenderAsPayer should', getAllSenderAsPayerTest => {
     getAllSenderAsPayerTest.test('return exception if db query throws', test => {
       const error = new Error()

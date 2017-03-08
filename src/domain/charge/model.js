@@ -15,7 +15,11 @@ exports.create = (charge) => {
     payer: charge.payer,
     payee: charge.payee
   }, '*')
-  .then(inserted => inserted[0])
+    .then(inserted => inserted[0])
+}
+
+exports.getByName = (name) => {
+  return Db.charges().where({ name: name }).first()
 }
 
 exports.getAll = () => {

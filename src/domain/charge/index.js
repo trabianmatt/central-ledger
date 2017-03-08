@@ -14,8 +14,8 @@ function filterCharges (charge, amount) {
   amount = new Decimal(amount)
 
   return (!charge.minimum || amount.greaterThanOrEqualTo(charge.minimum)) &&
-         (!charge.maximum || amount.lessThanOrEqualTo(charge.maximum)) &&
-         typeExists(charge.rateType)
+    (!charge.maximum || amount.lessThanOrEqualTo(charge.maximum)) &&
+    typeExists(charge.rateType)
 }
 
 function quoteAmount (charge, amount) {
@@ -42,6 +42,10 @@ const create = (charge) => {
   return Model.create(charge)
 }
 
+const getByName = (name) => {
+  return Model.getByName(name)
+}
+
 const getAll = () => {
   return Model.getAll()
 }
@@ -56,11 +60,12 @@ const getAllForTransfer = (transfer) => {
 
 const quote = (transaction) => {
   return getAllSenderAsPayer().then(charges => charges.filter(charge => filterCharges(charge, transaction.amount))
-                                          .map(charge => chargeQuote(charge, transaction.amount)))
+    .map(charge => chargeQuote(charge, transaction.amount)))
 }
 
 module.exports = {
   create,
+  getByName,
   getAll,
   getAllForTransfer,
   quote

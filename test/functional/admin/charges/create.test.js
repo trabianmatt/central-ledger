@@ -39,3 +39,37 @@ Test('POST /charges', putTest => {
 
   putTest.end()
 })
+
+Test('POST /charges', putTest => {
+  putTest.test('should throw an error when creating a duplicate charge', test => {
+    const chargeName = Fixtures.generateRandomName()
+    const payload = {
+      name: chargeName,
+      charge_type: 'tax',
+      rate_type: 'flat',
+      rate: '1.00',
+      minimum: '51.00',
+      maximum: '100.00',
+      code: '003',
+      is_active: true,
+      payer: 'sender',
+      payee: 'receiver'
+    }
+
+    Base.createCharge(payload)
+      .expect(201)
+      .expect('Content-Type', /json/)
+      .then(() => {
+        Base.createCharge(payload)
+          .expect(422)
+          .expect('Content-Type', /json/)
+          .then(res => {
+            test.equal(res.body.id, 'RecordExistsError')
+            test.equal(res.body.message, 'The charge has already been created')
+            test.end()
+          })
+      })
+  })
+
+  putTest.end()
+})
