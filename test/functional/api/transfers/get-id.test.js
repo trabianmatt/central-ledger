@@ -77,7 +77,7 @@ Test('GET /transfers/:id', getTest => {
   getTest.test('should return manually rejected transfer details', test => {
     const transferId = Fixtures.generateTransferId()
     const transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(Base.account1Name, amount), Fixtures.buildDebitOrCredit(Base.account2Name, amount))
-    const message = 'rejection reason'
+    const message = Fixtures.rejectionMessage()
 
     Base.prepareTransfer(transferId, transfer)
     .then(() => Base.rejectTransfer(transferId, message, { name: Base.account2Name, password: Base.account2Password }))
@@ -93,7 +93,7 @@ Test('GET /transfers/:id', getTest => {
           test.equal(res.body.credits[0].account, transfer.credits[0].account)
           test.equal(res.body.credits[0].amount, amount)
           test.equal(res.body.credits[0].rejected, true)
-          test.equal(res.body.credits[0].rejection_message, message)
+          test.deepEqual(res.body.credits[0].rejection_message, message)
           test.equal(res.body.execution_condition, transfer.execution_condition)
           test.equal(res.body.expires_at, transfer.expires_at)
           test.equal(res.body.state, TransferState.REJECTED)

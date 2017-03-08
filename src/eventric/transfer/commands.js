@@ -47,10 +47,13 @@ module.exports = {
         return Validator.validateReject(transfer, rejection_reason, requestingAccount)
         .then(result => {
           if (result.alreadyRejected) {
-            return transfer
+            return {
+              alreadyRejected: true,
+              transfer
+            }
           }
           transfer.reject({ rejection_reason: rejection_reason, message: message }) // eslint-disable-line
-          return transfer.$save().then(() => transfer)
+          return transfer.$save().then(() => ({ alreadyRejected: false, transfer }))
         })
       })
       .catch(Errors.AggregateNotFoundError, () => {

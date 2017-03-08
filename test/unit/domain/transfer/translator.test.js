@@ -4,6 +4,7 @@ const Test = require('tape')
 const Uuid = require('uuid4')
 const UrlParser = require('../../../../src/lib/urlparser')
 const TransferTranslator = require('../../../../src/domain/transfer/translator')
+const Fixtures = require('../../../fixtures')
 
 const executionCondition = 'ni:///sha-256;47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU?fpt=preimage-sha-256&cost=0'
 
@@ -19,7 +20,8 @@ Test('TransferTranslator', transferTranslatorTest => {
             'amount': 50,
             'memo': {
               'some_property': 'value'
-            }
+            },
+            'rejection_message': Fixtures.rejectionMessage()
           }
         ],
         'debits': [
@@ -51,7 +53,8 @@ Test('TransferTranslator', transferTranslatorTest => {
             amount: '50.00',
             memo: {
               'some_property': 'value'
-            }
+            },
+            rejection_message: Fixtures.rejectionMessage()
           }
         ],
         debits: [
@@ -88,7 +91,7 @@ Test('TransferTranslator', transferTranslatorTest => {
     })
 
     toTransferTest.test('translate an argument containing a "transferUuid" field', function (t) {
-      let from = {
+      const from = {
         'transferUuid': '3a2a1d9e-8640-4d2d-b06c-84f2cd613209',
         'state': 'prepared',
         'ledger': 'http://central-ledger',
@@ -112,7 +115,7 @@ Test('TransferTranslator', transferTranslatorTest => {
         'creditAccountName': 'bob',
         'debitAccountName': 'alice'
       }
-      let expected = {
+      const expected = {
         id: 'http://central-ledger/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613209',
         ledger: 'http://central-ledger',
         credits: [
@@ -145,7 +148,8 @@ Test('TransferTranslator', transferTranslatorTest => {
     })
 
     toTransferTest.test('translate all properties containing a "transferUuid" field', function (t) {
-      let from = {
+      const rejectionMessage = Fixtures.rejectionMessage()
+      const from = {
         'transferUuid': '3a2a1d9e-8640-4d2d-b06c-84f2cd613209',
         'state': 'prepared',
         'ledger': 'http://central-ledger',
@@ -153,6 +157,7 @@ Test('TransferTranslator', transferTranslatorTest => {
         'debitMemo': 'a debit memo',
         'creditAmount': 50.00,
         'creditMemo': 'a credit memo',
+        'creditRejectionMessage': JSON.stringify(rejectionMessage),
         'executionCondition': executionCondition,
         'cancellationCondition': 'cancellation condition',
         'rejectionReason': 'rejection reason',
@@ -163,13 +168,12 @@ Test('TransferTranslator', transferTranslatorTest => {
         'rejectedDate': '2016-11-17T20:02:19.363Z',
         'fulfillment': 'fulfillment',
         'creditRejected': 1,
-        'creditRejectionMessage': 'credit rejection message',
         'creditAccountId': 2,
         'debitAccountId': 1,
         'creditAccountName': 'bob',
         'debitAccountName': 'alice'
       }
-      let expected = {
+      const expected = {
         id: 'http://central-ledger/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613209',
         ledger: 'http://central-ledger',
         credits: [
@@ -177,7 +181,7 @@ Test('TransferTranslator', transferTranslatorTest => {
             amount: '50.00',
             memo: 'a credit memo',
             rejected: true,
-            rejection_message: 'credit rejection message'
+            rejection_message: rejectionMessage
           }
         ],
         debits: [
@@ -197,7 +201,7 @@ Test('TransferTranslator', transferTranslatorTest => {
           rejected_at: '2016-11-17T20:02:19.363Z'
         }
       }
-      let actual = TransferTranslator.toTransfer(from)
+      const actual = TransferTranslator.toTransfer(from)
       t.deepEquals(actual, expected)
       t.end()
     })

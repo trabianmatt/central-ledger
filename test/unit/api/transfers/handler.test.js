@@ -1,16 +1,16 @@
 'use strict'
 
-const src = '../../../../src'
 const Sinon = require('sinon')
 const Test = require('tapes')(require('tape'))
 const P = require('bluebird')
 const Uuid = require('uuid4')
-const Validator = require(`${src}/api/transfers/validator`)
-const Config = require(`${src}/lib/config`)
+const Fixtures = require('../../../fixtures')
+const Validator = require('../../../../src/api/transfers/validator')
+const Config = require('../../../../src/lib/config')
 const Errors = require('../../../../src/errors')
-const Handler = require(`${src}/api/transfers/handler`)
+const Handler = require('../../../../src/api/transfers/handler')
 const TransferService = require('../../../../src/domain/transfer')
-const TransferState = require(`${src}/domain/transfer/state`)
+const TransferState = require('../../../../src/domain/transfer/state')
 const executionCondition = 'ni:///sha-256;47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU?fpt=preimage-sha-256&cost=0'
 
 const createRequest = (id, payload) => {
@@ -252,40 +252,44 @@ Test('transfer handler', handlerTest => {
   })
 
   handlerTest.test('reject transfer', rejectTransferTest => {
-    rejectTransferTest.test('should rejected transfer', test => {
-      const transfer = {
-        id: 'https://central-ledger/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204',
-        ledger: 'http://usd-ledger.example/USD',
-        debits: [
-          {
-            account: 'http://usd-ledger.example/USD/accounts/alice',
-            amount: '50'
-          }
-        ],
-        credits: [
-          {
-            account: 'http://usd-ledger.example/USD/accounts/bob',
-            amount: '50'
-          }
-        ],
-        execution_condition: executionCondition,
-        expires_at: '2015-06-16T00:00:01.000Z',
-        timeline: {}
-      }
-
-      const rejectReason = 'error reason'
+    rejectTransferTest.test('should reject transfer', test => {
+      const rejectionMessage = Fixtures.rejectionMessage()
       const transferId = '3a2a1d9e-8640-4d2d-b06c-84f2cd613204'
       const request = {
         params: { id: transferId },
-        payload: rejectReason,
+        payload: rejectionMessage,
         auth
       }
 
-      TransferService.reject.returns(P.resolve(transfer))
+      TransferService.reject.returns(P.resolve({ alreadyRejected: false, transfer: {} }))
 
       const reply = response => {
-        test.equal(response.id, transfer.id)
-        test.ok(TransferService.reject.calledWith(Sinon.match({ id: transferId, rejection_reason: 'cancelled', message: rejectReason })))
+        test.deepEqual(response, rejectionMessage)
+        test.ok(TransferService.reject.calledWith(Sinon.match({ id: transferId, rejection_reason: 'cancelled', message: rejectionMessage })))
+        return {
+          code: statusCode => {
+            test.equal(statusCode, 201)
+            test.end()
+          }
+        }
+      }
+      Handler.rejectTransfer(request, reply)
+    })
+
+    rejectTransferTest.test('should reject rejected transfer', test => {
+      const rejectionMessage = Fixtures.rejectionMessage()
+      const transferId = '3a2a1d9e-8640-4d2d-b06c-84f2cd613204'
+      const request = {
+        params: { id: transferId },
+        payload: rejectionMessage,
+        auth
+      }
+
+      TransferService.reject.returns(P.resolve({ alreadyRejected: true, transfer: {} }))
+
+      const reply = response => {
+        test.deepEqual(response, rejectionMessage)
+        test.ok(TransferService.reject.calledWith(Sinon.match({ id: transferId, rejection_reason: 'cancelled', message: rejectionMessage })))
         return {
           code: statusCode => {
             test.equal(statusCode, 200)

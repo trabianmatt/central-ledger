@@ -47,10 +47,12 @@ const prepare = (payload) => {
 
 const reject = (rejection) => {
   return Commands.reject(rejection)
-    .then(transfer => {
+    .then(({ alreadyRejected, transfer }) => {
       const t = Translator.toTransfer(transfer)
-      Events.emitTransferRejected(t)
-      return t
+      if (!alreadyRejected) {
+        Events.emitTransferRejected(t)
+      }
+      return { alreadyRejected, transfer: t }
     })
 }
 
@@ -74,7 +76,7 @@ const fulfill = (fulfillment) => {
 const rejectExpired = () => {
   const rejections = TransferQueries.findExpired().then(expired => expired.map(x => expire(x.transferUuid)))
   return P.all(rejections).then(rejections => {
-    return rejections.map(r => r.id)
+    return rejections.map(r => r.transfer.id)
   })
 }
 

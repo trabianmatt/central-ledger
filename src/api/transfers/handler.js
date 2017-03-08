@@ -40,7 +40,7 @@ exports.rejectTransfer = function (request, reply) {
   }
 
   return TransferService.reject(rejection)
-  .then(transfer => reply(transfer).code(200))
+  .then(result => reply(rejection.message).code(result.alreadyRejected ? 200 : 201))
   .catch(reply)
 }
 

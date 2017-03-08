@@ -1,19 +1,18 @@
 'use strict'
 
-const src = '../../../../src'
 const Test = require('tapes')(require('tape'))
 const Eventric = require('eventric')
 const P = require('bluebird')
 const Sinon = require('sinon')
 const Moment = require('moment')
-const Transfer = require(`${src}/eventric/transfer`)
-const TransfersProjection = require(`${src}/domain/transfer/projection`)
-const FeesProjection = require(`${src}/domain/fee/projection`)
-const SettleableTransfersProjection = require(`${src}/eventric/transfer/settleable-transfers-projection`)
-const KnexStore = require(`${src}/eventric/knex-store`)
-const CryptoConditions = require(`${src}/crypto-conditions`)
+const Transfer = require('../../../../src/eventric/transfer')
+const TransfersProjection = require('../../../../src/domain/transfer/projection')
+const FeesProjection = require('../../../../src/domain/fee/projection')
+const SettleableTransfersProjection = require('../../../../src/eventric/transfer/settleable-transfers-projection')
+const KnexStore = require('../../../../src/eventric/knex-store')
+const CryptoConditions = require('../../../../src/crypto-conditions')
 const Errors = require('../../../../src/errors')
-const RejectionType = require(`${src}/domain/transfer/rejection-type`)
+const RejectionType = require('../../../../src/domain/transfer/rejection-type')
 const executionCondition = 'ni:///sha-256;47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU?fpt=preimage-sha-256&cost=0'
 
 const now = Moment('2016-06-16T00:00:01.000Z')
@@ -77,11 +76,8 @@ Test('Transfer aggregate', aggregateTest => {
         .then(result => {
           t.equal(result.existing, false)
           compareTransfers(t, result.transfer, transfer)
+          t.end()
         })
-        .catch(e => {
-          t.fail(e)
-        })
-        .then(t.end)
     })
 
     createTest.test('return existing transfer if preparing again', t => {
@@ -91,11 +87,8 @@ Test('Transfer aggregate', aggregateTest => {
       .then(result => {
         t.equal(result.existing, true)
         compareTransfers(t, result.transfer, transfer)
+        t.end()
       })
-      .catch(e => {
-        t.fail(e)
-      })
-      .then(t.end)
     })
 
     createTest.test('reject if transfer does not equal prepared', t => {
@@ -110,12 +103,11 @@ Test('Transfer aggregate', aggregateTest => {
         t.fail('Expected exception')
       })
       .catch(Errors.InvalidModificationError, e => {
-        t.pass()
+        t.end()
       })
       .catch(e => {
         t.fail('Expected InvalidModificationError')
       })
-      .then(t.end)
     })
 
     createTest.end()
@@ -132,10 +124,8 @@ Test('Transfer aggregate', aggregateTest => {
       .then(fulfilledTransfer => {
         compareTransfers(t, fulfilledTransfer, transfer)
         t.equal(fulfilledTransfer.fulfillment, fulfillment)
-      }).catch(e => {
-        t.fail(e)
+        t.end()
       })
-      .then(t.end)
     })
 
     fulfillTest.test('return previouslyFulfilled transfer', t => {
@@ -147,11 +137,8 @@ Test('Transfer aggregate', aggregateTest => {
       .then(fulfilledTransfer => {
         compareTransfers(t, fulfilledTransfer, transfer)
         t.equal(fulfilledTransfer.fulfillment, fulfillment)
+        t.end()
       })
-      .catch(e => {
-        t.fail(e)
-      })
-      .then(t.end)
     })
 
     fulfillTest.test('throw when fulfilling previously Fulfilled transfer with different condition', t => {
@@ -164,12 +151,11 @@ Test('Transfer aggregate', aggregateTest => {
         t.fail('Expected exception')
       })
       .catch(Errors.InvalidModificationError, e => {
-        t.pass()
+        t.end()
       })
       .catch(e => {
         t.fail('Expected InvalidModificationError: ' + e.message)
       })
-      .then(t.end)
     })
 
     fulfillTest.end()
@@ -178,18 +164,17 @@ Test('Transfer aggregate', aggregateTest => {
   aggregateTest.test('RejectTransfer should', rejectTest => {
     rejectTest.test('load and reject transfer', t => {
       const originalTransfer = createTransfer()
-      const rejectionReason = 'I do not want it'
+      const rejectionReason = RejectionType.CANCELLED
 
       P.resolve(context.command('PrepareTransfer', originalTransfer))
       .then(prepared => context.command('RejectTransfer', { id: originalTransfer.id, rejection_reason: rejectionReason }))
-      .then(transfer => {
+      .then(result => {
+        const transfer = result.transfer
         compareTransfers(t, transfer, originalTransfer)
         t.equal(transfer.rejection_reason, rejectionReason)
+        t.equal(result.alreadyRejected, false)
+        t.end()
       })
-      .catch(e => {
-        t.fail(e.message)
-      })
-      .then(t.end)
     })
 
     rejectTest.test('load and expire transfer', t => {
@@ -197,40 +182,37 @@ Test('Transfer aggregate', aggregateTest => {
 
       P.resolve(context.command('PrepareTransfer', originalTransfer))
       .then(prepared => context.command('RejectTransfer', { id: originalTransfer.id, rejection_reason: RejectionType.EXPIRED }))
-      .then(transfer => {
+      .then(result => {
+        const transfer = result.transfer
         compareTransfers(t, transfer, originalTransfer)
         t.equal(transfer.rejection_reason, RejectionType.EXPIRED)
+        t.equal(result.alreadyRejected, false)
+        t.end()
       })
-      .catch(e => {
-        t.fail(e.message)
-      })
-      .then(t.end)
     })
 
     rejectTest.test('return existing rejected transfer', t => {
       const originalTransfer = createTransfer()
-      const rejectionReason = 'no comment'
+      const rejectionReason = RejectionType.CANCELLED
 
       P.resolve(context.command('PrepareTransfer', originalTransfer))
       .then(prepared => context.command('RejectTransfer', { id: originalTransfer.id, rejection_reason: rejectionReason }))
       .then(rejected => context.command('RejectTransfer', { id: originalTransfer.id, rejection_reason: rejectionReason }))
-      .then(transfer => {
+      .then(result => {
+        const transfer = result.transfer
         compareTransfers(t, transfer, originalTransfer)
         t.equal(transfer.rejection_reason, rejectionReason)
+        t.equal(result.alreadyRejected, true)
+        t.end()
       })
-      .catch(e => {
-        t.fail(e.message)
-      })
-      .then(t.end)
     })
 
     rejectTest.test('throw InvalidModificationError if rejecting rejected with different reason', t => {
       const originalTransfer = createTransfer()
-      const rejectionReason = 'no comment'
 
       P.resolve(context.command('PrepareTransfer', originalTransfer))
-      .then(prepared => context.command('RejectTransfer', { id: originalTransfer.id, rejection_reason: rejectionReason }))
-      .then(rejected => context.command('RejectTransfer', { id: originalTransfer.id, rejection_reason: 'not ' + rejectionReason }))
+      .then(prepared => context.command('RejectTransfer', { id: originalTransfer.id, rejection_reason: RejectionType.CANCELLED }))
+      .then(rejected => context.command('RejectTransfer', { id: originalTransfer.id, rejection_reason: RejectionType.EXPIRED }))
       .then(i => {
         t.fail('Expected exception to be thrown')
       })

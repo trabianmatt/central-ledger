@@ -80,11 +80,10 @@ module.exports = [{
     auth: Auth.strategy(),
     description: 'Reject a transfer',
     validate: {
-      headers: Joi.object({ 'content-type': Joi.string().required().valid('text/plain') }).unknown(),
       params: {
         id: Joi.string().guid().required().description('Id of transfer to reject')
       },
-      payload: Joi.string().allow(null).max(512).description('Rejection reason')
+      payload: Joi.object().unknown().required().description('Rejection reason')
     }
   }
 },

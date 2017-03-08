@@ -153,10 +153,10 @@ Test('Transfer Service tests', serviceTest => {
 
   serviceTest.test('rejectExpired should', rejectTest => {
     rejectTest.test('find expired transfers and reject them', test => {
-      let transfers = [{ transferUuid: 1 }, { transferUuid: 2 }]
+      const transfers = [{ transferUuid: 1 }, { transferUuid: 2 }]
       TransferQueries.findExpired.returns(P.resolve(transfers))
       transfers.forEach((x, i) => {
-        Commands.reject.onCall(i).returns(P.resolve({ id: x.transferUuid }))
+        Commands.reject.onCall(i).returns(P.resolve({ alreadyRejected: false, transfer: x }))
         TransferTranslator.toTransfer.onCall(i).returns({ id: x.transferUuid })
       })
       Service.rejectExpired()
@@ -318,28 +318,45 @@ Test('Transfer Service tests', serviceTest => {
     rejectTest.test('execute reject command', test => {
       const rejectionReason = 'some reason'
       const transferId = Uuid()
-      const response = {}
+      const cleanTransfer = {}
       const transfer = { id: transferId }
       const payload = { id: transferId, rejection_reason: rejectionReason }
-      Commands.reject.withArgs(payload).returns(P.resolve(transfer))
-      TransferTranslator.toTransfer.withArgs(transfer).returns(response)
+      Commands.reject.withArgs(payload).returns(P.resolve({ alreadyRejected: false, transfer }))
+      TransferTranslator.toTransfer.withArgs(transfer).returns(cleanTransfer)
 
       Service.reject(payload)
         .then(result => {
-          test.equal(result, response)
+          test.deepEqual(result.transfer, cleanTransfer)
+          test.equal(result.alreadyRejected, false)
           test.ok(Commands.reject.calledWith(payload))
           test.end()
         })
     })
 
-    rejectTest.test('emit transfer rejected event', test => {
+    rejectTest.test('emit transfer rejected event if transfer not already rejected', test => {
       const transfer = {}
-      Commands.reject.returns(P.resolve(transfer))
+      Commands.reject.returns(P.resolve({ alreadyRejected: false, transfer }))
       const cleanTransfer = { id: Uuid() }
       TransferTranslator.toTransfer.withArgs(transfer).returns(cleanTransfer)
       Service.reject({})
         .then(result => {
+          test.deepEqual(result.transfer, cleanTransfer)
+          test.equal(result.alreadyRejected, false)
           test.ok(Events.emitTransferRejected.calledWith(cleanTransfer))
+          test.end()
+        })
+    })
+
+    rejectTest.test('not emit transfer rejected event if transfer already rejected', test => {
+      const transfer = {}
+      Commands.reject.returns(P.resolve({ alreadyRejected: true, transfer }))
+      const cleanTransfer = { id: Uuid() }
+      TransferTranslator.toTransfer.withArgs(transfer).returns(cleanTransfer)
+      Service.reject({})
+        .then(result => {
+          test.deepEqual(result.transfer, cleanTransfer)
+          test.equal(result.alreadyRejected, true)
+          test.notOk(Events.emitTransferRejected.calledWith(cleanTransfer))
           test.end()
         })
     })

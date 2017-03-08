@@ -176,6 +176,16 @@ const getCurrentUTCTimeInMilliseconds = () => {
   return new Date().getTime()
 }
 
+const rejectionMessage = () => {
+  return {
+    code: 'S00',
+    name: 'Bad Request',
+    message: 'destination transfer failed',
+    triggered_by: 'example.red.bob',
+    additional_info: {}
+  }
+}
+
 module.exports = {
   hostname,
   buildAccountPosition,
@@ -192,5 +202,6 @@ module.exports = {
   generateAccountName,
   generateTransferId,
   getMomentToExpire,
-  getCurrentUTCTimeInMilliseconds
+  getCurrentUTCTimeInMilliseconds,
+  rejectionMessage
 }

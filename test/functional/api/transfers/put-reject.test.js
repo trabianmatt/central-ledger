@@ -3,7 +3,6 @@
 const Test = require('tape')
 const Base = require('../../base')
 const Fixtures = require('../../../fixtures')
-const State = require('../../../../src/domain/transfer/state')
 
 const amount = '25.00'
 
@@ -12,34 +11,21 @@ Test('PUT /transfers/:id/reject', putTest => {
     const transferId = Fixtures.generateTransferId()
     const transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(Base.account1Name, amount), Fixtures.buildDebitOrCredit(Base.account2Name, amount))
 
+    const message = Fixtures.rejectionMessage()
     Base.prepareTransfer(transferId, transfer)
       .then(() => {
-        Base.rejectTransfer(transferId, '', { name: Base.account2Name, password: Base.account2Password })
-          .expect(200)
+        Base.rejectTransfer(transferId, message, { name: Base.account2Name, password: Base.account2Password })
+          .expect(201)
           .expect('Content-Type', /json/)
           .then(res => {
-            test.equal(res.body.id, transfer.id)
-            test.equal(res.body.ledger, transfer.ledger)
-            test.equal(res.body.debits[0].account, transfer.debits[0].account)
-            test.equal(res.body.debits[0].amount, amount)
-            test.equal(res.body.credits[0].account, transfer.credits[0].account)
-            test.equal(res.body.credits[0].amount, amount)
-            test.equal(res.body.credits[0].rejected, true)
-            test.equal(res.body.credits[0].rejection_message, '')
-            test.equal(res.body.execution_condition, transfer.execution_condition)
-            test.equal(res.body.expires_at, transfer.expires_at)
-            test.equal(res.body.state, State.REJECTED)
-            test.ok(res.body.timeline.prepared_at)
-            test.equal(res.body.timeline.hasOwnProperty('executed_at'), false)
-            test.ok(res.body.timeline.rejected_at)
-            test.equal(res.body.rejection_reason, 'cancelled')
+            test.deepEqual(res.body, message)
             test.end()
           })
       })
   })
 
   putTest.test('should return reason when rejecting a rejected transfer', test => {
-    const reason = 'some reason'
+    const reason = Fixtures.rejectionMessage()
 
     const transferId = Fixtures.generateTransferId()
     const transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(Base.account1Name, amount), Fixtures.buildDebitOrCredit(Base.account2Name, amount))
@@ -51,28 +37,14 @@ Test('PUT /transfers/:id/reject', putTest => {
           .expect(200)
           .expect('Content-Type', /json/)
           .then(res => {
-            test.equal(res.body.id, transfer.id)
-            test.equal(res.body.ledger, transfer.ledger)
-            test.equal(res.body.debits[0].account, transfer.debits[0].account)
-            test.equal(res.body.debits[0].amount, amount)
-            test.equal(res.body.credits[0].account, transfer.credits[0].account)
-            test.equal(res.body.credits[0].amount, amount)
-            test.equal(res.body.credits[0].rejected, true)
-            test.equal(res.body.credits[0].rejection_message, reason)
-            test.equal(res.body.execution_condition, transfer.execution_condition)
-            test.equal(res.body.expires_at, transfer.expires_at)
-            test.equal(res.body.state, State.REJECTED)
-            test.ok(res.body.timeline.prepared_at)
-            test.equal(res.body.timeline.hasOwnProperty('executed_at'), false)
-            test.ok(res.body.timeline.rejected_at)
-            test.equal(res.body.rejection_reason, 'cancelled')
+            test.deepEqual(res.body, reason)
             test.end()
           })
       })
   })
 
   putTest.test('should return error when rejecting fulfulled transfer', test => {
-    const reason = 'some reason'
+    const reason = Fixtures.rejectionMessage()
     const transferId = Fixtures.generateTransferId()
     const fulfillment = 'oAKAAA'
 
@@ -93,7 +65,7 @@ Test('PUT /transfers/:id/reject', putTest => {
   })
 
   putTest.test('should return error when rejecting unconditional transfer', test => {
-    const reason = 'some reason'
+    const reason = Fixtures.rejectionMessage()
     const transferId = Fixtures.generateTransferId()
     const fulfillment = 'oAKAAA'
 

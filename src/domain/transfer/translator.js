@@ -21,7 +21,8 @@ const transferProperties = [
 const formatAsset = (asset) => Util.mergeAndOmitNil(asset, {
   account: UrlParser.toAccountUri(asset.account),
   amount: Util.formatAmount(asset.amount),
-  memo: Util.parseJson(asset.memo)
+  memo: Util.parseJson(asset.memo),
+  rejection_message: Util.parseJson(asset.rejection_message)
 })
 
 const formatAssets = (assets) => (Array.isArray(assets) ? assets.map(formatAsset) : assets)

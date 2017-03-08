@@ -57,7 +57,7 @@ const prepareTransfer = (transferId, transfer) => P.resolve(putApi(`/transfers/$
 
 const fulfillTransfer = (transferId, fulfillment, auth) => putApi(`/transfers/${transferId}/fulfillment`, fulfillment, auth, 'text/plain')
 
-const rejectTransfer = (transferId, reason, auth) => putApi(`/transfers/${transferId}/rejection`, reason, auth, 'text/plain')
+const rejectTransfer = (transferId, reason, auth) => putApi(`/transfers/${transferId}/rejection`, reason, auth)
 
 const createCharge = (payload) => postAdmin('/charges', payload)
 

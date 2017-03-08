@@ -56,7 +56,7 @@ Test('GET /transfers/:id/fulfillment', getTest => {
     const transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(Base.account1Name, '50'), Fixtures.buildDebitOrCredit(Base.account2Name, '50'))
 
     Base.prepareTransfer(transferId, transfer)
-      .then(() => Base.rejectTransfer(transferId, 'testing things', { name: Base.account2Name, password: Base.account2Password }))
+      .then(() => Base.rejectTransfer(transferId, Fixtures.rejectionMessage(), { name: Base.account2Name, password: Base.account2Password }))
       .then(() => {
         Base.getFulfillment(transferId)
           .expect(422)

@@ -87,7 +87,8 @@ Test('transfer service', function (modelTest) {
         .then(accountMap => {
           TransferService.prepare(transfer)
             .then(prepared => TransferService.reject({ id: transferId, rejection_reason: rejectionReason }))
-            .then(rejected => {
+            .then(result => {
+              const rejected = result.transfer
               assert.equal(rejected.id, transfer.id)
               assert.equal(rejected.ledger, transfer.ledger)
               assert.equal(rejected.debits[0].account, transfer.debits[0].account)
@@ -96,6 +97,7 @@ Test('transfer service', function (modelTest) {
               assert.equal(rejected.credits[0].amount, transfer.credits[0].amount)
               assert.equal(rejected.execution_condition, transfer.execution_condition)
               assert.equal(rejected.expires_at, transfer.expires_at)
+              assert.equal(result.alreadyRejected, false)
               assert.end()
             })
         })

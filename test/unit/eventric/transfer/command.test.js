@@ -166,7 +166,8 @@ Test('Commands Test', commandsTest => {
 
       Commands.RejectTransfer({ id: id, rejection_reason: rejectionReason })
       .then(result => {
-        t.equal(result, transfer)
+        t.equal(result.transfer, transfer)
+        t.equal(result.alreadyRejected, true)
         t.end()
       })
     })

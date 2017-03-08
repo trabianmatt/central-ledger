@@ -69,23 +69,23 @@ Test('return error if id is not a guid on fulfill', function (assert) {
   })
 })
 
-Test('return error if invalid content type on rejection', function (assert) {
-  let req = Base.buildRequest({ url: '/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/rejection', method: 'PUT', headers: { 'Content-Type': 'application/json' } })
+Test('return error if id is not a guid on rejection', function (assert) {
+  let req = Base.buildRequest({ url: '/transfers/abcd/rejection', method: 'PUT' })
 
   Base.setup().then(server => {
     server.inject(req, function (res) {
-      Base.assertInvalidHeaderError(assert, res, [ { message: 'content-type must be one of [text/plain]', params: { key: 'content-type', valids: [ 'text/plain' ] } } ])
+      Base.assertInvalidUriParameterError(assert, res, [{ message: 'id must be a valid GUID', params: { key: 'id', value: 'abcd' } }])
       assert.end()
     })
   })
 })
 
-Test('return error if id is not a guid on rejection', function (assert) {
-  let req = Base.buildRequest({ url: '/transfers/abcd/rejection', method: 'PUT', headers: { 'Content-Type': 'text/plain' } })
+Test('return error if rejection reason missing', function (assert) {
+  let req = Base.buildRequest({ url: '/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/rejection', method: 'PUT' })
 
   Base.setup().then(server => {
     server.inject(req, function (res) {
-      Base.assertInvalidUriParameterError(assert, res, [{ message: 'id must be a valid GUID', params: { key: 'id', value: 'abcd' } }])
+      Base.assertBadRequestError(assert, res, [{ message: 'value must be an object', params: { key: 'value' } }])
       assert.end()
     })
   })
