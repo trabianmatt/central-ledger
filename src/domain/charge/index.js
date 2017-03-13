@@ -2,6 +2,7 @@
 
 const Model = require('./model')
 const Decimal = require('decimal.js')
+const Errors = require('../../errors')
 
 const PERCENTAGE = 'percent'
 const FLAT = 'flat'
@@ -42,6 +43,15 @@ const create = (charge) => {
   return Model.create(charge)
 }
 
+const update = (name, payload) => {
+  return Model.getByName(name).then(charge => {
+    if (!charge) {
+      throw new Errors.NotFoundError('The charge could not be found')
+    }
+    return Model.update(charge, payload)
+  })
+}
+
 const getByName = (name) => {
   return Model.getByName(name)
 }
@@ -65,6 +75,7 @@ const quote = (transaction) => {
 
 module.exports = {
   create,
+  update,
   getByName,
   getAll,
   getAllForTransfer,

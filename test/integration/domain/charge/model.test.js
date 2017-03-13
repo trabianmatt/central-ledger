@@ -44,6 +44,40 @@ Test('charges model', modelTest => {
     createTest.end()
   })
 
+  Test('charges model', modelTest => {
+    modelTest.test('update should', updateTest => {
+      updateTest.test('update a new charge', test => {
+        const chargeName = Fixtures.generateRandomName()
+        const payload = createChargePayload(chargeName)
+        const updatePayload = {
+          name: Fixtures.generateRandomName(),
+          charge_type: 'tax',
+          minimum: '150.00',
+          maximum: '151.00',
+          is_active: false
+        }
+
+        Model.create(payload)
+          .then((charge) => Model.update(charge, updatePayload))
+          .then((updatedCharge) => {
+            test.equal(updatedCharge.name, updatePayload.name)
+            test.equal(updatedCharge.chargeType, updatePayload.charge_type)
+            test.equal(updatedCharge.rateType, payload.rate_type)
+            test.equal(updatedCharge.rate, payload.rate)
+            test.equal(updatedCharge.minimum, updatePayload.minimum)
+            test.equal(updatedCharge.maximum, updatePayload.maximum)
+            test.equal(updatedCharge.code, payload.code)
+            test.equal(updatedCharge.isActive, updatePayload.is_active)
+            test.ok(updatedCharge.createdDate)
+            test.ok(updatedCharge.chargeId)
+            test.end()
+          })
+      })
+
+      updateTest.end()
+    })
+  })
+
   modelTest.test('getAll should', getAllTest => {
     getAllTest.test('return all charges', test => {
       const charge1Name = Fixtures.generateRandomName()

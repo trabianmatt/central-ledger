@@ -29,5 +29,24 @@ module.exports = [
         payee: Joi.string().required().valid('sender', 'receiver', 'ledger').description('Payee of the charged fee')
       }
     })
+  },
+  {
+    method: 'PUT',
+    path: '/charges/{name}',
+    handler: Handler.update,
+    config: RouteConfig.config(tags, Permissions.CHARGES_UPDATE, {
+      params: {
+        name: Joi.string().required().description('Charge name')
+      },
+      payload: {
+        name: Joi.string().token().max(256).optional().description('Name of the charge'),
+        charge_type: Joi.string().optional().valid('tax', 'fee').description('Type of the charge'),
+        minimum: Joi.number().optional().allow(null).description('Minimum amount for the charge'),
+        maximum: Joi.number().optional().allow(null).description('Maximum amount for the charge'),
+        code: Joi.string().token().max(256).optional().allow(null).description('Code for the charger'),
+        is_active: Joi.boolean().optional().description('Status for charge')
+      }
+    })
   }
 ]
+

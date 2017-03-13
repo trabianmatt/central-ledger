@@ -33,6 +33,7 @@ Test('charges handler', handlerTest => {
     Config.HOSTNAME = hostname
     sandbox.stub(Charge, 'getAll')
     sandbox.stub(Charge, 'create')
+    sandbox.stub(Charge, 'update')
     sandbox.stub(Charge, 'getByName')
     t.end()
   })
@@ -222,6 +223,122 @@ Test('charges handler', handlerTest => {
     })
 
     createTest.end()
+  })
+
+  handlerTest.test('update should', updateTest => {
+    updateTest.test('update a charge', test => {
+      const charge = {
+        name: 'charge_b',
+        charge_type: 'tax',
+        rate_type: 'flat',
+        rate: '1.00',
+        minimum: '10',
+        maximum: '5',
+        code: '2',
+        is_active: false,
+        payer: 'ledger',
+        payee: 'sender'
+      }
+
+      const payload = {
+        chargeType: 'tax',
+        minimum: '10',
+        maximum: '5',
+        code: '2',
+        is_active: false
+      }
+
+      const request = {
+        payload: payload,
+        params: { name: 'name' }
+      }
+
+      Charge.getByName.withArgs(request.payload.name).returns(P.resolve(null))
+      Charge.getByName.withArgs(charge.name).returns(P.resolve(charge))
+      Charge.update.withArgs(request.params.name, payload).returns(P.resolve(charge))
+
+      const reply = response => {
+        test.equal(response.name, charge.name)
+        test.equal(response.id, charge.chargeId)
+        test.equal(response.charge_type, charge.chargeType)
+        test.equal(response.rate_type, charge.rateType)
+        test.equal(response.rate, charge.rate)
+        test.equal(response.minimum, charge.minimum)
+        test.equal(response.maximum, charge.maximum)
+        test.equal(response.code, charge.code)
+        test.equal(response.is_active, charge.isActive)
+        test.equal(response.created, charge.createdDate)
+        test.end()
+      }
+
+      Handler.update(request, reply)
+    })
+
+    updateTest.test('reply with error if Charge services throws', test => {
+      const error = new Error()
+
+      const payload = {
+        name: 'charge',
+        chargeType: 'tax',
+        rateType: 'flat',
+        rate: '1.00',
+        minimum: '1.00',
+        maximum: '100.00',
+        code: '001',
+        is_active: true,
+        payer: 'ledger',
+        payee: 'sender'
+      }
+
+      const request = {
+        payload: payload,
+        params: { name: 'name' }
+      }
+
+      Charge.getByName.withArgs(payload.name).returns(P.resolve(null))
+      Charge.update.withArgs(request.params.name, payload).returns(P.reject(error))
+
+      const reply = (e) => {
+        test.equal(e, error)
+        test.end()
+      }
+      Handler.update(request, reply)
+    })
+
+    updateTest.test('reply with already exists error if a charge with the given name already exists', test => {
+      const charge = createCharge('charge')
+      charge.payer = 'sender'
+      charge.payee = 'receiver'
+
+      const payload = {
+        name: 'charge',
+        chargeType: 'tax',
+        rateType: 'flat',
+        rate: '1.00',
+        minimum: '1.00',
+        maximum: '100.00',
+        code: '001',
+        is_active: true,
+        payer: 'sender',
+        payee: 'receiver'
+      }
+
+      const request = {
+        payload: payload,
+        params: { name: 'name' }
+      }
+
+      Charge.getByName.withArgs(payload.name).returns(P.resolve(charge))
+
+      const reply = (e) => {
+        test.equal(e.name, 'RecordExistsError')
+        test.equal(e.payload.message, 'The charge has already been created')
+        test.end()
+      }
+      Handler.update(request, reply)
+    })
+
+    updateTest.end()
   })
 
   handlerTest.end()

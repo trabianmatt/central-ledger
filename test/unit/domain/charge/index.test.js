@@ -6,6 +6,7 @@ const P = require('bluebird')
 const Model = require('../../../../src/domain/charge/model')
 const ChargeService = require('../../../../src/domain/charge')
 const Decimal = require('decimal.js')
+const NotFoundError = require('../../../../src/errors').NotFoundError
 
 function createCharge (name = 'charge', rateType = 'percent', minimum = null, maximum = null) {
   return {
@@ -55,6 +56,51 @@ Test('Charge service', serviceTest => {
     })
 
     createTest.end()
+  })
+
+  serviceTest.test('update should', updateTest => {
+    updateTest.test('update charge in model', test => {
+      const charge = {
+        name: 'charge',
+        chargeType: 'charge_type',
+        rateType: 'rate_type',
+        rate: '1.00',
+        minimum: '0.25',
+        maximum: '100.00',
+        code: 1,
+        is_active: true
+      }
+
+      const payload = {
+        name: 'charge_b'
+      }
+      Model.getByName.returns(P.resolve(charge))
+      Model.update.returns(P.resolve({}))
+      ChargeService.update(charge.name, payload)
+        .then(() => {
+          test.ok(Model.update.calledWith(charge, payload))
+          test.end()
+        })
+    })
+
+    updateTest.test('throw a not found error when charge does not exist', test => {
+      const charge = {
+        name: 'charge'
+      }
+
+      const payload = {
+        name: 'charge_b'
+      }
+      Model.getByName.returns(P.resolve(null))
+      Model.update.returns(P.resolve({}))
+      ChargeService.update(charge.name, payload)
+        .catch(NotFoundError, e => {
+          test.equal(e.message, 'The charge could not be found')
+          test.end()
+        })
+    })
+
+    updateTest.end()
   })
 
   serviceTest.test('getByName should', getByNameTest => {

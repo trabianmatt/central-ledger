@@ -13,6 +13,7 @@ const permissions = {
   ACCOUNTS_UPDATE: new Permission('ACCOUNTS_UPDATE', 'Update account'),
   CHARGES_LIST: new Permission('CHARGES_GET', 'List all charges'),
   CHARGES_CREATE: new Permission('CHARGES_CREATE', 'Create a new charge'),
+  CHARGES_UPDATE: new Permission('CHARGES_UPDATE', 'Update a charge'),
   PERMISSIONS_LIST: new Permission('PERMISSIONS_LIST', 'List available permissions'),
   ROLES_CREATE: new Permission('ROLES_CREATE', 'Create a new role'),
   ROLES_DELETE: new Permission('ROLES_DELETE', 'Delete role'),

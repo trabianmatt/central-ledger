@@ -61,6 +61,8 @@ const rejectTransfer = (transferId, reason, auth) => putApi(`/transfers/${transf
 
 const createCharge = (payload) => postAdmin('/charges', payload)
 
+const updateCharge = (name, payload) => putAdmin(`/charges/${name}`, payload)
+
 module.exports = {
   account1Name: account1().name,
   account1Password: account1Name,
@@ -81,5 +83,6 @@ module.exports = {
   putApi,
   putAdmin,
   rejectTransfer,
-  updateAccount
+  updateAccount,
+  updateCharge
 }

@@ -18,14 +18,35 @@ exports.create = (charge) => {
     .then(inserted => inserted[0])
 }
 
+function filterUndefined (fields) {
+  for (var key in fields) {
+    if (fields[key] === undefined) {
+      delete fields[key]
+    }
+  }
+  return fields
+}
+
+exports.update = (charge, payload) => {
+  const fields = {
+    name: payload.name,
+    chargeType: payload.charge_type,
+    minimum: payload.minimum,
+    maximum: payload.maximum,
+    code: payload.code,
+    isActive: payload.is_active
+  }
+  return Db.charges().where({ chargeId: charge.chargeId }).update(filterUndefined(fields), '*').then(updated => updated[0])
+}
+
 exports.getByName = (name) => {
   return Db.charges().where({ name: name }).first()
 }
 
 exports.getAll = () => {
-  return Db.charges().orderBy('name', 'asc')
+  return Db.charges().where({ isActive: true }).orderBy('name', 'asc')
 }
 
 exports.getAllSenderAsPayer = () => {
-  return Db.charges().where({ payer: 'sender' }).orderBy('name', 'asc')
+  return Db.charges().where({ payer: 'sender' }).andWhere({ isActive: true }).orderBy('name', 'asc')
 }

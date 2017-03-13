@@ -5,7 +5,7 @@ const Errors = require('../../errors')
 
 const validateRequest = (request) => {
   return Charges.getByName(request.payload.name).then(charge => {
-    if (request.payload.payer === request.payload.payee) {
+    if (request.payload.payer && request.payload.payee && request.payload.payer === request.payload.payee) {
       throw new Errors.ValidationError('Payer and payee should be set to \'sender\', \'receiver\', or \'ledger\' and should not have the same value.')
     }
     if (charge) {
@@ -36,6 +36,15 @@ exports.create = (request, reply) => {
   return validateRequest(request)
     .then(validatedRequest => Charges.create(validatedRequest.payload))
     .then(result => reply(entityItem(result)).code(201))
+    .catch(reply)
+}
+
+exports.update = (request, reply) => {
+  return validateRequest(request)
+    .then(validatedRequest => {
+      return Charges.update(request.params.name, validatedRequest.payload)
+    })
+    .then(result => reply(entityItem(result)))
     .catch(reply)
 }
 

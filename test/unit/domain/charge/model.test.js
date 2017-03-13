@@ -16,7 +16,8 @@ Test('charges model', modelTest => {
     chargesStubs = {
       insert: sandbox.stub(),
       where: sandbox.stub(),
-      orderBy: sandbox.stub()
+      orderBy: sandbox.stub(),
+      update: sandbox.stub()
     }
 
     Db.charges = sandbox.stub().returns(chargesStubs)
@@ -33,7 +34,8 @@ Test('charges model', modelTest => {
     getAllTest.test('return exception if db query throws', test => {
       const error = new Error()
 
-      chargesStubs.orderBy.withArgs('name', 'asc').returns(P.reject(error))
+      let orderByStub = sandbox.stub().returns(P.reject(error))
+      chargesStubs.where.withArgs({ isActive: true }).returns({ orderBy: orderByStub })
 
       Model.getAll()
         .then(() => {
@@ -50,7 +52,8 @@ Test('charges model', modelTest => {
       const charge2Name = 'charge2'
       const charges = [{ name: charge1Name }, { name: charge2Name }]
 
-      chargesStubs.orderBy.withArgs('name', 'asc').returns(P.resolve(charges))
+      let orderByStub = sandbox.stub().returns(P.resolve(charges))
+      chargesStubs.where.withArgs({ isActive: true }).returns({ orderBy: orderByStub })
 
       Model.getAll()
         .then((found) => {
@@ -106,7 +109,8 @@ Test('charges model', modelTest => {
       const error = new Error()
 
       let orderByStub = sandbox.stub().returns(P.reject(error))
-      chargesStubs.where.withArgs({ payer: 'sender' }).returns({ orderBy: orderByStub })
+      let andWhereStub = sandbox.stub().returns({ orderBy: orderByStub })
+      chargesStubs.where.withArgs({ payer: 'sender' }).returns({ andWhere: andWhereStub })
 
       Model.getAllSenderAsPayer()
         .then(() => {
@@ -123,7 +127,8 @@ Test('charges model', modelTest => {
       const charges = [{ name: 'charge1' }, { name: 'charge2' }, { name: 'charge3' }]
 
       let orderByStub = sandbox.stub().returns(P.resolve(charges))
-      chargesStubs.where.withArgs({ payer: 'sender' }).returns({ orderBy: orderByStub })
+      let andWhereStub = sandbox.stub().returns({ orderBy: orderByStub })
+      chargesStubs.where.withArgs({ payer: 'sender' }).returns({ andWhere: andWhereStub })
 
       Model.getAllSenderAsPayer()
         .then((found) => {
@@ -158,6 +163,50 @@ Test('charges model', modelTest => {
     })
 
     createTest.end()
+  })
+
+  modelTest.test('update should', updateTest => {
+    updateTest.test('save everything but name and return updated charge', test => {
+      let name = 'charge'
+      let charge = {
+        chargeId: 1,
+        name
+      }
+
+      const payload = {
+        name: 'charge_b',
+        minimum: '1.00',
+        maximum: '100.00',
+        code: '002',
+        is_active: true
+      }
+
+      const fields = {
+        name: payload.name,
+        minimum: payload.minimum,
+        maximum: payload.maximum,
+        code: payload.code,
+        isActive: payload.is_active
+      }
+
+      const updatedCharge = {
+        chargeId: 1,
+        name: payload.name
+      }
+
+      let updateStub = sandbox.stub().returns(P.resolve([updatedCharge]))
+      chargesStubs.where.withArgs({ chargeId: charge.chargeId }).returns({ update: updateStub })
+
+      Model.update(charge, payload)
+        .then(updated => {
+          test.ok(chargesStubs.where.withArgs({ chargeId: charge.chargeId }.calledOnce))
+          test.ok(updateStub.withArgs(fields, '*').calledOnce)
+          test.equal(updated, updatedCharge)
+          test.end()
+        })
+    })
+
+    updateTest.end()
   })
 
   modelTest.end()
