@@ -9,18 +9,17 @@ const Model = require('../../../../../src/domain/security/models/users')
 
 Test('Users model', modelTest => {
   let sandbox
-  let usersStubs
 
   modelTest.beforeEach(test => {
     sandbox = Sinon.sandbox.create()
 
-    usersStubs = {
+    Db.users = {
       insert: sandbox.stub(),
-      where: sandbox.stub(),
-      select: sandbox.stub()
+      update: sandbox.stub(),
+      find: sandbox.stub(),
+      findOne: sandbox.stub(),
+      destroy: sandbox.stub()
     }
-
-    Db.users = sandbox.stub().returns(usersStubs)
 
     test.end()
   })
@@ -33,11 +32,12 @@ Test('Users model', modelTest => {
   modelTest.test('getAll should', getAllTest => {
     getAllTest.test('find all users in db', test => {
       const users = [{}, {}]
-      usersStubs.select.returns(P.resolve(users))
+      Db.users.find.returns(P.resolve(users))
 
       Model.getAll()
         .then(result => {
           test.deepEqual(result, users)
+          test.ok(Db.users.find.calledWith({}))
           test.end()
         })
     })
@@ -49,11 +49,13 @@ Test('Users model', modelTest => {
     getByIdTest.test('select first user by id', test => {
       const userId = Uuid()
       const user = { firstName: 'Dave' }
-      usersStubs.where.withArgs({ userId }).returns({ first: sandbox.stub().returns(P.resolve(user)) })
+
+      Db.users.findOne.returns(P.resolve(user))
 
       Model.getById(userId)
         .then(result => {
           test.equal(result, user)
+          test.ok(Db.users.findOne.calledWith({ userId }))
           test.end()
         })
     })
@@ -65,11 +67,13 @@ Test('Users model', modelTest => {
     getByKeyTest.test('select first user by key', test => {
       const key = Uuid()
       const user = { firstName: 'Dave' }
-      usersStubs.where.withArgs({ key }).returns({ first: sandbox.stub().returns(P.resolve(user)) })
+
+      Db.users.findOne.returns(P.resolve(user))
 
       Model.getByKey(key)
         .then(result => {
           test.equal(result, user)
+          test.ok(Db.users.findOne.calledWith({ key }))
           test.end()
         })
     })
@@ -81,11 +85,12 @@ Test('Users model', modelTest => {
     removeTest.test('destroy user in db', test => {
       const userId = Uuid()
 
-      usersStubs.where.withArgs({ userId }).returns({ del: sandbox.stub().returns(P.resolve(1)) })
+      Db.users.destroy.returns(P.resolve(1))
 
       Model.remove(userId)
         .then(result => {
           test.equal(result, 1)
+          test.ok(Db.users.destroy.calledWith({ userId }))
           test.end()
         })
     })
@@ -96,26 +101,27 @@ Test('Users model', modelTest => {
   modelTest.test('save should', saveTest => {
     saveTest.test('insert user in db if userId not defined', test => {
       const user = { firstName: 'Dave' }
-      usersStubs.insert.withArgs(sandbox.match(user), '*').returns(P.resolve([user]))
+
+      Db.users.insert.returns(P.resolve(user))
 
       Model.save(user)
         .then(result => {
           test.deepEqual(result, user)
+          test.ok(Db.users.insert.calledWith(sandbox.match(user)))
           test.end()
         })
     })
 
     saveTest.test('update user in db if userId defined', test => {
       const userId = Uuid()
-      const user = { userId }
+      const user = { userId, firstName: 'Dave' }
 
-      const updateStub = sandbox.stub().returns(P.resolve([user]))
-      usersStubs.where.withArgs(user).returns({ update: updateStub })
+      Db.users.update.returns(P.resolve(user))
 
       Model.save(user)
         .then(result => {
-          test.ok(updateStub.calledWith(user, '*'))
           test.deepEqual(result, user)
+          test.ok(Db.users.update.calledWith({ userId }, user))
           test.end()
         })
     })

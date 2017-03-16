@@ -3,30 +3,29 @@
 const Db = require('../../db')
 
 exports.getById = (id) => {
-  return Db.accounts().where({ accountId: id }).first()
+  return Db.accounts.findOne({ accountId: id })
 }
 
 exports.getByName = (name) => {
-  return Db.accounts().where({ name: name }).first()
+  return Db.accounts.findOne({ name })
 }
 
 exports.retrieveUserCredentials = (account) => {
-  return Db.userCredentials().where({ accountId: account.accountId }).first()
+  return Db.userCredentials.findOne({ accountId: account.accountId })
 }
 
 exports.getAll = () => {
-  return Db.accounts().orderBy('name', 'asc')
+  return Db.accounts.find({}, { order: 'name asc' })
 }
 
 exports.update = (account, isDisabled) => {
-  return Db.accounts().where({ accountId: account.accountId }).update({ isDisabled: isDisabled }, '*')
-    .then(updated => updated[0])
+  return Db.accounts.update({ accountId: account.accountId }, { isDisabled })
 }
 
 exports.create = (account) => {
-  return Db.accounts().insert({ name: account.name }, '*')
+  return Db.accounts.insert({ name: account.name })
     .then(insertedAccount => {
-      return Db.userCredentials().insert({ accountId: insertedAccount[0].accountId, password: account.hashedPassword }, '*')
-        .then(() => insertedAccount[0])
+      return Db.userCredentials.insert({ accountId: insertedAccount.accountId, password: account.hashedPassword })
+        .then(() => insertedAccount)
     })
 }

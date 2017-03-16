@@ -9,17 +9,14 @@ const Db = require(`${src}/db`)
 
 Test('executed-transfers model', function (modelTest) {
   let sandbox
-  let executedTransfersStubs
 
   modelTest.beforeEach((t) => {
     sandbox = Sinon.sandbox.create()
 
-    executedTransfersStubs = {
+    Db.executedTransfers = {
       insert: sandbox.stub(),
       truncate: sandbox.stub()
     }
-
-    Db.executedTransfers = sandbox.stub().returns(executedTransfersStubs)
 
     t.end()
   })
@@ -34,11 +31,12 @@ Test('executed-transfers model', function (modelTest) {
       let transfer = { id: '1234' }
       let created = { transferId: transfer.id }
 
-      executedTransfersStubs.insert.withArgs({ transferId: transfer.id }).returns(P.resolve([created]))
+      Db.executedTransfers.insert.returns(P.resolve(created))
 
       Model.create(transfer)
         .then(c => {
           test.equal(c, created)
+          test.ok(Db.executedTransfers.insert.calledWith({ transferId: transfer.id }))
           test.end()
         })
     })
@@ -48,11 +46,11 @@ Test('executed-transfers model', function (modelTest) {
 
   modelTest.test('truncate should', truncateTest => {
     truncateTest.test('truncate table', test => {
-      executedTransfersStubs.truncate.returns(P.resolve())
+      Db.executedTransfers.truncate.returns(P.resolve())
 
       Model.truncate()
         .then(() => {
-          test.ok(executedTransfersStubs.truncate.calledOnce)
+          test.ok(Db.executedTransfers.truncate.calledOnce)
           test.end()
         })
     })

@@ -8,5 +8,5 @@ exports.generateId = () => {
 }
 
 exports.create = (id) => {
-  return Db.settlements().insert({ settlementId: id }, '*').then(inserted => inserted[0])
+  return Db.settlements.insert({ settlementId: id })
 }

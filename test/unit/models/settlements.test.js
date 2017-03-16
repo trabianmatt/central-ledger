@@ -11,16 +11,13 @@ const Proxyquire = require('proxyquire')
 
 Test('settlements model', function (modelTest) {
   let sandbox
-  let settlementsStubs
 
   modelTest.beforeEach((t) => {
     sandbox = Sinon.sandbox.create()
 
-    settlementsStubs = {
+    Db.settlements = {
       insert: sandbox.stub()
     }
-
-    Db.settlements = sandbox.stub().returns(settlementsStubs)
 
     t.end()
   })
@@ -35,11 +32,12 @@ Test('settlements model', function (modelTest) {
       let settlementId = Uuid()
       let settlement = { settlementId: settlementId }
 
-      settlementsStubs.insert.withArgs({ settlementId: settlementId }, '*').returns(P.resolve([settlement]))
+      Db.settlements.insert.returns(P.resolve(settlement))
 
       Model.create(settlementId)
         .then(c => {
           test.equal(c, settlement)
+          test.ok(Db.settlements.insert.calledWith({ settlementId: settlementId }))
           test.end()
         })
     })

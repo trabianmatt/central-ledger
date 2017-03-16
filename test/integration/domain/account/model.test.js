@@ -2,6 +2,7 @@
 
 const Test = require('tape')
 const Fixtures = require('../../../fixtures')
+const Db = require('../../../../src/db')
 const Model = require('../../../../src/domain/account/model')
 
 function createAccount (name, hashedPassword = 'password') {
@@ -9,36 +10,40 @@ function createAccount (name, hashedPassword = 'password') {
   return Model.create(payload)
 }
 
-Test('accounts model', function (modelTest) {
-  modelTest.test('create should', function (createTest) {
-    createTest.test('create a new account', function (assert) {
+function deleteAccounts () {
+  return Db.from('accounts').destroy()
+}
+
+Test('accounts model', modelTest => {
+  modelTest.test('create should', createTest => {
+    createTest.test('create a new account', test => {
       const accountName = Fixtures.generateAccountName()
       const hashedPassword = 'some-password'
       createAccount(accountName, hashedPassword)
         .then((account) => {
-          assert.equal(account.name, accountName)
-          assert.ok(account.createdDate)
-          assert.ok(account.accountId)
-          assert.equal(account.isDisabled, false)
-          assert.end()
+          test.equal(account.name, accountName)
+          test.ok(account.createdDate)
+          test.ok(account.accountId)
+          test.equal(account.isDisabled, false)
+          test.end()
         })
     })
 
     createTest.end()
   })
 
-  modelTest.test('getByName should', function (getByNameTest) {
-    getByNameTest.test('get account by name', function (assert) {
+  modelTest.test('getByName should', getByNameTest => {
+    getByNameTest.test('get account by name', test => {
       const accountName = Fixtures.generateAccountName()
       createAccount(accountName)
         .then((account) => {
           Model.getByName(account.name)
             .then((found) => {
-              assert.notEqual(found, account)
-              assert.equal(found.name, account.name)
-              assert.deepEqual(found.createdDate, account.createdDate)
-              assert.equal(found.isDisabled, false)
-              assert.end()
+              test.notEqual(found, account)
+              test.equal(found.name, account.name)
+              test.deepEqual(found.createdDate, account.createdDate)
+              test.equal(found.isDisabled, false)
+              test.end()
             })
         })
     })
@@ -46,18 +51,18 @@ Test('accounts model', function (modelTest) {
     getByNameTest.end()
   })
 
-  modelTest.test('getById should', function (getByIdTest) {
-    getByIdTest.test('get account by id', function (assert) {
+  modelTest.test('getById should', getByIdTest => {
+    getByIdTest.test('get account by id', test => {
       const accountName = Fixtures.generateAccountName()
       createAccount(accountName)
         .then((account) => {
           Model.getById(account.accountId)
             .then((found) => {
-              assert.notEqual(found, account)
-              assert.equal(found.accountId, account.accountId)
-              assert.deepEqual(found.createdDate, account.createdDate)
-              assert.equal(found.isDisabled, false)
-              assert.end()
+              test.notEqual(found, account)
+              test.equal(found.accountId, account.accountId)
+              test.deepEqual(found.createdDate, account.createdDate)
+              test.equal(found.isDisabled, false)
+              test.end()
             })
         })
     })
@@ -65,37 +70,39 @@ Test('accounts model', function (modelTest) {
     getByIdTest.end()
   })
 
-  modelTest.test('getAll should', function (getAllTest) {
-    getAllTest.test('return all accounts', function (assert) {
-      const account1Name = Fixtures.generateAccountName()
-      const account2Name = Fixtures.generateAccountName()
-      createAccount(account1Name)
+  modelTest.test('getAll should', getAllTest => {
+    getAllTest.test('return all accounts and order by name ascending', test => {
+      const account1Name = 'zzz' + Fixtures.generateAccountName()
+      const account2Name = 'aaa' + Fixtures.generateAccountName()
+
+      deleteAccounts()
+        .then(() => createAccount(account1Name))
         .then(() => createAccount(account2Name))
         .then(() => Model.getAll())
-        .then((accounts) => {
-          assert.ok(accounts.length > 0)
-          assert.ok(accounts.find(a => a.name === account1Name))
-          assert.ok(accounts.find(a => a.name === account2Name))
-          assert.end()
+        .then(accounts => {
+          test.equal(accounts.length, 2)
+          test.equal(accounts[0].name, account2Name)
+          test.equal(accounts[1].name, account1Name)
+          test.end()
         })
     })
 
     getAllTest.end()
   })
 
-  modelTest.test('update should', function (updateTest) {
-    updateTest.test('update account isDisabled field', function (assert) {
+  modelTest.test('update should', updateTest => {
+    updateTest.test('update account isDisabled field', test => {
       const accountName = Fixtures.generateAccountName()
       const isDisabled = true
       createAccount(accountName)
         .then((account) => {
           Model.update(account, isDisabled)
             .then((updated) => {
-              assert.notEqual(updated, account)
-              assert.equal(updated.name, account.name)
-              assert.deepEqual(updated.createdDate, account.createdDate)
-              assert.equal(updated.isDisabled, isDisabled)
-              assert.end()
+              test.notEqual(updated, account)
+              test.equal(updated.name, account.name)
+              test.deepEqual(updated.createdDate, account.createdDate)
+              test.equal(updated.isDisabled, isDisabled)
+              test.end()
             })
         })
     })
@@ -103,20 +110,20 @@ Test('accounts model', function (modelTest) {
     updateTest.end()
   })
 
-  modelTest.test('retrieveUserCredentials should', function (retrieveUserCredentialsTest) {
-    retrieveUserCredentialsTest.test('return user credentials for a given account', function (assert) {
+  modelTest.test('retrieveUserCredentials should', retrieveUserCredsTest => {
+    retrieveUserCredsTest.test('return user credentials for a given account', test => {
       const account = Fixtures.generateAccountName()
       const password = 'password'
       createAccount(account, password)
         .then((createdAccount) => Model.retrieveUserCredentials(createdAccount)
         .then((userCredentials) => {
-          assert.equal(userCredentials.accountId, createdAccount.accountId)
-          assert.equal(userCredentials.password, password)
-          assert.end()
+          test.equal(userCredentials.accountId, createdAccount.accountId)
+          test.equal(userCredentials.password, password)
+          test.end()
         }))
     })
 
-    retrieveUserCredentialsTest.end()
+    retrieveUserCredsTest.end()
   })
 
   modelTest.end()

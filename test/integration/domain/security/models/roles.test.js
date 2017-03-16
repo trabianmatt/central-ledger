@@ -84,8 +84,8 @@ Test('roles model', rolesTest => {
     getAllTest.end()
   })
 
-  rolesTest.test('remove should', deleteTest => {
-    deleteTest.test('destroy role by id', test => {
+  rolesTest.test('remove should', removeTest => {
+    removeTest.test('destroy role by id', test => {
       const role = createRole()
       Model.save(role)
         .then(result => {
@@ -94,8 +94,8 @@ Test('roles model', rolesTest => {
             .then(r => test.ok(r))
             .then(() => Model.remove(roleId))
             .then(removed => {
-              test.equal(removed.length, 1)
-              test.equal(removed[0].roleId, roleId)
+              test.ok(removed)
+              test.equal(removed.roleId, roleId)
               return Model.getById(roleId)
             })
             .then(r => test.notOk(r))
@@ -103,7 +103,7 @@ Test('roles model', rolesTest => {
         .then(test.end)
     })
 
-    deleteTest.end()
+    removeTest.end()
   })
 
   rolesTest.test('addUserRole should', addUserRoleTest => {
@@ -144,6 +144,29 @@ Test('roles model', rolesTest => {
     })
 
     getUserRolesTest.end()
+  })
+
+  rolesTest.test('removeUserRoles should', removeUserRolesTest => {
+    removeUserRolesTest.test('destroy roles for user', test => {
+      UserModel.save(createUser())
+        .then(userResult => Model.save(createRole())
+          .then(role => ({ userId: userResult.userId, roleId: role.roleId }))
+        )
+        .then(userRole => {
+          Model.addUserRole(userRole)
+            .then(result => {
+              return Model.removeUserRoles(userRole.userId)
+                .then(removed => {
+                  test.ok(removed)
+                  test.equal(removed.userId, userRole.userId)
+                  test.equal(removed.roleId, userRole.roleId)
+                  test.end()
+                })
+            })
+        })
+    })
+
+    removeUserRolesTest.end()
   })
 
   rolesTest.end()

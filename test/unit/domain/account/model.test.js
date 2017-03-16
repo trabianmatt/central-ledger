@@ -9,25 +9,20 @@ const Db = require(`${src}/db`)
 
 Test('accounts model', modelTest => {
   let sandbox
-  let accountsStubs
-  let userCredentialsStubs
 
   modelTest.beforeEach((t) => {
     sandbox = Sinon.sandbox.create()
 
-    accountsStubs = {
+    Db.accounts = {
       insert: sandbox.stub(),
       update: sandbox.stub(),
-      where: sandbox.stub(),
-      orderBy: sandbox.stub()
+      findOne: sandbox.stub(),
+      find: sandbox.stub()
     }
-    userCredentialsStubs = {
+    Db.userCredentials = {
       insert: sandbox.stub(),
-      where: sandbox.stub()
+      findOne: sandbox.stub()
     }
-
-    Db.accounts = sandbox.stub().returns(accountsStubs)
-    Db.userCredentials = sandbox.stub().returns(userCredentialsStubs)
 
     t.end()
   })
@@ -41,7 +36,7 @@ Test('accounts model', modelTest => {
     getAllTest.test('return exception if db query throws', test => {
       const error = new Error()
 
-      accountsStubs.orderBy.withArgs('name', 'asc').returns(P.reject(error))
+      Db.accounts.find.returns(P.reject(error))
 
       Model.getAll()
         .then(() => {
@@ -58,11 +53,12 @@ Test('accounts model', modelTest => {
       const account2Name = 'dfsp2'
       const accounts = [{ name: account1Name }, { name: account2Name }]
 
-      accountsStubs.orderBy.withArgs('name', 'asc').returns(P.resolve(accounts))
+      Db.accounts.find.returns(P.resolve(accounts))
 
       Model.getAll()
         .then((found) => {
           test.equal(found, accounts)
+          test.ok(Db.accounts.find.calledWith({}, { order: 'name asc' }))
           test.end()
         })
         .catch(err => {
@@ -77,7 +73,7 @@ Test('accounts model', modelTest => {
     getByIdTest.test('return exception if db query throws', test => {
       const error = new Error()
 
-      accountsStubs.where.withArgs({ accountId: 1 }).returns({ first: sandbox.stub().returns(P.reject(error)) })
+      Db.accounts.findOne.returns(P.reject(error))
 
       Model.getById(1)
         .then(() => {
@@ -93,12 +89,12 @@ Test('accounts model', modelTest => {
       const id = 1
       const account = { accountId: id }
 
-      accountsStubs.where.withArgs({ accountId: id }).returns({ first: sandbox.stub().returns(P.resolve(account)) })
+      Db.accounts.findOne.returns(P.resolve(account))
 
       Model.getById(id)
         .then(r => {
           test.equal(r, account)
-          test.equal(accountsStubs.where.firstCall.args[0].accountId, id)
+          test.ok(Db.accounts.findOne.calledWith({ accountId: id }))
           test.end()
         })
         .catch(err => {
@@ -114,7 +110,7 @@ Test('accounts model', modelTest => {
       let name = 'dfsp1'
       let error = new Error()
 
-      accountsStubs.where.withArgs({ name: name }).returns({ first: sandbox.stub().returns(P.reject(error)) })
+      Db.accounts.findOne.returns(P.reject(error))
 
       Model.getByName(name)
         .then(() => {
@@ -130,12 +126,12 @@ Test('accounts model', modelTest => {
       let name = 'dfsp1'
       let account = { name: name }
 
-      accountsStubs.where.withArgs({ name: name }).returns({ first: sandbox.stub().returns(P.resolve(account)) })
+      Db.accounts.findOne.returns(P.resolve(account))
 
       Model.getByName(name)
         .then(r => {
           test.equal(r, account)
-          test.equal(accountsStubs.where.firstCall.args[0].name, name)
+          test.ok(Db.accounts.findOne.calledWith({ name }))
           test.end()
         })
         .catch(err => {
@@ -153,15 +149,14 @@ Test('accounts model', modelTest => {
       const account = { accountId: id }
       const isDisabled = false
 
-      let updateStub = sandbox.stub().returns(P.reject(error))
-      accountsStubs.where.withArgs({ accountId: id }).returns({ update: updateStub })
+      Db.accounts.update.returns(P.reject(error))
 
       Model.update(account, isDisabled)
         .then(() => {
           test.fail('Should have thrown error')
         })
         .catch(err => {
-          test.ok(updateStub.withArgs({ isDisabled: isDisabled }, '*').calledOnce)
+          test.ok(Db.accounts.update.withArgs({ accountId: id }, { isDisabled }).calledOnce)
           test.equal(err, error)
           test.end()
         })
@@ -184,12 +179,11 @@ Test('accounts model', modelTest => {
         isDisabled: isDisabled
       }
 
-      let updateStub = sandbox.stub().returns(P.resolve([updatedAccount]))
-      accountsStubs.where.withArgs({ accountId: id }).returns({ update: updateStub })
+      Db.accounts.update.returns(P.resolve(updatedAccount))
 
       Model.update(account, isDisabled)
         .then(r => {
-          test.ok(updateStub.withArgs({ isDisabled: isDisabled }, '*').calledOnce)
+          test.ok(Db.accounts.update.withArgs({ accountId: id }, { isDisabled }).calledOnce)
           test.equal(r, updatedAccount)
           test.end()
         })
@@ -207,13 +201,13 @@ Test('accounts model', modelTest => {
       let payload = { name: name, hashedPassword: 'hashedPassword' }
       let insertedAccount = { accountId: 1, name: name }
 
-      accountsStubs.insert.returns(P.resolve([insertedAccount]))
-      userCredentialsStubs.insert.returns(P.resolve([]))
+      Db.accounts.insert.returns(P.resolve(insertedAccount))
+      Db.userCredentials.insert.returns(P.resolve({}))
 
       Model.create(payload)
         .then(s => {
-          test.ok(accountsStubs.insert.withArgs({ name: name }, '*').calledOnce)
-          test.ok(userCredentialsStubs.insert.withArgs({ accountId: insertedAccount.accountId, password: payload.hashedPassword }, '*').calledOnce)
+          test.ok(Db.accounts.insert.withArgs({ name: name }).calledOnce)
+          test.ok(Db.userCredentials.insert.withArgs({ accountId: insertedAccount.accountId, password: payload.hashedPassword }).calledOnce)
           test.equal(s, insertedAccount)
           test.end()
         })
@@ -224,17 +218,16 @@ Test('accounts model', modelTest => {
 
   modelTest.test('retrieveUserCredentials should', retrieverUserCredsTest => {
     retrieverUserCredsTest.test('return user credentials for a given account', test => {
-      let account = { name: 'dfsp1', 'accountId': '1234' }
+      let account = { name: 'dfsp1', accountId: '1234' }
       let userCredentials = { accountId: account.accountId, password: 'password' }
 
-      userCredentialsStubs.where.withArgs({ accountId: account.accountId }).returns({ first: sandbox.stub().returns(P.resolve(userCredentials)) })
+      Db.userCredentials.findOne.returns(P.resolve(userCredentials))
 
       Model.retrieveUserCredentials(account)
         .then(r => {
-          let whereArg = userCredentialsStubs.where.firstCall.args[0]
-          test.equal(whereArg.accountId, account.accountId)
           test.equal(r.accountId, userCredentials.accountId)
           test.equal(r.password, userCredentials.password)
+          test.ok(Db.userCredentials.findOne.calledWith({ accountId: account.accountId }))
           test.end()
         })
     })

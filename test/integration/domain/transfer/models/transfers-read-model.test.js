@@ -18,7 +18,7 @@ let pastDate = () => {
 }
 
 const getTransfersCount = () => {
-  return Db.transfers().count('*').then(record => parseInt(record[0].count))
+  return Db.transfers.count({}, '*')
 }
 
 const createAccounts = (accountNames) => {

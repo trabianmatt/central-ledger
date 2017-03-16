@@ -3,7 +3,7 @@
 const Db = require('../../db')
 
 exports.create = (charge) => {
-  return Db.charges().insert({
+  return Db.charges.insert({
     name: charge.name,
     chargeType: charge.charge_type,
     rateType: charge.rate_type,
@@ -14,8 +14,7 @@ exports.create = (charge) => {
     isActive: charge.is_active,
     payer: charge.payer,
     payee: charge.payee
-  }, '*')
-    .then(inserted => inserted[0])
+  })
 }
 
 function filterUndefined (fields) {
@@ -36,17 +35,17 @@ exports.update = (charge, payload) => {
     code: payload.code,
     isActive: payload.is_active
   }
-  return Db.charges().where({ chargeId: charge.chargeId }).update(filterUndefined(fields), '*').then(updated => updated[0])
+  return Db.charges.update({ chargeId: charge.chargeId }, filterUndefined(fields))
 }
 
 exports.getByName = (name) => {
-  return Db.charges().where({ name: name }).first()
+  return Db.charges.findOne({ name })
 }
 
 exports.getAll = () => {
-  return Db.charges().where({ isActive: true }).orderBy('name', 'asc')
+  return Db.charges.find({ isActive: true }, { order: 'name asc' })
 }
 
 exports.getAllSenderAsPayer = () => {
-  return Db.charges().where({ payer: 'sender' }).andWhere({ isActive: true }).orderBy('name', 'asc')
+  return Db.charges.find({ payer: 'sender', isActive: true }, { order: 'name asc' })
 }

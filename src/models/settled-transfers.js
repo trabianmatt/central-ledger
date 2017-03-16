@@ -3,9 +3,9 @@
 const Db = require('../db')
 
 exports.create = (transfer) => {
-  return Db.settledTransfers().insert({ transferId: transfer.id, settlementId: transfer.settlementId }, '*').then(inserted => inserted[0])
+  return Db.settledTransfers.insert({ transferId: transfer.id, settlementId: transfer.settlementId })
 }
 
 exports.truncate = () => {
-  return Db.settledTransfers().truncate()
+  return Db.settledTransfers.truncate()
 }

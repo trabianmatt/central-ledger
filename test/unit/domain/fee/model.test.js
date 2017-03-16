@@ -9,22 +9,19 @@ const Db = require(`${src}/db`)
 
 Test('fees model', modelTest => {
   let sandbox
-  let feesStubs
-  let executedTransfersStubs
 
   modelTest.beforeEach((t) => {
     sandbox = Sinon.sandbox.create()
 
-    feesStubs = {
+    Db.fees = {
       insert: sandbox.stub(),
-      where: sandbox.stub()
-    }
-    executedTransfersStubs = {
-      leftJoin: sandbox.stub()
+      find: sandbox.stub(),
+      findOne: sandbox.stub()
     }
 
-    Db.fees = sandbox.stub().returns(feesStubs)
-    Db.executedTransfers = sandbox.stub().returns(executedTransfersStubs)
+    Db.executedTransfers = {
+      query: sandbox.stub()
+    }
 
     t.end()
   })
@@ -38,7 +35,7 @@ Test('fees model', modelTest => {
     getAllForTransferTest.test('return exception if db query throws', test => {
       const error = new Error()
 
-      feesStubs.where.returns(P.reject(error))
+      Db.fees.find.returns(P.reject(error))
 
       Model.getAllForTransfer({ transferUuid: '1234' })
         .then(() => {
@@ -56,11 +53,12 @@ Test('fees model', modelTest => {
       const fees = [{ feeId: feeId1 }, { feeId: feeId2 }]
       const transfer = { transferUuid: '1234' }
 
-      feesStubs.where.withArgs({ transferId: transfer.transferUuid }).returns(P.resolve(fees))
+      Db.fees.find.returns(P.resolve(fees))
 
       Model.getAllForTransfer(transfer)
         .then((found) => {
           test.equal(found, fees)
+          test.ok(Db.fees.find.calledWith({ transferId: transfer.transferUuid }))
           test.end()
         })
     })
@@ -89,11 +87,12 @@ Test('fees model', modelTest => {
         chargeId: 3
       }
 
-      feesStubs.insert.withArgs(payload, '*').returns(P.resolve([fee]))
+      Db.fees.insert.returns(P.resolve(fee))
 
       Model.create(payload)
         .then(c => {
           test.equal(c, fee)
+          test.ok(Db.fees.insert.calledWith(payload))
           test.end()
         })
     })
@@ -111,11 +110,12 @@ Test('fees model', modelTest => {
       const charge = { chargeId }
       const transfer = { transferUuid: transferId }
 
-      feesStubs.where.withArgs({ transferId: transfer.transferUuid, chargeId: charge.chargeId }).returns({ first: sandbox.stub().returns(P.resolve(fee)) })
+      Db.fees.findOne.returns(P.resolve(fee))
 
       Model.doesExist(charge, transfer)
         .then(existing => {
           test.equal(existing, fee)
+          test.ok(Db.fees.findOne.calledWith({ transferId: transfer.transferUuid, chargeId: charge.chargeId }))
           test.end()
         })
     })
@@ -132,6 +132,7 @@ Test('fees model', modelTest => {
 
       const account = { accountId: 11 }
 
+      let builderStub = sandbox.stub()
       let joinFeesStub = sandbox.stub()
       let joinPayerStub = sandbox.stub()
       let joinPayeeStub = sandbox.stub()
@@ -146,13 +147,18 @@ Test('fees model', modelTest => {
       groupStub.where = groupWhereStub.returns({ orWhere: groupOrWhereStub })
       whereStub.callsArgWith(0, groupStub)
 
-      executedTransfersStubs.leftJoin.returns({
+      builderStub.leftJoin = sandbox.stub()
+
+      Db.executedTransfers.query.callsArgWith(0, builderStub)
+      Db.executedTransfers.query.returns(P.resolve(fees))
+
+      builderStub.leftJoin.returns({
         innerJoin: joinFeesStub.returns({
           innerJoin: joinPayerStub.returns({
             innerJoin: joinPayeeStub.returns({
               whereNull: whereNullStub.returns({
                 where: whereStub.returns({
-                  distinct: distinctStub.returns(P.resolve(fees))
+                  distinct: distinctStub
                 })
               })
             })
@@ -162,14 +168,13 @@ Test('fees model', modelTest => {
 
       Model.getSettleableFeesByAccount(account)
         .then(foundFee => {
-          test.ok(executedTransfersStubs.leftJoin.withArgs('settledTransfers AS st', 'executedTransfers.transferId', 'st.transferId').calledOnce)
+          test.equal(foundFee, fees)
+          test.ok(builderStub.leftJoin.withArgs('settledTransfers AS st', 'executedTransfers.transferId', 'st.transferId').calledOnce)
           test.ok(joinFeesStub.withArgs('fees AS f', 'f.transferId', 'executedTransfers.transferId').calledOnce)
           test.ok(joinPayerStub.withArgs('accounts AS pe', 'f.payeeAccountId', 'pe.accountId').calledOnce)
           test.ok(joinPayeeStub.withArgs('accounts AS pr', 'f.payerAccountId', 'pr.accountId').calledOnce)
           test.ok(whereNullStub.withArgs('st.transferId').calledOnce)
           test.ok(distinctStub.withArgs('f.feeId AS feeId', 'pe.name AS payeeAccountName', 'pr.name AS payerAccountName', 'f.amount AS payeeAmount', 'f.amount AS payerAmount').calledOnce)
-
-          test.equal(foundFee, fees)
           test.end()
         })
     })

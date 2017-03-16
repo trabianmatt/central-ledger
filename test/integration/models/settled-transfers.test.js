@@ -7,7 +7,7 @@ const Fixtures = require('../../fixtures')
 const Db = require('../../../src/db')
 
 const getSettledTransfersCount = () => {
-  return Db.settledTransfers().count('*').then(record => parseInt(record[0].count))
+  return Db.settledTransfers.count({}, '*')
 }
 
 Test('settled-transfers model', modelTest => {

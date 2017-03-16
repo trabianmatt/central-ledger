@@ -9,18 +9,16 @@ const Db = require(`${src}/db`)
 
 Test('charges model', modelTest => {
   let sandbox
-  let chargesStubs
 
   modelTest.beforeEach((t) => {
     sandbox = Sinon.sandbox.create()
-    chargesStubs = {
-      insert: sandbox.stub(),
-      where: sandbox.stub(),
-      orderBy: sandbox.stub(),
-      update: sandbox.stub()
-    }
 
-    Db.charges = sandbox.stub().returns(chargesStubs)
+    Db.charges = {
+      insert: sandbox.stub(),
+      update: sandbox.stub(),
+      find: sandbox.stub(),
+      findOne: sandbox.stub()
+    }
 
     t.end()
   })
@@ -34,8 +32,7 @@ Test('charges model', modelTest => {
     getAllTest.test('return exception if db query throws', test => {
       const error = new Error()
 
-      let orderByStub = sandbox.stub().returns(P.reject(error))
-      chargesStubs.where.withArgs({ isActive: true }).returns({ orderBy: orderByStub })
+      Db.charges.find.returns(P.reject(error))
 
       Model.getAll()
         .then(() => {
@@ -43,6 +40,7 @@ Test('charges model', modelTest => {
         })
         .catch(err => {
           test.equal(err, error)
+          test.ok(Db.charges.find.calledWith({ isActive: true }, { order: 'name asc' }))
           test.end()
         })
     })
@@ -52,12 +50,12 @@ Test('charges model', modelTest => {
       const charge2Name = 'charge2'
       const charges = [{ name: charge1Name }, { name: charge2Name }]
 
-      let orderByStub = sandbox.stub().returns(P.resolve(charges))
-      chargesStubs.where.withArgs({ isActive: true }).returns({ orderBy: orderByStub })
+      Db.charges.find.returns(P.resolve(charges))
 
       Model.getAll()
         .then((found) => {
           test.equal(found, charges)
+          test.ok(Db.charges.find.calledWith({ isActive: true }, { order: 'name asc' }))
           test.end()
         })
         .catch(err => {
@@ -73,7 +71,7 @@ Test('charges model', modelTest => {
       const error = new Error()
       const name = 'charge1'
 
-      chargesStubs.where.withArgs({ name: name }).returns({ first: sandbox.stub().returns(P.reject(error)) })
+      Db.charges.findOne.returns(P.reject(error))
 
       Model.getByName(name)
         .then(() => {
@@ -81,6 +79,7 @@ Test('charges model', modelTest => {
         })
         .catch(err => {
           test.equal(err, error)
+          test.ok(Db.charges.findOne.calledWith({ name }))
           test.end()
         })
     })
@@ -89,11 +88,12 @@ Test('charges model', modelTest => {
       const name = 'charge1'
       const charge = { name }
 
-      chargesStubs.where.withArgs({ name: name }).returns({ first: sandbox.stub().returns(P.resolve(charge)) })
+      Db.charges.findOne.returns(P.resolve(charge))
 
       Model.getByName(name)
         .then((found) => {
           test.equal(found, charge)
+          test.ok(Db.charges.findOne.calledWith({ name }))
           test.end()
         })
         .catch(err => {
@@ -108,17 +108,15 @@ Test('charges model', modelTest => {
     getAllSenderAsPayerTest.test('return exception if db query throws', test => {
       const error = new Error()
 
-      let orderByStub = sandbox.stub().returns(P.reject(error))
-      let andWhereStub = sandbox.stub().returns({ orderBy: orderByStub })
-      chargesStubs.where.withArgs({ payer: 'sender' }).returns({ andWhere: andWhereStub })
+      Db.charges.find.returns(P.reject(error))
 
       Model.getAllSenderAsPayer()
         .then(() => {
           test.fail('Should have thrown error')
         })
         .catch(err => {
-          test.ok(orderByStub.withArgs('name', 'asc').calledOnce)
           test.equal(err, error)
+          test.ok(Db.charges.find.calledWith({ payer: 'sender', isActive: true }, { order: 'name asc' }))
           test.end()
         })
     })
@@ -126,14 +124,12 @@ Test('charges model', modelTest => {
     getAllSenderAsPayerTest.test('return all charges ordered by name', test => {
       const charges = [{ name: 'charge1' }, { name: 'charge2' }, { name: 'charge3' }]
 
-      let orderByStub = sandbox.stub().returns(P.resolve(charges))
-      let andWhereStub = sandbox.stub().returns({ orderBy: orderByStub })
-      chargesStubs.where.withArgs({ payer: 'sender' }).returns({ andWhere: andWhereStub })
+      Db.charges.find.returns(P.resolve(charges))
 
       Model.getAllSenderAsPayer()
         .then((found) => {
-          test.ok(orderByStub.withArgs('name', 'asc').calledOnce)
           test.equal(found, charges)
+          test.ok(Db.charges.find.calledWith({ payer: 'sender', isActive: true }, { order: 'name asc' }))
           test.end()
         })
         .catch(err => {
@@ -149,13 +145,13 @@ Test('charges model', modelTest => {
       let name = 'charge'
       let charge = { name }
 
-      chargesStubs.insert.returns(P.resolve([charge]))
+      Db.charges.insert.returns(P.resolve(charge))
 
       const payload = { name }
 
       Model.create(payload)
         .then(created => {
-          const insertArg = chargesStubs.insert.firstCall.args[0]
+          const insertArg = Db.charges.insert.firstCall.args[0]
           test.notEqual(insertArg, payload)
           test.equal(created, charge)
           test.end()
@@ -194,13 +190,11 @@ Test('charges model', modelTest => {
         name: payload.name
       }
 
-      let updateStub = sandbox.stub().returns(P.resolve([updatedCharge]))
-      chargesStubs.where.withArgs({ chargeId: charge.chargeId }).returns({ update: updateStub })
+      Db.charges.update.returns(P.resolve(updatedCharge))
 
       Model.update(charge, payload)
         .then(updated => {
-          test.ok(chargesStubs.where.withArgs({ chargeId: charge.chargeId }.calledOnce))
-          test.ok(updateStub.withArgs(fields, '*').calledOnce)
+          test.ok(Db.charges.update.calledWith({ chargeId: charge.chargeId }, fields))
           test.equal(updated, updatedCharge)
           test.end()
         })

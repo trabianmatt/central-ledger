@@ -1,6 +1,5 @@
 'use strict'
 
-const _ = require('lodash')
 const Db = require('../db')
 const Uuid = require('uuid4')
 
@@ -13,24 +12,20 @@ class KnexStore {
   }
 
   _findDomainEvents (criteria, callback) {
-    let query = Db.connection(this._tableName)
-
-    _.keys(criteria).forEach(k => {
-      query = query.whereIn(k, criteria[k])
-    })
-
-    return query
+    return Db.from(this._tableName)
+      .find(criteria)
       .then(results => callback(null, results.map(this._toDomainEvent)))
       .catch(e => callback(e, null))
   }
 
   _getNextSequenceNumber (domainEvent) {
-    return Db.connection(this._tableName).max('sequenceNumber').where({ aggregateId: domainEvent.aggregate.id })
-      .then(result => {
-        if (domainEvent.ensureIsFirstDomainEvent || result[0].max === null) {
+    return Db.from(this._tableName)
+      .max({ aggregateId: domainEvent.aggregate.id }, 'sequenceNumber')
+      .then(max => {
+        if (domainEvent.ensureIsFirstDomainEvent || max === null) {
           return 1
         } else {
-          return result[0].max + 1
+          return max + 1
         }
       })
   }
@@ -47,7 +42,7 @@ class KnexStore {
   }
 
   _insertDomainEvent (sequenceNumber, domainEvent) {
-    return Db.connection(this._tableName).insert({
+    return Db.from(this._tableName).insert({
       eventId: Uuid(),
       name: domainEvent.name,
       payload: domainEvent.payload,
@@ -55,7 +50,7 @@ class KnexStore {
       aggregateName: domainEvent.aggregate.name,
       sequenceNumber: sequenceNumber,
       timestamp: (new Date(domainEvent.timestamp)).toISOString()
-    }, '*').then(inserted => inserted[0])
+    })
   }
 
   initialize (context) {

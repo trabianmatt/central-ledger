@@ -9,18 +9,16 @@ const Time = require('../../../../src/lib/time')
 
 Test('tokens model', function (modelTest) {
   let sandbox
-  let tokensStubs
 
   modelTest.beforeEach((t) => {
     sandbox = Sinon.sandbox.create()
     sandbox.stub(Time, 'getCurrentUTCTimeInMilliseconds')
 
-    tokensStubs = {
+    Db.tokens = {
       insert: sandbox.stub(),
-      where: sandbox.stub()
+      find: sandbox.stub(),
+      destroy: sandbox.stub()
     }
-
-    Db.tokens = sandbox.stub().returns(tokensStubs)
 
     t.end()
   })
@@ -35,16 +33,15 @@ Test('tokens model', function (modelTest) {
       const payload = { accountId: 1, token: 'token', expiration: new Date().getTime() }
       const created = { tokenId: 1 }
 
-      tokensStubs.insert.returns(P.resolve([created]))
+      Db.tokens.insert.returns(P.resolve(created))
 
       Model.create(payload)
         .then(c => {
-          let insertArgs = tokensStubs.insert.firstCall.args
-          test.notEqual(insertArgs[0], payload)
-          test.equal(insertArgs[0].accountId, payload.accountId)
-          test.equal(insertArgs[0].token, payload.token)
-          test.equal(insertArgs[0].expiration, payload.expiration)
-          test.equal(insertArgs[1], '*')
+          let insertArg = Db.tokens.insert.firstCall.args[0]
+          test.notEqual(insertArg, payload)
+          test.equal(insertArg.accountId, payload.accountId)
+          test.equal(insertArg.token, payload.token)
+          test.equal(insertArg.expiration, payload.expiration)
           test.equal(c, created)
           test.end()
         })
@@ -58,11 +55,12 @@ Test('tokens model', function (modelTest) {
       const account = { accountId: 1 }
       const tokens = [ { accountId: account.accountId, token: 'token1' }, { accountId: account.accountId, token: 'token2' } ]
 
-      tokensStubs.where.withArgs({ accountId: account.accountId }).returns(P.resolve(tokens))
+      Db.tokens.find.returns(P.resolve(tokens))
 
       Model.byAccount(account)
         .then(results => {
           test.equal(results, tokens)
+          test.ok(Db.tokens.find.calledWith({ accountId: account.accountId }))
           test.end()
         })
     })
@@ -77,13 +75,12 @@ Test('tokens model', function (modelTest) {
 
       const expiredTokens = [ { accountId: 1, token: 'token', expiration: 1 } ]
 
-      let delStub = sandbox.stub().returns(P.resolve(expiredTokens))
-      tokensStubs.where.withArgs('expiration', '<=', currentTime).returns({ del: delStub })
+      Db.tokens.destroy.returns(P.resolve(expiredTokens))
 
       Model.removeExpired()
         .then(removed => {
-          test.ok(delStub.withArgs('*').calledOnce)
           test.equal(removed, expiredTokens)
+          test.ok(Db.tokens.destroy.calledWith({ 'expiration <=': currentTime }))
           test.end()
         })
     })

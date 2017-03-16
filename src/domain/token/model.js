@@ -4,20 +4,19 @@ const Db = require('../../db')
 const Time = require('../../lib/time')
 
 const create = ({ accountId, token, expiration }) => {
-  return Db.tokens().insert({
+  return Db.tokens.insert({
     accountId,
     token,
     expiration
-  }, '*')
-  .then(inserted => inserted[0])
+  })
 }
 
 const byAccount = ({ accountId }) => {
-  return Db.tokens().where({ accountId: accountId })
+  return Db.tokens.find({ accountId: accountId })
 }
 
 const removeExpired = () => {
-  return Db.tokens().where('expiration', '<=', Time.getCurrentUTCTimeInMilliseconds()).del('*')
+  return Db.tokens.destroy({ 'expiration <=': Time.getCurrentUTCTimeInMilliseconds() })
 }
 
 module.exports = {

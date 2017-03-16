@@ -3,20 +3,20 @@
 const Uuid = require('uuid4')
 const Db = require('../../../db')
 
-const getAll = () => Db.users().select()
+const getAll = () => Db.users.find({})
 
-const getById = (userId) => Db.users().where({ userId }).first()
+const getById = (userId) => Db.users.findOne({ userId })
 
-const getByKey = (key) => Db.users().where({ key }).first()
+const getByKey = (key) => Db.users.findOne({ key })
 
-const remove = (userId) => Db.users().where({ userId }).del('*')
+const remove = (userId) => Db.users.destroy({ userId })
 
 const save = (user) => {
   if (!user.userId) {
     user.userId = Uuid()
-    return Db.users().insert(user, '*').then(inserted => inserted[0])
+    return Db.users.insert(user)
   } else {
-    return Db.users().where({ userId: user.userId }).update(user, '*').then(updated => updated[0])
+    return Db.users.update({ userId: user.userId }, user)
   }
 }
 

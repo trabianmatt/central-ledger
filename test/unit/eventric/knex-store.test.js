@@ -40,25 +40,23 @@ Test('knex store test', storeTest => {
     let store = new KnexStore()
     return P.resolve(store.initialize({ name: contextName }))
       .then(ctx => {
-        Db.connection.withArgs(ctx._tableName).returns(dbMethodsStub)
+        Db.from.withArgs(ctx._tableName).returns(dbMethodsStub)
         return ctx
       })
   }
 
   let setSequenceNumber = (aggregateId, sequenceNumber = 0) => {
-    let whereStub = sandbox.stub()
-    whereStub.withArgs({ aggregateId: aggregateId }).returns(P.resolve([{ max: sequenceNumber }]))
-    dbMethodsStub.max.withArgs('sequenceNumber').returns({ where: whereStub })
+    dbMethodsStub.max.withArgs({ aggregateId }, 'sequenceNumber').returns(P.resolve(sequenceNumber))
   }
 
   storeTest.beforeEach(t => {
     sandbox = Sinon.sandbox.create()
     dbMethodsStub = {
       insert: sandbox.stub(),
-      whereIn: sandbox.stub(),
+      find: sandbox.stub(),
       max: sandbox.stub()
     }
-    Db.connection = sandbox.stub()
+    Db.from = sandbox.stub()
     t.end()
   })
 
@@ -131,13 +129,13 @@ Test('knex store test', storeTest => {
     saveDomainEventTest.test('insert event in db', test => {
       let domainEvent = createDomainEvent()
 
-      let insertArgs
+      let insertArg
       let insertAsyncCalled = false
 
-      dbMethodsStub.insert = (arg1, arg2) => {
-        insertArgs = [arg1, arg2]
+      dbMethodsStub.insert = (arg1) => {
+        insertArg = arg1
         insertAsyncCalled = true
-        return P.resolve([arg1])
+        return P.resolve(arg1)
       }
 
       setSequenceNumber(domainEvent.aggregate.id)
@@ -148,15 +146,13 @@ Test('knex store test', storeTest => {
             .then(result => {
               test.ok(insertAsyncCalled)
 
-              test.ok(insertArgs[0].eventId)
-              test.equal(insertArgs[0].name, domainEvent.name)
-              test.equal(insertArgs[0].payload, domainEvent.payload)
-              test.equal(insertArgs[0].aggregateId, domainEvent.aggregate.id)
-              test.equal(insertArgs[0].aggregateName, domainEvent.aggregate.name)
-              test.equal(insertArgs[0].sequenceNumber, 1)
-              test.equal(insertArgs[0].timestamp, domainEvent.timestamp.toISOString())
-
-              test.equal(insertArgs[1], '*')
+              test.ok(insertArg.eventId)
+              test.equal(insertArg.name, domainEvent.name)
+              test.equal(insertArg.payload, domainEvent.payload)
+              test.equal(insertArg.aggregateId, domainEvent.aggregate.id)
+              test.equal(insertArg.aggregateName, domainEvent.aggregate.name)
+              test.equal(insertArg.sequenceNumber, 1)
+              test.equal(insertArg.timestamp, domainEvent.timestamp.toISOString())
 
               test.equal(result.id, 1)
               test.equal(result.name, domainEvent.name)
@@ -198,7 +194,7 @@ Test('knex store test', storeTest => {
       let domainEventNames = ['name1', 'name2']
       let results = [createEvent(), createEvent()]
 
-      dbMethodsStub.whereIn.withArgs('name', domainEventNames).returns(P.resolve(results))
+      dbMethodsStub.find.withArgs({ name: domainEventNames }).returns(P.resolve(results))
 
       createStore()
       .then(s => {
@@ -215,7 +211,7 @@ Test('knex store test', storeTest => {
       let domainEventName = 'name1'
       let results = [createEvent(), createEvent()]
 
-      dbMethodsStub.whereIn.withArgs('name', [domainEventName]).returns(P.resolve(results))
+      dbMethodsStub.find.withArgs({ name: [domainEventName] }).returns(P.resolve(results))
 
       createStore()
       .then(s => {
@@ -228,9 +224,9 @@ Test('knex store test', storeTest => {
       })
     })
 
-    findByNameTest.test('return error if db.whereIn throws error', test => {
+    findByNameTest.test('return error if db.find throws error', test => {
       let error = new Error()
-      dbMethodsStub.whereIn.returns(P.reject(error))
+      dbMethodsStub.find.returns(P.reject(error))
 
       let cb = (err, result) => {
         test.equal(err, error)
@@ -249,7 +245,7 @@ Test('knex store test', storeTest => {
       let ids = [Uuid(), Uuid()]
       let results = [createEvent(), createEvent()]
 
-      dbMethodsStub.whereIn.withArgs('aggregateId', ids).returns(P.resolve(results))
+      dbMethodsStub.find.withArgs({ aggregateId: ids }).returns(P.resolve(results))
 
       createStore()
       .then(s => {
@@ -266,7 +262,7 @@ Test('knex store test', storeTest => {
       let id = Uuid()
       let results = [createEvent(), createEvent()]
 
-      dbMethodsStub.whereIn.withArgs('aggregateId', [id]).returns(P.resolve(results))
+      dbMethodsStub.find.withArgs({ aggregateId: [id] }).returns(P.resolve(results))
 
       createStore()
       .then(s => {
@@ -281,7 +277,7 @@ Test('knex store test', storeTest => {
 
     findByAggregateIdTest.test('return error if db.whereIn throws error', test => {
       let error = new Error()
-      dbMethodsStub.whereIn.returns(P.reject(error))
+      dbMethodsStub.find.returns(P.reject(error))
 
       let cb = (err, result) => {
         test.equal(err, error)
@@ -301,8 +297,7 @@ Test('knex store test', storeTest => {
       let ids = [Uuid(), Uuid()]
       let results = [createEvent(), createEvent()]
 
-      dbMethodsStub.whereIn.withArgs('name', domainEventNames).returns(dbMethodsStub)
-      dbMethodsStub.whereIn.withArgs('aggregateId', ids).returns(P.resolve(results))
+      dbMethodsStub.find.withArgs({ name: domainEventNames, aggregateId: ids }).returns(P.resolve(results))
 
       createStore()
       .then(s => {
@@ -320,8 +315,7 @@ Test('knex store test', storeTest => {
       let id = Uuid()
       let results = [createEvent(), createEvent()]
 
-      dbMethodsStub.whereIn.withArgs('name', [name]).returns(dbMethodsStub)
-      dbMethodsStub.whereIn.withArgs('aggregateId', [id]).returns(P.resolve(results))
+      dbMethodsStub.find.withArgs({ name: [name], aggregateId: [id] }).returns(P.resolve(results))
 
       createStore()
       .then(s => {
@@ -339,8 +333,7 @@ Test('knex store test', storeTest => {
       let id = Uuid()
       let error = new Error()
 
-      dbMethodsStub.whereIn.withArgs('name', [name]).returns(dbMethodsStub)
-      dbMethodsStub.whereIn.withArgs('aggregateId', [id]).returns(P.reject(error))
+      dbMethodsStub.find.withArgs({ name: [name], aggregateId: [id] }).returns(P.reject(error))
 
       let cb = (err, result) => {
         test.equal(err, error)
