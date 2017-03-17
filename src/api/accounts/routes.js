@@ -38,5 +38,24 @@ module.exports = [{
       }
     }
   }
+},
+{
+  method: 'PUT',
+  path: '/accounts/{name}',
+  handler: Handler.updateUserCredentials,
+  config: {
+    id: 'account_update_user_credentials',
+    tags: tags,
+    description: 'Update an accounts user credentials',
+    auth: Auth.strategy(),
+    validate: {
+      params: {
+        name: nameValidator
+      },
+      payload: {
+        password: passwordValidator
+      }
+    }
+  }
 }
 ]

@@ -21,7 +21,8 @@ Test('accounts model', modelTest => {
     }
     Db.userCredentials = {
       insert: sandbox.stub(),
-      findOne: sandbox.stub()
+      findOne: sandbox.stub(),
+      update: sandbox.stub()
     }
 
     t.end()
@@ -214,6 +215,28 @@ Test('accounts model', modelTest => {
     })
 
     createTest.end()
+  })
+
+  modelTest.test('updateUserCredentials should', updateUserCredentialsTest => {
+    updateUserCredentialsTest.test('return user credentials for a given account', test => {
+      let account = { name: 'dfsp1', accountId: '1234' }
+      let password = '1234'
+      let userCredentials = { accountId: account.accountId, password }
+
+      Db.userCredentials.update.returns(P.resolve(userCredentials))
+
+      Model.updateUserCredentials(account, password)
+        .then(r => {
+          test.ok(Db.userCredentials.update.withArgs({ accountId: account.accountId }, { password }).calledOnce)
+          test.equal(r, userCredentials)
+          test.end()
+        })
+        .catch(err => {
+          test.fail(err)
+        })
+    })
+
+    updateUserCredentialsTest.end()
   })
 
   modelTest.test('retrieveUserCredentials should', retrieverUserCredsTest => {

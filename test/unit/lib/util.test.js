@@ -67,5 +67,34 @@ Test('util', utilTest => {
     parseJsonTest.end()
   })
 
+  utilTest.test('filterUndefined should', filterUndefinedTest => {
+    filterUndefinedTest.test('return map with undefined values stripped out', test => {
+      const undefinedMap = {}
+      const obj1 = {
+        prop1: 'test',
+        prop2: {
+          'date_time': new Date().toDateString(),
+          'number': 1000
+        },
+        prop3: undefinedMap.prop3,
+        prop4: null
+      }
+
+      const obj2 = {
+        prop1: 'test',
+        prop2: {
+          'date_time': new Date().toDateString(),
+          'number': 1000
+        },
+        prop4: null
+      }
+
+      const result = Util.filterUndefined(obj1)
+      test.deepEqual(result, obj2)
+      test.end()
+    })
+    filterUndefinedTest.end()
+  })
+
   utilTest.end()
 })

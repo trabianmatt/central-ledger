@@ -22,6 +22,10 @@ exports.update = (account, isDisabled) => {
   return Db.accounts.update({ accountId: account.accountId }, { isDisabled })
 }
 
+exports.updateUserCredentials = (account, hashedPassword) => {
+  return Db.userCredentials.update({ accountId: account.accountId }, { password: hashedPassword })
+}
+
 exports.create = (account) => {
   return Db.accounts.insert({ name: account.name })
     .then(insertedAccount => {

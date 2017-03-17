@@ -12,7 +12,17 @@ const Errors = require('../../../../src/errors')
 const createGet = (name, credentials = null) => {
   return {
     params: { name: name || 'name' },
-    server: { log: () => {} },
+    server: { log: () => { } },
+    auth: {
+      credentials
+    }
+  }
+}
+
+const createPut = (name, credentials = null) => {
+  return {
+    params: { name: name || 'name' },
+    server: { log: () => { } },
     auth: {
       credentials
     }
@@ -22,7 +32,7 @@ const createGet = (name, credentials = null) => {
 const createPost = payload => {
   return {
     payload: payload || {},
-    server: { log: () => {} }
+    server: { log: () => { } }
   }
 }
 
@@ -42,6 +52,7 @@ Test('accounts handler', handlerTest => {
     sandbox.stub(Account, 'create')
     sandbox.stub(Account, 'getByName')
     sandbox.stub(Account, 'getAll')
+    sandbox.stub(Account, 'updateUserCredentials')
     sandbox.stub(PositionService, 'calculateForAccount')
     t.end()
   })
@@ -200,6 +211,47 @@ Test('accounts handler', handlerTest => {
     })
 
     getByNameTest.end()
+  })
+
+  handlerTest.test('updateUserCredentials should', updateUserCredentialsTest => {
+    updateUserCredentialsTest.test('update a users credentials', test => {
+      const name = 'somename'
+      const account = createAccount(name)
+      Account.getByName.returns(P.resolve(account))
+      Account.updateUserCredentials.returns(P.resolve(account))
+
+      const reply = response => {
+        test.equal(response.id, `${hostname}/accounts/${response.name}`)
+        test.equal(response.name, name)
+        test.equal(response.ledger, hostname)
+        test.notOk(response.hasOwnProperty('key'))
+        test.notOk(response.hasOwnProperty('secret'))
+        test.notOk(response.hasOwnProperty('credentials'))
+        test.end()
+      }
+
+      const request = createPut(name, { name })
+      request.payload = { password: '1234' }
+      Handler.updateUserCredentials(request, reply)
+    })
+
+    updateUserCredentialsTest.test('reply with unauthorizd error if user credentials do not match', test => {
+      const name = 'somename'
+      const account = createAccount(name)
+      Account.getByName.returns(P.resolve(account))
+
+      const request = createPut(name, { name: '1234' })
+      request.payload = { password: '1234' }
+      try {
+        Handler.updateUserCredentials(request)
+      } catch (error) {
+        test.assert(error instanceof Errors.UnauthorizedError)
+        test.equal(error.message, 'Invalid attempt updating the password.')
+        test.end()
+      }
+    })
+
+    updateUserCredentialsTest.end()
   })
 
   handlerTest.test('create should', createTest => {

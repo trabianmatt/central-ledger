@@ -161,6 +161,23 @@ Test('Account service', serviceTest => {
     getByNameTest.end()
   })
 
+  serviceTest.test('updateUserCredentials should', updateUserCredentialsTest => {
+    updateUserCredentialsTest.test('updateUserCredentials from Model', test => {
+      const name = 'name'
+      const password = '12345'
+      Model.updateUserCredentials.returns(P.resolve({ name }))
+      Crypto.hash.withArgs(password).returns(P.resolve('123456'))
+
+      AccountService.updateUserCredentials({ name }, { password })
+        .then(result => {
+          test.deepEqual(result, { name })
+          test.end()
+        })
+    })
+
+    updateUserCredentialsTest.end()
+  })
+
   serviceTest.test('update should', updateTest => {
     updateTest.test('update from Model', test => {
       const isDisabled = false

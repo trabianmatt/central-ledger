@@ -77,6 +77,12 @@ const update = (name, payload) => {
   })
 }
 
+const updateUserCredentials = (account, payload) => {
+  return Crypto.hash(payload.password).then(hashedPassword => {
+    return Model.updateUserCredentials(account, hashedPassword).then(() => account)
+  })
+}
+
 const retrieveUserCredentials = (account) => {
   return Model.retrieveUserCredentials(account)
 }
@@ -106,5 +112,6 @@ module.exports = {
   getById,
   getByName,
   verify,
-  update
+  update,
+  updateUserCredentials
 }

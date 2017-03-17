@@ -110,20 +110,37 @@ Test('accounts model', modelTest => {
     updateTest.end()
   })
 
-  modelTest.test('retrieveUserCredentials should', retrieveUserCredsTest => {
-    retrieveUserCredsTest.test('return user credentials for a given account', test => {
+  modelTest.test('updateUserCredentials should', updateUserCredentialsTest => {
+    updateUserCredentialsTest.test('update user credentials for a given account', test => {
+      const account = Fixtures.generateAccountName()
+      const password = 'password'
+      const updatedPassword = 'password2'
+      createAccount(account, password)
+        .then((createdAccount) => Model.updateUserCredentials(createdAccount, updatedPassword)
+          .then((userCredentials) => {
+            test.equal(userCredentials.accountId, createdAccount.accountId)
+            test.equal(userCredentials.password, updatedPassword)
+            test.end()
+          }))
+    })
+
+    updateUserCredentialsTest.end()
+  })
+
+  modelTest.test('retrieveUserCredentials should', retrieveUserCredentialsTest => {
+    retrieveUserCredentialsTest.test('return user credentials for a given account', test => {
       const account = Fixtures.generateAccountName()
       const password = 'password'
       createAccount(account, password)
         .then((createdAccount) => Model.retrieveUserCredentials(createdAccount)
-        .then((userCredentials) => {
-          test.equal(userCredentials.accountId, createdAccount.accountId)
-          test.equal(userCredentials.password, password)
-          test.end()
-        }))
+          .then((userCredentials) => {
+            test.equal(userCredentials.accountId, createdAccount.accountId)
+            test.equal(userCredentials.password, password)
+            test.end()
+          }))
     })
 
-    retrieveUserCredsTest.end()
+    retrieveUserCredentialsTest.end()
   })
 
   modelTest.end()

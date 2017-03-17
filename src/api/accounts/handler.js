@@ -52,6 +52,22 @@ exports.create = (request, reply) => {
     .catch(reply)
 }
 
+exports.updateUserCredentials = (request, reply) => {
+  const accountName = request.params.name
+  const credentials = request.auth.credentials
+  const authenticated = (credentials && (credentials.is_admin || credentials.name === accountName))
+
+  if (!authenticated) {
+    throw new Errors.UnauthorizedError('Invalid attempt updating the password.')
+  }
+  Account.getByName(request.params.name)
+    .then(handleMissingRecord)
+    .then(account => Account.updateUserCredentials(account, request.payload))
+    .then(updatedAccount => buildAccount(updatedAccount))
+    .then(reply)
+    .catch(reply)
+}
+
 exports.getByName = (request, reply) => {
   const accountName = request.params.name
   const credentials = request.auth.credentials

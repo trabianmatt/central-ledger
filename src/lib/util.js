@@ -47,6 +47,15 @@ const expand = (value) => {
   return (value) ? _.split(value, '|') : value
 }
 
+const filterUndefined = (fields) => {
+  for (var key in fields) {
+    if (fields[key] === undefined) {
+      delete fields[key]
+    }
+  }
+  return fields
+}
+
 module.exports = {
   assign,
   expand,
@@ -56,5 +65,6 @@ module.exports = {
   omitNil,
   parseJson,
   pick,
-  squish
+  squish,
+  filterUndefined
 }

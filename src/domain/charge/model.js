@@ -1,6 +1,7 @@
 'use strict'
 
 const Db = require('../../db')
+const Util = require('../../lib/util')
 
 exports.create = (charge) => {
   return Db.charges.insert({
@@ -17,15 +18,6 @@ exports.create = (charge) => {
   })
 }
 
-function filterUndefined (fields) {
-  for (var key in fields) {
-    if (fields[key] === undefined) {
-      delete fields[key]
-    }
-  }
-  return fields
-}
-
 exports.update = (charge, payload) => {
   const fields = {
     name: payload.name,
@@ -35,7 +27,7 @@ exports.update = (charge, payload) => {
     code: payload.code,
     isActive: payload.is_active
   }
-  return Db.charges.update({ chargeId: charge.chargeId }, filterUndefined(fields))
+  return Db.charges.update({ chargeId: charge.chargeId }, Util.filterUndefined(fields))
 }
 
 exports.getByName = (name) => {
