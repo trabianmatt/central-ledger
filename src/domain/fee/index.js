@@ -70,6 +70,10 @@ const generateFeesForTransfer = (event) => {
   })
 }
 
+const getSettleableFees = () => {
+  return Model.getSettleableFees()
+}
+
 const getSettleableFeesByAccount = (account) => {
   return Model.getSettleableFeesByAccount(account)
 }
@@ -77,5 +81,6 @@ const getSettleableFeesByAccount = (account) => {
 module.exports = {
   getAllForTransfer,
   generateFeesForTransfer,
+  getSettleableFees,
   getSettleableFeesByAccount
 }

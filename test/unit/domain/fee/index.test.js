@@ -30,6 +30,7 @@ Test('Fee service', serviceTest => {
     sandbox.stub(Model, 'doesExist')
     sandbox.stub(Model, 'getAllForTransfer')
     sandbox.stub(Model, 'getSettleableFeesByAccount')
+    sandbox.stub(Model, 'getSettleableFees')
     sandbox.stub(Charges, 'getAllForTransfer')
     sandbox.stub(Account, 'getByName')
     sandbox.stub(TransferQueries, 'getById')
@@ -203,6 +204,62 @@ Test('Fee service', serviceTest => {
     })
 
     getAllForTransferTest.end()
+  })
+
+  serviceTest.test('getSettleableFees should', getSettleableFeesTest => {
+    getSettleableFeesTest.test('return fees from Model', test => {
+      const charge = {
+        name: 'charge',
+        chargeId: '1',
+        chargeType: 'fee',
+        rateType: 'flat',
+        rate: '1.00',
+        payer: 'sender',
+        payee: 'receiver'
+      }
+      const charge2 = {
+        name: 'charge2',
+        chargeId: '2',
+        chargeType: 'fee',
+        rateType: 'percent',
+        rate: '.50',
+        payer: 'sender',
+        payee: 'receiver'
+      }
+      const transfer = {
+        transferUuid: '012',
+        debitAccountId: '1',
+        creditAccountId: '2',
+        creditAmount: '1.00',
+        debitAmount: '1.00'
+      }
+      const fee1 = createFee(transfer, charge)
+      fee1.feeId = 0
+      const fee2 = createFee(transfer, charge2)
+      fee2.feeId = 1
+      const fees = [fee1, fee2]
+
+      Model.getSettleableFees.returns(P.resolve(fees))
+      FeeService.getSettleableFees()
+        .then(result => {
+          test.equal(result.length, 2)
+          test.equal(result[0].feeId, fee1.feeId)
+          test.equal(result[0].transferId, fee1.transferId)
+          test.equal(result[0].amount, fee1.amount)
+          test.equal(result[0].payerAccountId, fee1.payerAccountId)
+          test.equal(result[0].payeeAccountId, fee1.payeeAccountId)
+          test.equal(result[0].chargeId, fee1.chargeId)
+          test.equal(result[1].feeId, fee2.feeId)
+          test.equal(result[1].transferId, fee2.transferId)
+          test.equal(result[1].amount, fee2.amount)
+          test.equal(result[1].payerAccountId, fee2.payerAccountId)
+          test.equal(result[1].payeeAccountId, fee2.payeeAccountId)
+          test.equal(result[1].chargeId, fee2.chargeId)
+          test.end()
+        })
+    })
+
+    getSettleableFeesTest.end()
   })
 
   serviceTest.test('getSettleableFeesByAccount should', getSettleableFeesByAccountTest => {

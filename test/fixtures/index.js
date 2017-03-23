@@ -159,12 +159,20 @@ const buildAccountUrl = (accountName) => {
   return `http://${hostname}/accounts/${accountName}`
 }
 
-const buildAccountPosition = (accountName, payments, receipts) => {
+function buildAccountPosition (accountName, tPayments, tReceipts, fPayments, fReceipts) {
   return {
     account: buildAccountUrl(accountName),
-    net: (receipts - payments).toString(),
-    payments: payments.toString(),
-    receipts: receipts.toString()
+    fees: {
+      payments: fPayments.toString(),
+      receipts: fReceipts.toString(),
+      net: (fReceipts - fPayments).toString()
+    },
+    transfers: {
+      payments: tPayments.toString(),
+      receipts: tReceipts.toString(),
+      net: (tReceipts - tPayments).toString()
+    },
+    net: (tReceipts - tPayments + fReceipts - fPayments).toString()
   }
 }
 

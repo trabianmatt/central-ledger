@@ -60,6 +60,21 @@ const calculatePositions = (executed, positionMap) => {
   }
 }
 
+const generatePosition = (accountUri, transferPositions, feePositions) => {
+  const transferAmount = new Decimal(transferPositions.net)
+  const feeAmount = new Decimal(feePositions.net)
+
+  delete transferPositions.account
+  delete feePositions.account
+
+  return {
+    account: accountUri,
+    fees: feePositions,
+    transfers: transferPositions,
+    net: transferAmount.plus(feeAmount).valueOf()
+  }
+}
+
 exports.calculateForAccount = (account) => {
   const accountUri = UrlParser.toAccountUri(account.name)
   const transferPositionMap = new Map().set(accountUri, buildEmptyPosition())
@@ -68,18 +83,8 @@ exports.calculateForAccount = (account) => {
   return P.all([SettleableTransfersReadmodel.getSettleableTransfersByAccount(account.accountId), Fee.getSettleableFeesByAccount(account)]).then(([transfers, fees]) => {
     const transferPositions = buildResponse(calculatePositions(transfers, transferPositionMap)).find(x => x.account === accountUri)
     const feePositions = buildResponse(calculatePositions(fees.map(mapFeeToExecuted), feePositionMap)).find(x => x.account === accountUri)
-    const transferAmount = new Decimal(transferPositions.net)
-    const feeAmount = new Decimal(feePositions.net)
 
-    delete transferPositions.account
-    delete feePositions.account
-
-    return {
-      account: accountUri,
-      fees: feePositions,
-      transfers: transferPositions,
-      net: transferAmount.plus(feeAmount).valueOf()
-    }
+    return generatePosition(accountUri, transferPositions, feePositions)
   })
 }
 
@@ -89,14 +94,28 @@ exports.calculateForAllAccounts = () => {
       if (!accounts || accounts.length === 0) {
         return []
       }
+      const transferPositionMap = new Map()
+      const feePositionMap = new Map()
 
-      const positionMap = new Map()
-      accounts.forEach(a => {
-        positionMap.set(UrlParser.toAccountUri(a.name), buildEmptyPosition())
+      accounts.forEach(account => {
+        transferPositionMap.set(UrlParser.toAccountUri(account.name), buildEmptyPosition())
+        feePositionMap.set(UrlParser.toAccountUri(account.name), buildEmptyPosition())
       })
 
-      return SettleableTransfersReadmodel.getSettleableTransfers()
-        .then(transfers => calculatePositions(transfers, positionMap))
-        .then(buildResponse)
+      return P.all([SettleableTransfersReadmodel.getSettleableTransfers(), Fee.getSettleableFees()]).then(([transfers, fees]) => {
+        const transferPositions = buildResponse(calculatePositions(transfers, transferPositionMap))
+        const feePositions = buildResponse(calculatePositions(fees.map(mapFeeToExecuted), feePositionMap))
+
+        var positions = []
+        accounts.forEach(account => {
+          const accountUri = UrlParser.toAccountUri(account.name)
+          const accountTransferPositions = transferPositions.find(x => x.account === accountUri)
+          const accountFeePositions = feePositions.find(x => x.account === accountUri)
+
+          positions.push(generatePosition(accountUri, accountTransferPositions, accountFeePositions))
+        })
+
+        return positions
+      })
     })
 }
