@@ -20,7 +20,7 @@ const registerTaskDefinition = (name, image, port, environment = []) => {
         logConfiguration: {
           logDriver: 'syslog',
           options: {
-            'syslog-address': 'tcp://172.31.35.189:514',
+            'syslog-address': 'tcp://127.0.0.1:514',
             'syslog-facility': 'daemon',
             'tag': 'central-ledger'
           }
