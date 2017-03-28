@@ -5,6 +5,8 @@ const Sinon = require('sinon')
 const P = require('bluebird')
 const Model = require('../../../../src/domain/fee/model')
 const FeeService = require('../../../../src/domain/fee')
+const SettledFeeService = require('../../../../src/models/settled-fees')
+const SettlementsModel = require('../../../../src/models/settlements')
 const Charges = require('../../../../src/domain/charge')
 const Account = require('../../../../src/domain/account')
 const TransferQueries = require('../../../../src/domain/transfer/queries')
@@ -30,7 +32,10 @@ Test('Fee service', serviceTest => {
     sandbox.stub(Model, 'doesExist')
     sandbox.stub(Model, 'getAllForTransfer')
     sandbox.stub(Model, 'getSettleableFeesByAccount')
+    sandbox.stub(Model, 'getSettleableFeesForTransfer')
     sandbox.stub(Model, 'getSettleableFees')
+    sandbox.stub(SettlementsModel, 'create')
+    sandbox.stub(SettledFeeService, 'create')
     sandbox.stub(Charges, 'getAllForTransfer')
     sandbox.stub(Account, 'getByName')
     sandbox.stub(TransferQueries, 'getById')
@@ -263,7 +268,7 @@ Test('Fee service', serviceTest => {
   })
 
   serviceTest.test('getSettleableFeesByAccount should', getSettleableFeesByAccountTest => {
-    getSettleableFeesByAccountTest.test('return fees from Model', test => {
+    getSettleableFeesByAccountTest.test('return settleable fees from Model by account', test => {
       const charge = {
         name: 'charge',
         chargeId: '1',
@@ -319,6 +324,42 @@ Test('Fee service', serviceTest => {
     })
 
     getSettleableFeesByAccountTest.end()
+  })
+
+  serviceTest.test('settleFee should', settleTest => {
+    settleTest.test('return settled fee from Model', test => {
+      const charge = {
+        name: 'charge',
+        chargeId: '1',
+        chargeType: 'fee',
+        rateType: 'flat',
+        rate: '1.00',
+        payer: 'sender',
+        payee: 'receiver'
+      }
+      const transfer = {
+        transferUuid: '012',
+        debitAccountId: '1',
+        creditAccountId: '2',
+        creditAmount: '1.00',
+        debitAmount: '1.00'
+      }
+      const fee = createFee(transfer, charge)
+      fee.feeId = 6
+      const settlementId = '1234'
+
+      Model.getSettleableFeesForTransfer.returns(P.resolve([fee]))
+      SettlementsModel.create.returns(P.resolve({ settlementId }))
+      SettledFeeService.create.returns(P.resolve({ feeId: fee.feeId, settlementId }))
+      FeeService.settleFeesForTransfers(['1234', '1234'])
+        .then(result => {
+          test.equal(result.length, 1)
+          test.equal(result[0], fee.feeId)
+          test.end()
+        })
+    })
+
+    settleTest.end()
   })
 
   serviceTest.end()

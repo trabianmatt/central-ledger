@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS "settledFees" (
+  "feeId" INTEGER PRIMARY KEY NOT NULL,
+  "settlementId" UUID NOT NULL
+);

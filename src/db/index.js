@@ -21,6 +21,7 @@ class Database {
       'transfers',
       'executedTransfers',
       'settledTransfers',
+      'settledFees',
       'settlements'
     ]
   }

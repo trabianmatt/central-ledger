@@ -10,9 +10,9 @@ const initialize = (params, done) => {
 
 const handleTransferExecuted = (event) => {
   return DA(FeeService.generateFeesForTransfer(event)
-        .catch(err => {
-          Logger.error('Error handling TransferExecuted event', err)
-        }))
+    .catch(err => {
+      Logger.error('Error handling TransferExecuted event', err)
+    }))
 }
 
 module.exports = {

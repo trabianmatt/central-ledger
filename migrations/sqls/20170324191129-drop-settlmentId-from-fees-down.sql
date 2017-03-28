@@ -1,0 +1,1 @@
+ALTER TABLE fees ADD COLUMN "settlementId" UUID NULL;

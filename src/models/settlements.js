@@ -7,6 +7,6 @@ exports.generateId = () => {
   return Uuid()
 }
 
-exports.create = (id) => {
-  return Db.settlements.insert({ settlementId: id })
+exports.create = (id, settlementType) => {
+  return Db.settlements.insert({ settlementId: id, settlementType })
 }

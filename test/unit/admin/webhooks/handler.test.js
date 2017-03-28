@@ -5,6 +5,7 @@ const Sinon = require('sinon')
 const Uuid = require('uuid4')
 const P = require('bluebird')
 const TransferService = require('../../../../src/domain/transfer')
+const FeeService = require('../../../../src/domain/fee')
 const TokenService = require('../../../../src/domain/token')
 const Handler = require('../../../../src/admin/webhooks/handler')
 
@@ -27,6 +28,7 @@ Test('Handler Test', handlerTest => {
     sandbox = Sinon.sandbox.create()
     sandbox.stub(TransferService, 'rejectExpired')
     sandbox.stub(TransferService, 'settle')
+    sandbox.stub(FeeService, 'settleFeesForTransfers')
     sandbox.stub(TokenService, 'removeExpired')
     t.end()
   })
@@ -65,12 +67,14 @@ Test('Handler Test', handlerTest => {
   })
 
   handlerTest.test('settle should', settleTest => {
-    settleTest.test('return settled transfer ids', test => {
+    settleTest.test('return settled transfer and fee ids', test => {
       let transferIds = [Uuid(), Uuid(), Uuid()]
+      let feeIds = ['1', '2', '3']
       TransferService.settle.returns(P.resolve(transferIds))
+      FeeService.settleFeesForTransfers.returns(P.resolve(feeIds))
 
       let reply = response => {
-        test.equal(response, transferIds)
+        test.deepEqual(response, { transfers: transferIds, fees: feeIds })
         test.end()
       }
 

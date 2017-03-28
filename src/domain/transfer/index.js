@@ -82,7 +82,7 @@ const rejectExpired = () => {
 
 const settle = () => {
   const settlementId = SettlementsModel.generateId()
-  const settledTransfers = SettlementsModel.create(settlementId).then(() => {
+  const settledTransfers = SettlementsModel.create(settlementId, 'transfer').then(() => {
     return SettleableTransfersReadModel.getSettleableTransfers().then(
       transfers => transfers.map(x => Commands.settle({id: x.transferId, settlement_id: settlementId})))
   })

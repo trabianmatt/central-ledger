@@ -5,6 +5,8 @@ const Model = require('./model')
 const Charges = require('../charge')
 const Account = require('../account')
 const TransferQueries = require('../transfer/queries')
+const SettlementsModel = require('../../models/settlements')
+const SettledFee = require('../../models/settled-fees.js')
 const Util = require('../../../src/lib/util')
 const Config = require('../../../src/lib/config')
 
@@ -78,9 +80,38 @@ const getSettleableFeesByAccount = (account) => {
   return Model.getSettleableFeesByAccount(account)
 }
 
+const settleFee = (fee, settlement) => {
+  return SettledFee.create({ feeId: fee.feeId, settlementId: settlement.settlementId }).then(settledFee => settledFee.feeId)
+}
+
+const reduceFees = (unflattenedFees) => {
+  const flattened = []
+  unflattenedFees.forEach(fees => {
+    fees.forEach(fee => {
+      if (!flattened.includes(fee)) {
+        flattened.push(fee)
+      }
+    })
+  })
+  return flattened
+}
+
+const settleFeesForTransfers = (transfers) => {
+  return SettlementsModel.create(SettlementsModel.generateId(), 'fee').then(settlement => {
+    return P.all(transfers.map(transfer => {
+      return Model.getSettleableFeesForTransfer(transfer).then(fees => {
+        return P.all(fees.map(fee => settleFee(fee, settlement)))
+      })
+    })).then(unflattenedFees => {
+      return reduceFees(unflattenedFees)
+    })
+  })
+}
+
 module.exports = {
   getAllForTransfer,
   generateFeesForTransfer,
   getSettleableFees,
-  getSettleableFeesByAccount
+  getSettleableFeesByAccount,
+  settleFeesForTransfers
 }

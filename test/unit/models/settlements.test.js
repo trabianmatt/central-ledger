@@ -28,16 +28,33 @@ Test('settlements model', function (modelTest) {
   })
 
   modelTest.test('create should', createTest => {
-    createTest.test('insert and return new settlement record', test => {
+    createTest.test('insert and return new settlement record for a transfer', test => {
       let settlementId = Uuid()
-      let settlement = { settlementId: settlementId }
+      let settlement = { settlementId: settlementId, settlementType: 'transfer' }
 
       Db.settlements.insert.returns(P.resolve(settlement))
 
-      Model.create(settlementId)
+      Model.create(settlementId, 'transfer')
         .then(c => {
           test.equal(c, settlement)
-          test.ok(Db.settlements.insert.calledWith({ settlementId: settlementId }))
+          test.end()
+        })
+    })
+
+    createTest.end()
+  })
+
+  modelTest.test('create should', createTest => {
+    createTest.test('insert and return new settlement record for a fee', test => {
+      let settlementId = Uuid()
+      let settlement = { settlementId: settlementId, settlementType: 'fee' }
+
+      Db.settlements.insert.returns(P.resolve(settlement))
+
+      Model.create(settlementId, 'fee')
+        .then(c => {
+          test.equal(c, settlement)
+          test.ok(Db.settlements.insert.calledWith(settlement))
           test.end()
         })
     })
