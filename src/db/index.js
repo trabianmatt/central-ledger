@@ -9,37 +9,35 @@ const Config = require('../lib/config')
 class Database {
   constructor () {
     this._knex = null
-    this.tables = [
-      'accounts',
-      'userCredentials',
-      'charges',
-      'fees',
-      'roles',
-      'userRoles',
-      'users',
-      'tokens',
-      'transfers',
-      'executedTransfers',
-      'settledTransfers',
-      'settledFees',
-      'settlements'
-    ]
+    this._tables = []
+
+    this._listTableQueries = {
+      'pg': (k) => {
+        return k('pg_catalog.pg_tables').where({ schemaname: 'public' }).select('tablename').then(rows => rows.map(r => r.tablename))
+      }
+    }
   }
 
   connect () {
     if (!this._knex) {
-      return configureKnex(Config.DATABASE_URI).then(k => {
-        this._knex = k
-        this._setupTableObjects()
-        return k
+      return configureKnex(Config.DATABASE_URI).then(knex => {
+        this._knex = knex
+
+        return this._listTables().then(tables => {
+          this._tables = tables
+          this._setTableProperties()
+          return
+        })
       })
     }
-    return P.resolve(this._knex)
+    return P.resolve()
   }
 
   disconnect () {
     if (this._knex) {
-      this._removeTableObjects()
+      this._removeTableProperties()
+      this._tables = []
+
       this._knex.destroy()
       this._knex = null
     }
@@ -52,8 +50,8 @@ class Database {
     return new Table(tableName, this._knex)
   }
 
-  _setupTableObjects () {
-    this.tables.forEach(t => {
+  _setTableProperties () {
+    this._tables.forEach(t => {
       Object.defineProperty(this, t, {
         get: () => {
           return new Table(t, this._knex)
@@ -64,12 +62,20 @@ class Database {
     })
   }
 
-  _removeTableObjects () {
-    this.tables.forEach(t => delete this[t])
+  _removeTableProperties () {
+    this._tables.forEach(t => delete this[t])
+  }
+
+  _listTables () {
+    const dbType = this._knex.client.config.client
+    if (!this._listTableQueries[dbType]) {
+      throw new Error(`Listing tables is not supported for database type ${dbType}`)
+    }
+    return this._listTableQueries[dbType](this._knex)
   }
 }
 
-const configureKnex = function (databaseUri) {
+const configureKnex = (databaseUri) => {
   return new P((resolve, reject) => {
     const knexConfig = {
       postgres: { client: 'pg' }

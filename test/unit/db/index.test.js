@@ -1,6 +1,7 @@
 'use strict'
 
 const src = '../../../src'
+const P = require('bluebird')
 const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const Proxyquire = require('proxyquire')
@@ -14,12 +15,16 @@ Test('db', dbTest => {
   let Db
 
   let goodDatabaseUri = 'postgres://some-data-uri'
+  let tableNames = [{ tablename: 'accounts' }, { tablename: 'users' }, { tablename: 'tokens' }]
 
   dbTest.beforeEach(t => {
     sandbox = Sinon.sandbox.create()
 
     knexConnStub = sandbox.stub()
     knexConnStub.destroy = sandbox.stub()
+    knexConnStub.client = { config: { client: 'pg' } }
+    knexConnStub.withArgs('pg_catalog.pg_tables').returns({ where: sandbox.stub().withArgs({ schemaname: 'public' }).returns({ select: sandbox.stub().withArgs('tablename').returns(P.resolve(tableNames)) }) })
+
     knexStub = sandbox.stub().returns(knexConnStub)
 
     tableStub = sandbox.stub()
@@ -42,10 +47,13 @@ Test('db', dbTest => {
           test.ok(knexStub.calledOnce)
           test.equal(knexStub.firstCall.args[0].client, 'pg')
           test.equal(knexStub.firstCall.args[0].connection, goodDatabaseUri)
-          Db.tables.forEach(tbl => {
-            test.ok(Db[tbl])
+
+          test.equal(Db._tables.length, tableNames.length)
+          tableNames.forEach(tbl => {
+            test.ok(Db[tbl.tablename])
           })
           test.notOk(Db.tableNotExists)
+
           test.end()
         })
     })
@@ -78,6 +86,19 @@ Test('db', dbTest => {
         })
     })
 
+    connectTest.test('throw error if database type not supported for listing tables', test => {
+      delete Db._listTableQueries['pg']
+      Db.connect()
+        .then(conn => {
+          test.fail('Should have thrown error')
+          test.end()
+        })
+        .catch(err => {
+          test.equal(err.message, 'Listing tables is not supported for database type pg')
+          test.end()
+        })
+    })
+
     connectTest.test('only create one connection', test => {
       Db.connect()
       .then(conn1 => {
@@ -95,15 +116,15 @@ Test('db', dbTest => {
 
   dbTest.test('known table property should', tablePropTest => {
     tablePropTest.test('create new query object for known table', test => {
-      let tableName = 'accounts'
+      let tableName = tableNames[0].tablename
 
       let obj = {}
       tableStub.returns(obj)
 
       Db.connect()
         .then(db => {
-          let accountsTable = Db.accounts
-          test.equal(accountsTable, obj)
+          let table = Db[tableName]
+          test.equal(table, obj)
           test.ok(tableStub.calledWith(tableName, knexConnStub))
           test.end()
         })
@@ -126,16 +147,15 @@ Test('db', dbTest => {
         })
     })
 
-    disconnectTest.test('remove table properties', test => {
+    disconnectTest.test('remove table properties and reset table list to empty', test => {
       Db.connect()
         .then(db => {
-          test.ok(Db._knex)
-          test.ok(Db.accounts)
+          test.ok(Db[tableNames[0].tablename])
+          test.equal(Db._tables.length, tableNames.length)
 
           Db.disconnect()
-          test.ok(knexConnStub.destroy.calledOnce)
-          test.notOk(Db._knex)
-          test.notOk(Db.accounts)
+          test.notOk(Db[tableNames[0].tablename])
+          test.equal(Db._tables.length, 0)
 
           test.end()
         })

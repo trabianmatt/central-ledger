@@ -33,11 +33,11 @@ const createServer = (port, modules) => {
 const initialize = (port, modules = [], loadEventric = false) => {
   return runMigrations()
   .then(connectDatabase)
-  .then(r => {
+  .then(() => {
     if (loadEventric) {
       return startEventric()
     } else {
-      return r
+      return P.resolve()
     }
   })
   .then(() => createServer(port, modules))
