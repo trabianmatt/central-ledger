@@ -1,1 +1,0 @@
-ALTER TABLE settlements ADD COLUMN "settlementType" CHARACTER VARYING(16) NOT NULL;

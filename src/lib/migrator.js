@@ -1,17 +1,15 @@
 'use strict'
 
-const DbMigrate = require('db-migrate')
-const Config = require('./config')
-const MigrateConfig = require('../../config/db-migrate.json')
+const Path = require('path')
+const Knex = require('knex')
+const Knexfile = require('../../config/knexfile')
 
 exports.migrate = function () {
-  const dbMigrate = DbMigrate.getInstance(true, buildOptions())
-  return dbMigrate.up()
+  return Knex(updateMigrationsLocation(Knexfile)).migrate.latest()
 }
 
-function buildOptions () {
-  MigrateConfig.local = Config.DATABASE_URI
-  return {
-    config: MigrateConfig
-  }
+const updateMigrationsLocation = (kf) => {
+  const parsed = Path.parse(kf.migrations.directory)
+  kf.migrations.directory = Path.join(process.cwd(), parsed.base)
+  return kf
 }

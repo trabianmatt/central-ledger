@@ -9,7 +9,7 @@
     "url": "git@github.com:LevelOneProject/central-ledger.git"
   },
   "config": {
-    "db": "--config ./config/db-migrate.json",
+    "knex": "--knexfile ./config/knexfile.js",
     "images": {
       "api": "central-ledger",
       "admin": "central-ledger-admin"
@@ -38,10 +38,10 @@
     "test:functional:test-only": "./test/functional-runner.sh docker-compose.yml docker-compose.functional.yml .env",
     "test:spec": "./test/spec-runner.sh",
     "db:psql": "docker run -it --net centralledger_back --rm postgres:9.4 sh -c 'exec psql -h postgres -p \"$POSTGRES_PORT_5432_TCP_PORT\" -U central_ledger -d postgres'",
-    "migrate": "db-migrate up $npm_package_config_db",
-    "migrate:reset": "db-migrate reset $npm_package_config_db",
-    "migrate:create": "db-migrate create $npm_package_config_db",
-    "migrate:down": "db-migrate down $npm_package_config_db",
+    "migrate": "knex migrate:latest $npm_package_config_knex",
+    "migrate:create": "knex migrate:make $npm_package_config_knex",
+    "migrate:rollback": "knex migrate:rollback $npm_package_config_knex",
+    "migrate:current": "knex migrate:currentVersion $npm_package_config_knex",
     "docker:build": "run-s docker:build:api docker:build:admin",
     "docker:build:api": "docker build -f api.Dockerfile -t $npm_package_config_images_api:latest .",
     "docker:build:admin": "docker build -f admin.Dockerfile -t $npm_package_config_images_admin:latest .",
@@ -56,8 +56,6 @@
     "argon2": "0.14.0",
     "blipp": "2.3.0",
     "bluebird": "3.4.6",
-    "db-migrate": "0.10.0-beta.20",
-    "db-migrate-pg": "0.1.11",
     "deasync-promise": "1.0.1",
     "decimal.js": "7.1.0",
     "eventric": "0.26.0",

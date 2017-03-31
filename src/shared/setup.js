@@ -8,11 +8,15 @@ const Db = require('../db')
 const Eventric = require('../eventric')
 const Plugins = require('./plugins')
 
-const runMigrations = () => Migrator.migrate()
+const migrate = (runMigrations) => {
+  return runMigrations ? Migrator.migrate() : P.resolve()
+}
 
 const connectDatabase = () => Db.connect()
 
-const startEventric = () => Eventric.getContext()
+const startEventric = (loadEventric) => {
+  return loadEventric ? Eventric.getContext() : P.resolve()
+}
 
 const createServer = (port, modules) => {
   return new P((resolve, reject) => {
@@ -29,18 +33,13 @@ const createServer = (port, modules) => {
   })
 }
 
+// Migrator.migrate is called before connecting to the database to ensure all new tables are loaded properly.
 // Eventric.getContext is called to replay all events through projections (creating the read-model) before starting the server.
-const initialize = (port, modules = [], loadEventric = false) => {
-  return runMigrations()
-  .then(connectDatabase)
-  .then(() => {
-    if (loadEventric) {
-      return startEventric()
-    } else {
-      return P.resolve()
-    }
-  })
-  .then(() => createServer(port, modules))
+const initialize = ({ port, modules = [], loadEventric = false, runMigrations = false }) => {
+  return migrate(runMigrations)
+    .then(() => connectDatabase())
+    .then(() => startEventric(loadEventric))
+    .then(() => createServer(port, modules))
 }
 
 module.exports = {

@@ -3,16 +3,26 @@
 const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const P = require('bluebird')
-const DbMigrate = require('db-migrate')
-const Migrator = require('../../../src/lib/migrator')
-const Config = require('../../../src/lib/config')
+const Path = require('path')
+const Proxyquire = require('proxyquire')
 
-Test('migrator', function (migratorTest) {
+Test('migrator', migratorTest => {
   let sandbox
+  let configuredMigrationsFolder
+  let knexStub
+  let knexConnStub
+  let Migrator
 
   migratorTest.beforeEach(t => {
     sandbox = Sinon.sandbox.create()
-    sandbox.stub(DbMigrate, 'getInstance')
+
+    knexConnStub = sandbox.stub()
+    knexStub = sandbox.stub().returns(knexConnStub)
+
+    configuredMigrationsFolder = 'migrations-path'
+
+    Migrator = Proxyquire('../../../src/lib/migrator', { knex: knexStub, '../../config/knexfile': { migrations: { directory: `../${configuredMigrationsFolder}` } } })
+
     t.end()
   })
 
@@ -21,24 +31,18 @@ Test('migrator', function (migratorTest) {
     t.end()
   })
 
-  migratorTest.test('migrate should', function (migrateTest) {
-    migrateTest.test('configure db-migrate and run migrations', function (assert) {
-      let upStub = Sinon.stub().returns(P.resolve(null))
-      DbMigrate.getInstance.returns({ up: upStub })
+  migratorTest.test('migrate should', migrateTest => {
+    migrateTest.test('override migrations directory path and run migrations', test => {
+      let latestStub = sandbox.stub().returns(P.resolve())
+      knexConnStub.migrate = { latest: latestStub }
+
+      let updatedMigrationsPath = Path.join(process.cwd(), configuredMigrationsFolder)
 
       Migrator.migrate()
         .then(() => {
-          let getInstanceStubArg1 = DbMigrate.getInstance.firstCall.args[0]
-          let getInstanceStubArg2 = DbMigrate.getInstance.firstCall.args[1]
-
-          assert.equal(getInstanceStubArg1, true)
-          assert.deepEqual(getInstanceStubArg2.config, {
-            defaultEnv: 'local',
-            'sql-file': true,
-            local: Config.DATABASE_URI
-          })
-          assert.ok(upStub.calledOnce)
-          assert.end()
+          test.equal(knexStub.firstCall.args[0].migrations.directory, updatedMigrationsPath)
+          test.ok(latestStub.calledOnce)
+          test.end()
         })
     })
 

@@ -1,5 +1,0 @@
-ALTER TABLE transfers DROP COLUMN "creditAccountId";
-ALTER TABLE transfers DROP COLUMN "debitAccountId";
-
-ALTER TABLE transfers ADD COLUMN "creditAccount" CHARACTER VARYING(1024) NOT NULL;
-ALTER TABLE transfers ADD COLUMN "debitAccount" CHARACTER VARYING(1024) NOT NULL;

@@ -9,7 +9,6 @@ const Migrator = require('../../../src/lib/migrator')
 const Db = require('../../../src/db')
 const Eventric = require('../../../src/eventric')
 const Plugins = require('../../../src/shared/plugins')
-
 const Setup = require('../../../src/shared/setup')
 
 Test('setup', setupTest => {
@@ -91,24 +90,35 @@ Test('setup', setupTest => {
       return createServer()
     }
 
-    initializeTest.test('run migrations, connect to db and return hapi server', test => {
+    initializeTest.test('connect to db and return hapi server', test => {
       const server = setupPromises()
 
-      Setup.initialize().then(s => {
-        test.ok(Migrator.migrate.called)
+      Setup.initialize({}).then(s => {
         test.ok(Db.connect.called)
         test.notOk(Eventric.getContext.called)
+        test.notOk(Migrator.migrate.called)
         test.equal(s, server)
         test.end()
       })
     })
 
-    initializeTest.test('setup eventric context if loadEventric', test => {
+    initializeTest.test('run migrations if runMigrations flag enabled', test => {
       setupPromises()
 
-      Setup.initialize(1234, [], true).then(() => {
-        test.ok(Migrator.migrate.called)
+      Setup.initialize({ runMigrations: true }).then(() => {
         test.ok(Db.connect.called)
+        test.ok(Migrator.migrate.called)
+        test.notOk(Eventric.getContext.called)
+        test.end()
+      })
+    })
+
+    initializeTest.test('setup eventric context if loadEventric flag enabled', test => {
+      setupPromises()
+
+      Setup.initialize({ loadEventric: true }).then(() => {
+        test.ok(Db.connect.called)
+        test.notOk(Migrator.migrate.called)
         test.ok(Eventric.getContext.called)
         test.end()
       })

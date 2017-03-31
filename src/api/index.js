@@ -11,7 +11,7 @@ const Account = require('../domain/account')
 
 const Setup = require('../shared/setup')
 
-module.exports = Setup.initialize(Config.PORT, [Auth, Routes, Sockets, Worker], true)
+module.exports = Setup.initialize({ port: Config.PORT, modules: [Auth, Routes, Sockets, Worker], loadEventric: true, runMigrations: true })
   .then(server => {
     return Account.createLedgerAccount(Config.LEDGER_ACCOUNT_NAME, Config.LEDGER_ACCOUNT_PASSWORD).then(() => server)
   })

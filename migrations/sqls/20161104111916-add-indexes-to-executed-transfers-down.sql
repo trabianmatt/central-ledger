@@ -1,1 +1,0 @@
-DROP INDEX "executedTransfers_transferId_idx";

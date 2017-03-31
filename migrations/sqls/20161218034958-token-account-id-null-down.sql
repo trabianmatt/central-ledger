@@ -1,2 +1,0 @@
-ALTER TABLE tokens
-ALTER COLUMN "accountId" SET NOT NULL;

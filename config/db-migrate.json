@@ -1,5 +1,0 @@
-{
-    "defaultEnv": "local",
-    "sql-file" : true,
-    "local": {"ENV": "CLEDG_DATABASE_URI"}
-}
