@@ -4,24 +4,21 @@ const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const P = require('bluebird')
 const Path = require('path')
+const Migrations = require('@leveloneproject/central-services-database').Migrations
 const Proxyquire = require('proxyquire')
 
 Test('migrator', migratorTest => {
   let sandbox
   let configuredMigrationsFolder
-  let knexStub
-  let knexConnStub
   let Migrator
 
   migratorTest.beforeEach(t => {
     sandbox = Sinon.sandbox.create()
-
-    knexConnStub = sandbox.stub()
-    knexStub = sandbox.stub().returns(knexConnStub)
+    sandbox.stub(Migrations)
 
     configuredMigrationsFolder = 'migrations-path'
 
-    Migrator = Proxyquire('../../../src/lib/migrator', { knex: knexStub, '../../config/knexfile': { migrations: { directory: `../${configuredMigrationsFolder}` } } })
+    Migrator = Proxyquire('../../../src/lib/migrator', { '../../config/knexfile': { migrations: { directory: `../${configuredMigrationsFolder}` } } })
 
     t.end()
   })
@@ -33,15 +30,14 @@ Test('migrator', migratorTest => {
 
   migratorTest.test('migrate should', migrateTest => {
     migrateTest.test('override migrations directory path and run migrations', test => {
-      let latestStub = sandbox.stub().returns(P.resolve())
-      knexConnStub.migrate = { latest: latestStub }
+      Migrations.migrate.returns(P.resolve())
 
       let updatedMigrationsPath = Path.join(process.cwd(), configuredMigrationsFolder)
 
       Migrator.migrate()
         .then(() => {
-          test.equal(knexStub.firstCall.args[0].migrations.directory, updatedMigrationsPath)
-          test.ok(latestStub.calledOnce)
+          test.ok(Migrations.migrate.calledOnce)
+          test.ok(Migrations.migrate.firstCall.args[0].migrations.directory, updatedMigrationsPath)
           test.end()
         })
     })

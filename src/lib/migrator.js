@@ -1,11 +1,11 @@
 'use strict'
 
 const Path = require('path')
-const Knex = require('knex')
+const Migrations = require('@leveloneproject/central-services-database').Migrations
 const Knexfile = require('../../config/knexfile')
 
 exports.migrate = function () {
-  return Knex(updateMigrationsLocation(Knexfile)).migrate.latest()
+  return Migrations.migrate(updateMigrationsLocation(Knexfile))
 }
 
 const updateMigrationsLocation = (kf) => {

@@ -7,12 +7,13 @@ const Migrator = require('../lib/migrator')
 const Db = require('../db')
 const Eventric = require('../eventric')
 const Plugins = require('./plugins')
+const Config = require('../lib/config')
 
 const migrate = (runMigrations) => {
   return runMigrations ? Migrator.migrate() : P.resolve()
 }
 
-const connectDatabase = () => Db.connect()
+const connectDatabase = () => Db.connect(Config.DATABASE_URI)
 
 const startEventric = (loadEventric) => {
   return loadEventric ? Eventric.getContext() : P.resolve()

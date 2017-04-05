@@ -7,12 +7,15 @@ const P = require('bluebird')
 const ErrorHandling = require('@leveloneproject/central-services-error-handling')
 const Migrator = require('../../../src/lib/migrator')
 const Db = require('../../../src/db')
+const Config = require('../../../src/lib/config')
 const Eventric = require('../../../src/eventric')
 const Plugins = require('../../../src/shared/plugins')
 const Setup = require('../../../src/shared/setup')
 
 Test('setup', setupTest => {
   let sandbox
+  let oldDatabaseUri
+  let databaseUri = 'some-database-uri'
 
   setupTest.beforeEach(test => {
     sandbox = Sinon.sandbox.create()
@@ -21,11 +24,16 @@ Test('setup', setupTest => {
     sandbox.stub(Migrator)
     sandbox.stub(Eventric)
     Db.connect = sandbox.stub()
+
+    oldDatabaseUri = Config.DATABASE_URI
+    Config.DATABASE_URI = databaseUri
+
     test.end()
   })
 
   setupTest.afterEach(test => {
     sandbox.restore()
+    Config.DATABASE_URI = oldDatabaseUri
     test.end()
   })
 
@@ -94,7 +102,7 @@ Test('setup', setupTest => {
       const server = setupPromises()
 
       Setup.initialize({}).then(s => {
-        test.ok(Db.connect.called)
+        test.ok(Db.connect.calledWith(databaseUri))
         test.notOk(Eventric.getContext.called)
         test.notOk(Migrator.migrate.called)
         test.equal(s, server)

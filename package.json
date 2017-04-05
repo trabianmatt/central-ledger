@@ -51,6 +51,7 @@
   },
   "dependencies": {
     "@leveloneproject/central-services-auth": "0.4.0",
+    "@leveloneproject/central-services-database": "0.2.1",
     "@leveloneproject/central-services-error-handling": "0.3.0",
     "@leveloneproject/central-services-shared": "0.3.0",
     "argon2": "0.14.0",
@@ -68,7 +69,6 @@
     "inert": "4.0.2",
     "joi": "10.0.1",
     "jsonwebtoken": "7.3.0",
-    "knex": "0.12.6",
     "lodash": "4.17.2",
     "moment": "2.16.0",
     "rc": "1.1.6",
