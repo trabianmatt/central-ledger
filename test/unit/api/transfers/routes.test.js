@@ -52,7 +52,7 @@ Test('return error if fulfillment missing', function (assert) {
 
   Base.setup().then(server => {
     server.inject(req, function (res) {
-      Base.assertBadRequestError(assert, res, [{ message: 'value must be a string', params: { key: 'value', value: null } }])
+      Base.assertBadRequestError(assert, res, [{ message: 'value is not allowed to be empty', params: { key: 'value' } }])
       assert.end()
     })
   })
