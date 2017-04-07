@@ -10,7 +10,7 @@ Test('POST /webhooks/settle-transfers', settleTest => {
     let transfer = Fixtures.buildTransfer(transferId, Fixtures.buildDebitOrCredit(Base.account1Name, '101.00'), Fixtures.buildDebitOrCredit(Base.account2Name, '101.00'))
     const charge = {
       name: 'settleChargeName',
-      charge_type: 'tax',
+      charge_type: 'fee',
       rate_type: 'flat',
       rate: '1.00',
       minimum: '100.00',

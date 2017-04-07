@@ -668,7 +668,7 @@ Content-Type: application/json
 [
   {
     "name": "charge1",
-    "charge_type": "tax",
+    "charge_type": "fee",
     "code": "001",
     "amount": "0.25",
     "currency_code": "USD",
@@ -676,7 +676,7 @@ Content-Type: application/json
   },
   {
     "name": "charge2",
-    "charge_type": "tax",
+    "charge_type": "fee",
     "code": "002",
     "amount": "2.00",
     "currency_code": "USD",
@@ -713,7 +713,7 @@ Create a charge that will be applied across the dfsp on transfer execution
 | Field | Type | Description |
 | ----- | ---- | ----------- |
 | Name | String | Unique name for the charge |
-| Charge Type | String | Type of the charge, either *tax* or *fee* |
+| Charge Type | String | Type of the charge, should be *fee* |
 | Rate Type | String | How the charge rate is applied, either *flat* or *percent* |
 | Rate | String | Charge rate, represented as a decimal for percent *(5% is 0.05)* and as the actual value for flat|
 | Minimum | String | Minimum transfer amount needed to apply the charge|
@@ -734,7 +734,7 @@ POST http://central-ledger-admin/charges HTTP/1.1
 Content-Type: application/json
 {
 	"name": "charge",
-	"charge_type": "tax",
+	"charge_type": "fee",
 	"rate_type": "flat",
 	"rate": "1.00",
 	"minimum": "0.00", 
@@ -753,7 +753,7 @@ Content-Type: application/json
 {
   "name": "charge",
   "id": 5,
-  "charge_type": "tax",
+  "charge_type": "fee",
   "rate_type": "flat",
   "rate": "1.00",
   "minimum": "0.00",
@@ -801,7 +801,7 @@ Update an existing charge, only the name, charge type, minimum, maximum, code, a
 | Field | Type | Description |
 | ----- | ---- | ----------- |
 | Name | String | Unique name for the charge |
-| Charge Type | String | Type of the charge, either *tax* or *fee* |
+| Charge Type | String | Type of the charge, should be *fee* |
 | Minimum | String | Minimum transfer amount needed to apply the charge|
 | Maximum | String | Maximum transfer amount needed to apply the charge|
 | Code | String | Three character code used to identify the charge|
@@ -958,7 +958,7 @@ A position object can have the following fields:
 
 ### Charge Object
 
-A charge represents either a tax or fee that will be applied on a transfer at execution
+A charge represents a fee that will be applied on a transfer at execution
 
 A charge object can have the following fields:
 
@@ -966,7 +966,7 @@ A charge object can have the following fields:
 | ---- | ---- | ----------- |
 | id | Integer | Identifier for the charge |
 | name | String | Unique name of the charge |
-| charge_type | String | The type of the charge, either *tax* or *fee* |
+| charge_type | String | The type of the charge, should be *fee* |
 | rate_type | String | The rate type for the charge, either *flat* or *percent* |
 | rate | String | The amount for the charge, represented as a *decimal for the percent rate type (5% is 0.05)* and as the *actual value for the flat rate type* |
 | minimum | String | Minimum transfer amount for the charge to be applied |

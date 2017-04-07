@@ -144,7 +144,7 @@ Test('charges handler', handlerTest => {
 
       const payload = {
         name: 'charge',
-        chargeType: 'tax',
+        chargeType: 'fee',
         rateType: 'flat',
         rate: '1.00',
         minimum: '1.00',
@@ -172,7 +172,7 @@ Test('charges handler', handlerTest => {
 
       const payload = {
         name: 'charge',
-        chargeType: 'tax',
+        chargeType: 'fee',
         rateType: 'flat',
         rate: '1.00',
         minimum: '1.00',
@@ -201,7 +201,7 @@ Test('charges handler', handlerTest => {
 
       const payload = {
         name: 'charge',
-        chargeType: 'tax',
+        chargeType: 'fee',
         rateType: 'flat',
         rate: '1.00',
         minimum: '1.00',
@@ -229,7 +229,7 @@ Test('charges handler', handlerTest => {
     updateTest.test('update a charge', test => {
       const charge = {
         name: 'charge_b',
-        charge_type: 'tax',
+        charge_type: 'fee',
         rate_type: 'flat',
         rate: '1.00',
         minimum: '10',
@@ -241,7 +241,7 @@ Test('charges handler', handlerTest => {
       }
 
       const payload = {
-        chargeType: 'tax',
+        chargeType: 'fee',
         minimum: '10',
         maximum: '5',
         code: '2',
@@ -279,7 +279,7 @@ Test('charges handler', handlerTest => {
 
       const payload = {
         name: 'charge',
-        chargeType: 'tax',
+        chargeType: 'fee',
         rateType: 'flat',
         rate: '1.00',
         minimum: '1.00',
@@ -312,7 +312,7 @@ Test('charges handler', handlerTest => {
 
       const payload = {
         name: 'charge',
-        chargeType: 'tax',
+        chargeType: 'fee',
         rateType: 'flat',
         rate: '1.00',
         minimum: '1.00',

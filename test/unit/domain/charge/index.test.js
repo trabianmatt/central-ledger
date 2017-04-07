@@ -11,7 +11,7 @@ const NotFoundError = require('../../../../src/errors').NotFoundError
 function createCharge (name = 'charge', rateType = 'percent', minimum = null, maximum = null) {
   return {
     name,
-    chargeType: 'tax',
+    chargeType: 'fee',
     rateType: rateType,
     rate: '0.50',
     minimum,

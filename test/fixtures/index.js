@@ -137,7 +137,7 @@ const buildReadModelTransfer = (transferId, debit, credit, state, expiresAt, pre
 const buildCharge = (name, rateType, code) => {
   return {
     'name': name,
-    'charge_type': 'tax',
+    'charge_type': 'fee',
     'rate_type': rateType,
     'rate': '0.50',
     'code': code,

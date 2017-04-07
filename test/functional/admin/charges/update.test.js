@@ -9,7 +9,7 @@ Test('PUT /charges/{name}', putTest => {
     const chargeName = Fixtures.generateRandomName()
     const payload = {
       name: chargeName,
-      charge_type: 'tax',
+      charge_type: 'fee',
       rate_type: 'flat',
       rate: '1.00',
       minimum: '51.00',
@@ -60,7 +60,7 @@ Test('PUT /charges/{name}', putTest => {
     const chargeName = Fixtures.generateRandomName()
     const payload = {
       name: chargeName,
-      charge_type: 'tax',
+      charge_type: 'fee',
       rate_type: 'flat',
       rate: '1.00',
       minimum: '51.00',

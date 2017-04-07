@@ -51,7 +51,7 @@ Test('charges model', modelTest => {
         const payload = createChargePayload(chargeName)
         const updatePayload = {
           name: Fixtures.generateRandomName(),
-          charge_type: 'tax',
+          charge_type: 'fee',
           minimum: '150.00',
           maximum: '151.00',
           is_active: false

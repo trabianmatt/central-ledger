@@ -18,7 +18,7 @@ module.exports = [
     config: RouteConfig.config(tags, Permissions.CHARGES_CREATE, {
       payload: {
         name: Joi.string().token().max(256).required().description('Name of the charge'),
-        charge_type: Joi.string().required().valid('tax', 'fee').description('Type of the charge'),
+        charge_type: Joi.string().required().valid('fee').description('Type of the charge'),
         rate_type: Joi.string().required().valid('percent', 'flat').description('Rate type of the charge'),
         rate: Joi.number().required().description('Rate for the charge'),
         minimum: Joi.number().optional().description('Minimum amount for the charge'),
@@ -40,7 +40,7 @@ module.exports = [
       },
       payload: {
         name: Joi.string().token().max(256).optional().description('Name of the charge'),
-        charge_type: Joi.string().optional().valid('tax', 'fee').description('Type of the charge'),
+        charge_type: Joi.string().optional().valid('fee').description('Type of the charge'),
         minimum: Joi.number().optional().allow(null).description('Minimum amount for the charge'),
         maximum: Joi.number().optional().allow(null).description('Maximum amount for the charge'),
         code: Joi.string().token().max(256).optional().allow(null).description('Code for the charger'),
