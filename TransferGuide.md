@@ -1,8 +1,8 @@
-# Execute Transfer Guide
+# Transfer Guide
 ***
 
 ## Introduction
-The Central Ledger is a system to record transfers between DFSPs, and to calculate net positions for DFSPs and issue settlement instructions. In this guide, we'll walk through the different steps of successfully executing a transfer:
+In this guide, we'll walk through the different steps of successfully executing a transfer:
 * [**Creating accounts**](#step-1-creating-accounts)
 * [**Preparing a transfer**](#step-2-preparing-a-transfer) 
 * [**Executing a transfer**](#step-3-executing-a-transfer)
@@ -14,7 +14,7 @@ The Central Ledger is a system to record transfers between DFSPs, and to calcula
 To get started, you'll need to create two accounts, one to credit to and one to debit from.  
 
 ### Create account **dfsp1**
-Start off by creating an account with the name **dfsp1**. Simply provide the account's name and password then make a call to the create account endpoint. More detail about the response and errors can be found in the [endpoint documentation.](central-ledger-documentation.md#create-account)
+Start off by creating an account with the name **dfsp1**. Simply provide the account's name and password then make a call to the create account endpoint. More detail about the response and errors can be found in the [API documentation.](API.md#create-account)
 
 #### Request
 ```
@@ -66,7 +66,7 @@ HTTP/1.1 201 Created
 ```
 
 ## Step 2: Preparing a transfer
-Now that you have two accounts created, a transfer can be prepared. For this transfer, you will be debiting 100 from **dfsp1** and crediting it to **dfsp2**. There are quite a few optional fields that can be passed on a transfer prepare call. For now, you can stick to the minimum. A more in depth explanation can be found in the [endpoint documentation.](central-ledger-documentation.md)
+Now that you have two accounts created, a transfer can be prepared. For this transfer, you will be debiting 100 from **dfsp1** and crediting it to **dfsp2**. There are quite a few optional fields that can be passed on a transfer prepare call. For now, you can stick to the minimum. A more in depth explanation can be found in the [API documentation.](API.md)
 
 #### Request
 ```
@@ -116,7 +116,7 @@ HTTP/1.1 201 Created
 ```
 
 ## Step 3: Executing a transfer
-Now that the transfer is prepared, you are free to execute the transfer. This consists of either fulfilling or cancelling the transfer. For this example, you will be fulfilling the transfer, because the transfer was prepared with an execution_condition as opposed to a cancellation_condition. Like before, more information can be found in the [endpoint documentation.](central-ledger-documentation.md) 
+Now that the transfer is prepared, you are free to execute the transfer. This consists of either fulfilling or cancelling the transfer. For this example, you will be fulfilling the transfer, because the transfer was prepared with an execution\_condition as opposed to a cancellation\_condition. Like before, more information can be found in the [API documentation.](API.md) 
 
 #### Request
 ```
@@ -133,4 +133,4 @@ oAKAAA
 
 
 ## Next Steps
-Now that you have succesfully created accounts and prepared and executed a transfer, you should feel comfortable working with the other endpoints found in the [Central Ledger documentation.](central-ledger-documentation.md)
+Now that you have succesfully created accounts and prepared and executed a transfer, you should feel comfortable working with the other endpoints found in the [API documentation.](API.md)

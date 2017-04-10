@@ -1,9 +1,13 @@
-# Central Ledger Documentation
+# Central Ledger API Documentation
 ***
 
-In this guide, we'll walk through the different central ledger endpoints:
-* `POST` [**Create account**](#create-account)
+The central ledger has two APIs targeted at different consumers. The DFSP API is used by DFSPs to prepare and execute transfers, and for DFSPs to retrieve their current settlement position. The Admin API is used by the operational hub to manage DFSPs and ensure the health of the system.
+
+#### [DFSP API](#dfsp-api) endpoints
 * `GET` [**Get account**](#get-account)
+* `PUT` [**Update account**](#update-account)
+* `POST` [**Send message to account**](#send-message-to-account)
+* `GET` [**Get position for account**](#get-position-for-account)
 * `PUT` [**Prepare transfer**](#prepare-transfer) 
 * `PUT` [**Fulfill transfer**](#fulfill-transfer)
 * `PUT` [**Reject transfer**](#reject-transfer) 
@@ -13,10 +17,35 @@ In this guide, we'll walk through the different central ledger endpoints:
 * `GET` [**Get metadata**](#get-metadata) 
 * `POST` [**Settle fulfilled transfers**](#settle-all-currently-fulfilled-transfers) 
 * `POST` [**Get charge quote**](#get-a-charge-quote) 
-* `POST` [**Create charge**](#create-a-charge) (admin)
-* `PUT` [**Update charge**](#update-a-charge) (admin)
+* `POST` [**Get authentication token**](#get-authentication-token)
+* `GET`  [**Health**](#health)
 
-The different endpoints often deal with these [data structures](#data-structures): 
+#### [Admin API](#admin-api) endpoints
+* `POST` [**Create account**](#create-account)
+* `PUT`  [**Update account**](#update-account)
+* `GET`  [**Get all accounts**](#get-all-accounts)
+* `POST` [**Create charge**](#create-charge)
+* `PUT`  [**Update charge**](#update-charge)
+* `GET`  [**Get all charges**](#get-all-charges)
+* `GET`  [**Get available permissions**](#get-available-permissions)
+* `POST` [**Create role**](#create-role)
+* `PUT`  [**Update role**](#update-role)
+* `DELETE`  [**Delete role**](#delete-role)
+* `GET`  [**Get all roles**](#get-all-roles)
+* `POST` [**Get authentication token**](#get-admin-authentication-token)
+* `POST` [**Create user**](#create-user)
+* `PUT` [**Update user**](#update-user)
+* `DELETE` [**Delete user**](#delete-user)
+* `GET`  [**Get user by id**](#get-user-by-id)
+* `GET`  [**Get all users**](#get-all-users)
+* `GET`  [**Get roles assigned to user**](#get-roles-assigned-to-user)
+* `POST` [**Assign role to user**](#assign-role-to-user)
+* `POST` [**Reject expired transfers**](#reject-expired-transfers)
+* `POST` [**Reject expired tokens**](#reject-expired-tokens)
+* `POST` [**Settle transfers and fees**](#settle-transfers-and-fees)
+* `GET`  [**Health**](#admin-health)
+
+The API endpoints often deal with these [data structures](#data-structures): 
 
 * [**Transfer Object**](#transfer-object)
 * [**Account Object**](#account-object)
@@ -28,68 +57,9 @@ The different endpoints often deal with these [data structures](#data-structures
 Information about various errors returned can be found here:
 * [**Error Information**](#error-information)
 
-### Introduction
-The Central Ledger offers a series of services to facilitate transfer information for participants. The information collected in the transfer process is leveraged for clearing funds to end users, calculating net positons, and performing net settlements. In this guide, we’ll walk through the various steps of completing a transfer.
 ***
 
-## Endpoints
-
-#### Create account
-The create account endpoint will create an account in the ledger.
-
-##### HTTP Request
-`POST http://central-ledger/accounts`
-
-##### Headers
-| Field | Type | Description |
-| ----- | ---- | ----------- |
-| Content-Type | String | Must be set to `application/json` |
-
-##### Request Body
-| Field | Type | Description |
-| ----- | ---- | ----------- |
-| Object | Account | An [Account object](#account-object) to create |
-
-##### Response 201 Created
-| Field | Type | Description |
-| ----- | ---- | ----------- |
-| Object | Account | The newly-created [Account object](#account-object) as saved |
-
-##### Request
-``` http
-POST http://central-ledger/accounts HTTP/1.1
-Content-Type: application/json
-{
-  "name": "dfsp1",
-  "password": "dfsp1_password"
-}
-```
-
-##### Response
-``` http
-HTTP/1.1 201 CREATED
-Content-Type: application/json
-{
-  "id": "http://central-ledger/accounts/dfsp1",
-  "name": "dfsp1",
-  "created": "2017-01-03T19:50:39.744Z",
-  "balance": "0",
-  "is_disabled": false,
-  "ledger": "http://central-ledger"
-}
-```
-
-##### Errors (4xx)
-| Field | Description |
-| ----- | ----------- |
-| RecordExistsError | The account already exists (determined by name) |
-
-``` http
-{
-  "id": "RecordExistsError",
-  "message": "The account has already been registered"
-}
-```
+## DFSP API
 
 #### Get account
 The get account endpoint will return information about the account. To successfully retrieve an account, make sure the [account has been previously created.](#create-account)
@@ -136,6 +106,15 @@ The get account endpoint will return information about the account. To successfu
   "message": "The requested resource could not be found."
 }
 ```
+
+#### Update account
+Needs documentation
+
+#### Send message to account
+Needs documentation
+
+#### Get position for account
+Needs documentation
 
 #### Prepare transfer
 The prepare transfer endpoint will create or update a transfer object. A transfer between two DFSPs must be prepared before it can be fulfilled. Before you can successfully prepare a transfer, make sure you have [created the corresponding accounts](#create-account).
@@ -697,7 +676,76 @@ Content-Type: application/json
 }
 ```
 
-#### Create a charge
+#### Get authentication token
+Needs documentation
+
+#### Health
+Needs documentation
+
+## Admin API
+
+#### Create account
+The create account endpoint will create an account in the ledger.
+
+##### HTTP Request
+`POST http://central-ledger/accounts`
+
+##### Headers
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Content-Type | String | Must be set to `application/json` |
+
+##### Request Body
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Object | Account | An [Account object](#account-object) to create |
+
+##### Response 201 Created
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Object | Account | The newly-created [Account object](#account-object) as saved |
+
+##### Request
+``` http
+POST http://central-ledger/accounts HTTP/1.1
+Content-Type: application/json
+{
+  "name": "dfsp1",
+  "password": "dfsp1_password"
+}
+```
+
+##### Response
+``` http
+HTTP/1.1 201 CREATED
+Content-Type: application/json
+{
+  "id": "http://central-ledger/accounts/dfsp1",
+  "name": "dfsp1",
+  "created": "2017-01-03T19:50:39.744Z",
+  "balance": "0",
+  "is_disabled": false,
+  "ledger": "http://central-ledger"
+}
+```
+
+##### Errors (4xx)
+| Field | Description |
+| ----- | ----------- |
+| RecordExistsError | The account already exists (determined by name) |
+
+``` http
+{
+  "id": "RecordExistsError",
+  "message": "The account has already been registered"
+}
+```
+
+#### Update account
+
+#### Get all accounts
+
+#### Create charge
 Create a charge that will be applied across the dfsp on transfer execution
 
 ##### HTTP Request
@@ -780,7 +828,7 @@ Content-Type: application/json
 }
 ```
 
-#### Update a charge
+#### Update charge
 Update an existing charge, only the name, charge type, minimum, maximum, code, and is active fields may be updated.
 
 ##### HTTP Request
@@ -859,6 +907,60 @@ Content-Type: application/json
   "message": "Body does not match schema"
 }
 ```
+
+#### Get all charges
+Needs documentation
+
+#### Get available permissions
+Needs documentation
+
+#### Create role
+Needs documentation
+
+#### Update role
+Needs documentation
+
+#### Delete role
+Needs documentation
+
+#### Get all roles
+Needs documentation
+
+#### Get admin authentication token
+Needs documentation
+
+#### Create user
+Needs documentation
+
+#### Update user
+Needs documentation
+
+#### Delete user
+Needs documentation
+
+#### Get user by id
+Needs documentation
+
+#### Get all user
+Needs documentation
+
+#### Get roles assigned to user
+Needs documentation
+
+#### Assign role to user
+Needs documentation
+
+#### Reject expired transfers
+Needs documentation
+
+#### Reject expired tokens
+Needs documentation
+
+#### Settle transfers and fees
+Needs documentation
+
+#### Admin health
+Needs documentation
 
 ***
 
