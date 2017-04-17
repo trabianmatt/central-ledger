@@ -22,7 +22,7 @@ The central ledger has two APIs targeted at different consumers. The DFSP API is
 
 #### [Admin API](#admin-api) endpoints
 * `POST` [**Create account**](#create-account)
-* `PUT`  [**Update account**](#update-account)
+* `PUT`  [**Update admin account**](#update-admin-account)
 * `GET`  [**Get all accounts**](#get-all-accounts)
 * `POST` [**Create charge**](#create-charge)
 * `PUT`  [**Update charge**](#update-charge)
@@ -108,13 +108,159 @@ The get account endpoint will return information about the account. To successfu
 ```
 
 #### Update account
-Needs documentation
+The update account endpoint will update the account's credentials and return the newly updated Account object.
+
+##### HTTP Request
+`PUT http://central-ledger/accounts/dfsp1`
+
+##### URL Params
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| password | String | The new password for the account |
+
+##### Response 200 OK
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Object | Account | The [Account object](#account-object) as saved |
+
+##### Request
+``` http
+  PUT http://central-ledger/accounts/dfsp1 HTTP/1.1
+```
+
+##### Response
+``` http
+  HTTP/1.1 200 OK
+  Content-Type: application/json
+  {
+    "name": "dfsp1",
+    "id": "http://localhost:3000/accounts/dfsp1",
+    "created": "2017-02-23T17:11:35.928Z",
+    "is_disabled": true,
+    "_links": {
+      "self": "http://localhost:3000/accounts/dfsp1"
+    }
+  }
+```
+
+##### Errors (4xx)
+| Field | Description |
+| ----- | ----------- |
+| NotFoundError | The requested resource could not be found |
+``` http
+{
+  "id": "NotFoundError",
+  "message": "The requested resource could not be found."
+}
+```
 
 #### Send message to account
-Needs documentation
+The send messages endpoint posts messages to different accounts
+
+##### HTTP Request
+`POST http://central-ledger/messages`
+
+##### Headers
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Content-Type | String | Must be set to `application/json` |
+
+##### Request Body
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| ledger | URI | A link to the account's ledger |
+| from | URI | A link to the from account |
+| to | URI | A link to the to account |
+| data | String | The data to be sent |
+
+##### Response 201 Created
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+
+##### Request
+``` http
+POST http://central-ledger/messages HTTP/1.1
+Content-Type: application/json
+{
+  "ledger": "http://central-ledger",
+  "from": "http://central-ledger/accounts/from",
+  "to": "http://central-ledger/accounts/to",
+  "data": { "foo": "bar" }
+}
+```
+
+##### Response
+``` http
+HTTP/1.1 201 CREATED
+Content-Type: application/json
+```
+
+##### Errors (4xx)
+| Field | Description |
+| ----- | ----------- |
+| RecordExistsError | The account already exists (determined by name) |
+
+``` http
+{
+  "id": "RecordExistsError",
+  "message": "The account has already been registered"
+}
+```
 
 #### Get position for account
-Needs documentation
+The get account net positions endpoint returns the current net positions for the given account.
+
+##### HTTP Request
+`GET http://central-ledger/positions/dfsp1`
+
+##### URL Params
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| name | String | The unique name for the account |
+
+##### Response 200 OK
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| account | String | Resource identifier |
+| fees | Position | The [Position object](#positions-object) for an account's fees |
+| transfers | Position | The [Position object](#position-object) for an account's transfers |
+| net | String | Net non-settled amount for the account as string|
+
+##### Request
+``` http
+GET http://central-ledger/positions/dsfp1 HTTP/1.1
+```
+
+##### Response
+``` http
+HTTP/1.1 200 OK
+Content-Type: application/json
+{
+  "account": "http://localhost:3000/accounts/dfsp1",
+  "fees": {
+    "payments": "10",
+    "receipts": "20",
+    "net": "10"
+  },
+  "transfers": {
+    "payments": "10",
+    "receipts": "20",
+    "net": "10"
+  },
+  "net": "20"
+}
+```
+
+##### Errors (4xx)
+| Field | Description |
+| ----- | ----------- |
+| UnprocessableEntityError | The provided entity is syntactically correct, but there is a generic semantic problem with it | 
+``` http
+{
+  "id": "UnprocessableEntityError",
+  "message": "The provided entity is syntactically correct, but there is a generic semantic problem with it"
+}
+```
 
 #### Prepare transfer
 The prepare transfer endpoint will create or update a transfer object. A transfer between two DFSPs must be prepared before it can be fulfilled. Before you can successfully prepare a transfer, make sure you have [created the corresponding accounts](#create-account).
@@ -230,7 +376,7 @@ The fulfill transfer endpoint will either execute or cancel a transfer, dependin
 ##### Response 200 OK
 | Field | Type | Description |
 | ----- | ---- | ----------- |
-| Fulfillment | String | The fulfillment that was sent |
+| Object | Transfer | The [Transfer object](#transfer-object) as fulfilled |
 
 ##### Request
 ``` http
@@ -299,10 +445,15 @@ The reject transfer endpoint rejects the transfer with the given message. To suc
 | ----- | ---- | ----------- |
 | id | String | Transfer UUID |
 
+##### Request Body
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Rejection | String | The rejection message in string format |
+
 ##### Response 200 OK
 | Field | Type | Description |
 | ----- | ---- | ----------- |
-| Rejection | String | An error message in string format |
+| Object | Transfer | The [Transfer object](#transfer-object) as rejected |
 
 ##### Request
 ``` http
@@ -468,7 +619,7 @@ The get current net positions endpoint returns the current net positions for all
 ##### Response 200 OK
 | Field | Type | Description |
 | ----- | ---- | ----------- |
-| Positions | Array | List of current [Position objects](#position-object) for the ledger |
+| positions | Array | List of current [Position objects](#position-object) for the ledger |
 
 #### Request
 ``` http
@@ -624,7 +775,7 @@ Get a list of charge quotes for a given amount, that the sender would be respons
 ##### Request Body
 | Field | Type | Description |
 | ----- | ---- | ----------- |
-| Amount | Decimal | The amount for quote |
+| amount | Decimal | The amount for quote |
 
 ##### Response 200 OK
 | Field | Type | Description |
@@ -677,10 +828,58 @@ Content-Type: application/json
 ```
 
 #### Get authentication token
-Needs documentation
+The get authentication endpoint generates an authentication token
+
+##### HTTP Request
+`GET http://central-ledger/auth_token`
+
+##### Headers
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Content-Type | String | Must be set to `application/json` |
+| Authorization | Basic  | Defaults to admin:admin | |
+
+##### Response 200 OK
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| token | String | The generated authentication token |
+
+##### Request
+``` http
+GET http://central-ledger/auth_token HTTP/1.1
+```
+
+##### Response
+``` http
+HTTP/1.1 200 OK
+{
+  "token": "1234token4321"
+}
+```
 
 #### Health
-Needs documentation
+Get the current status of the service
+
+##### HTTP Request
+`GET http://central-ledger/health`
+
+##### Response 200 OK
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| status | String | The status of the ledger, *OK* if the service is working |
+
+##### Request
+``` http
+GET http://central-ledger/health HTTP/1.1
+```
+
+##### Response
+``` http
+HTTP/1.1 200 OK
+{
+  "status": "OK"
+}
+```
 
 ## Admin API
 
@@ -741,9 +940,112 @@ Content-Type: application/json
 }
 ```
 
-#### Update account
+#### Update admin account
+The update admin account endpoint will update the account's 'is_disabled' field and return the newly updated Account object.
+
+##### HTTP Request
+`PUT http://central-ledger-admin/accounts/dfsp1`
+
+##### URL Params
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| name | String | The unique name for the account |
+
+##### Headers
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Authorization | Bearer Token  | JWT based access token |
+
+##### Response 200 OK
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Object | Account | The [Account object](#account-object) as saved |
+
+##### Request
+``` http
+  PUT http://central-ledger-admin/accounts/dfsp1 HTTP/1.1
+```
+
+##### Response
+``` http
+  HTTP/1.1 200 OK
+  Content-Type: application/json
+  {
+    "name": "dfsp1",
+    "id": "http://localhost:3000/accounts/dfsp1",
+    "created": "2017-02-23T17:11:35.928Z",
+    "is_disabled": true,
+    "_links": {
+      "self": "http://localhost:3000/accounts/dfsp1"
+    }
+  }
+```
+
+##### Errors (4xx)
+| Field | Description |
+| ----- | ----------- |
+| NotFoundError | The requested resource could not be found |
+``` http
+{
+  "id": "NotFoundError",
+  "message": "The requested resource could not be found."
+}
+```
 
 #### Get all accounts
+The get all accounts endpoint lists all created accounts
+
+##### HTTP Request
+`GET http://central-ledger-admin/accounts`
+
+##### Headers
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Authorization | Bearer Token  | JWT based access token |
+
+##### Response 200 OK
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Object | Array | An array of all created [Account objects](#account-object) |
+
+#### Request
+``` http
+GET http://central-ledger-admin/accounts HTTP/1.1
+```
+
+##### Response
+``` http
+HTTP/1.1 200 OK
+[
+  {
+    "id": "http://central-ledger/accounts/dfsp1",
+    "name": "dfsp1",
+    "created": "2016-09-28T17:03:37.168Z",
+    "balance": 1000000,
+    "is_disabled": false,
+    "ledger": "http://central-ledger"
+  },
+  {
+    "id": "http://central-ledger/accounts/dfsp2",
+    "name": "dfsp2",
+    "created": "2016-09-28T17:03:37.168Z",
+    "balance": 1000000,
+    "is_disabled": false,
+    "ledger": "http://central-ledger"
+  }
+]
+```
+
+##### Errors (4xx)
+| Field | Description |
+| ----- | ----------- |
+| NotFoundError | The requested resource could not be found |
+``` http
+{
+  "id": "NotFoundError",
+  "message": "The requested resource could not be found."
+}
+```
 
 #### Create charge
 Create a charge that will be applied across the dfsp on transfer execution
@@ -760,16 +1062,16 @@ Create a charge that will be applied across the dfsp on transfer execution
 ##### Request Body
 | Field | Type | Description |
 | ----- | ---- | ----------- |
-| Name | String | Unique name for the charge |
-| Charge Type | String | Type of the charge, should be *fee* |
-| Rate Type | String | How the charge rate is applied, either *flat* or *percent* |
-| Rate | String | Charge rate, represented as a decimal for percent *(5% is 0.05)* and as the actual value for flat|
-| Minimum | String | Minimum transfer amount needed to apply the charge|
-| Maximum | String | Maximum transfer amount needed to apply the charge|
-| Code | String | Three character code used to identify the charge|
-| Is Active | Boolean | Set by admin, determines whether charge should be applied or not|
-| Payer | String | Account that pays the fee generated by the charge, either *sender*, *receiver*, or *ledger*|
-| Payee | String | Account that receives the fee generated by the charge, either *sender*, *receiver*, or *ledger*|
+| name | String | Unique name for the charge |
+| charge_type | String | Type of the charge, should be *fee* |
+| rate_type | String | How the charge rate is applied, either *flat* or *percent* |
+| rate | String | Charge rate, represented as a decimal for percent *(5% is 0.05)* and as the actual value for flat|
+| minimum | String | Minimum transfer amount needed to apply the charge|
+| maximum | String | Maximum transfer amount needed to apply the charge|
+| code | String | Three character code used to identify the charge|
+| is_active | Boolean | Set by admin, determines whether charge should be applied or not|
+| payer | String | Account that pays the fee generated by the charge, either *sender*, *receiver*, or *ledger*|
+| payee | String | Account that receives the fee generated by the charge, either *sender*, *receiver*, or *ledger*|
 
 ##### Response 200 OK
 | Field | Type | Description |
@@ -848,12 +1150,12 @@ Update an existing charge, only the name, charge type, minimum, maximum, code, a
 ##### Request Body
 | Field | Type | Description |
 | ----- | ---- | ----------- |
-| Name | String | Unique name for the charge |
-| Charge Type | String | Type of the charge, should be *fee* |
-| Minimum | String | Minimum transfer amount needed to apply the charge|
-| Maximum | String | Maximum transfer amount needed to apply the charge|
-| Code | String | Three character code used to identify the charge|
-| Is Active | Boolean | Set by admin, determines whether charge should be applied or not|
+| name | String | Unique name for the charge |
+| charge_type | String | Type of the charge, should be *fee* |
+| minimum | String | Minimum transfer amount needed to apply the charge|
+| maximum | String | Maximum transfer amount needed to apply the charge|
+| code | String | Three character code used to identify the charge|
+| is_active | Boolean | Set by admin, determines whether charge should be applied or not|
 
 ##### Response 200 OK
 | Field | Type | Description |
@@ -909,59 +1211,842 @@ Content-Type: application/json
 ```
 
 #### Get all charges
-Needs documentation
+The get all charges endpoint lists all created charges
+
+##### HTTP Request
+`GET http://central-ledger-admin/charges`
+
+##### Headers
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Authorization | Bearer Token  | JWT based access token |
+
+##### Response 200 OK
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Object | Array | An array of all created [Charge objects](#charge-object) |
+
+#### Request
+``` http
+GET http://central-ledger-admin/charges HTTP/1.1
+```
+
+##### Response
+``` http
+HTTP/1.1 200 OK
+[
+  {
+    "name": "fee_1",
+    "id": 1,
+    "charge_type": "fee",
+    "rate_type": "flat",
+    "rate": "1.00",
+    "minimum": "0.00",
+    "maximum": "15.00",
+    "code": "001",
+    "is_active": true,
+    "created": "2017-04-10T19:49:54.850Z",
+    "payer": "sender",
+    "payee": "receiver"
+  }
+]
+```
+
+##### Errors (4xx)
+| Field | Description |
+| ----- | ----------- |
+| NotFoundError | The requested resource could not be found |
+``` http
+{
+  "id": "NotFoundError",
+  "message": "The requested resource could not be found."
+}
+```
 
 #### Get available permissions
-Needs documentation
+The get available permissions endpoint lists all available permissions
+
+##### HTTP Request
+`GET http://central-ledger-admin/permissions`
+
+##### Headers
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Authorization | Bearer Token  | JWT based access token |
+
+##### Response 200 OK
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Object | Array | An array of [Permission objects](#permission-object) |
+
+#### Request
+``` http
+GET http://central-ledger-admin/permissions HTTP/1.1
+```
+
+##### Response
+``` http
+HTTP/1.1 200 OK
+[
+  {
+    "key": "ACCOUNTS_CREATE",
+    "description": "Create an account"
+  },
+  {
+    "key": "ACCOUNTS_LIST",
+    "description": "List all accounts"
+  }
+]
+```
+
+##### Errors (4xx)
+| Field | Description |
+| ----- | ----------- |
+| NotFoundError | The requested resource could not be found |
+``` http
+{
+  "id": "NotFoundError",
+  "message": "The requested resource could not be found."
+}
+```
 
 #### Create role
-Needs documentation
+The create role endpoint will create a user role.
+
+##### HTTP Request
+`POST http://central-ledger-admin/roles`
+
+##### Headers
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Content-Type | String | Must be set to `application/json` |
+| Authorization | Bearer Token  | JWT based access token |
+
+##### Request Body
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| name | String | The name of the role |
+| description | String | The description of the role |
+| permissions | Array | An array of [Permission object](#permission-object) keys |
+
+##### Response 201 Created
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Object | Role | The newly-created [Role object](#role-object) as saved |
+
+##### Request
+``` http
+POST http://central-ledge-adminr/roles HTTP/1.1
+Content-Type: application/json
+{
+	"name" : "Create role.",
+	"description" : "An admin role for creating and listing users.",
+	"permissions" : ["ACCOUNTS_CREATE, ACCOUNTS_LIST"]
+}
+```
+
+##### Response
+``` http
+HTTP/1.1 201 CREATED
+Content-Type: application/json
+{
+  "roleId": "374885fd-2384-429c-9355-57466aff2dd2",
+  "name": "Create role.",
+  "description": "An admin role for creating and listing users.",
+  "permissions": [
+    "ACCOUNTS_CREATE, ACCOUNTS_LIST"
+  ]
+}
+```
+
+##### Errors (4xx)
+| Field | Description |
+| ----- | ----------- |
+| RecordExistsError | The role already exists (determined by name) |
+
+``` http
+{
+  "id": "RecordExistsError",
+  "message": "The role has already been created"
+}
+```
 
 #### Update role
-Needs documentation
+The update role endpoint will update a given user role.
+
+##### HTTP Request
+`PUT http://central-ledger-admin/roles/374885fd-2384-429c-9355-57466aff2dd2`
+
+##### Headers
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Content-Type | String | Must be set to `application/json` |
+| Authorization | Bearer Token  | JWT based access token |
+
+##### Request Body
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| name | String | The name of the role |
+| description | String | The description of the role |
+| permissions | Array | An array of [Permission object](#permission-object) keys |
+
+##### Response 200 OK
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Object | Role | The newly-created [Role object](#role-object) as saved |
+
+##### Request
+``` http
+PUT http://central-ledge-adminr/roles/374885fd-2384-429c-9355-57466aff2dd2 HTTP/1.1
+Content-Type: application/json
+{
+	"name" : "Create role.",
+	"description" : "An admin role for creating, listing, and deleting users.",
+	"permissions" : ["ACCOUNTS_CREATE, ACCOUNTS_LIST, ACCOUNT_DELETE"]
+}
+```
+
+##### Response
+``` http
+HTTP/1.1 20O OK
+Content-Type: application/json
+{
+  "roleId": "374885fd-2384-429c-9355-57466aff2dd2",
+  "name": "Create role.",
+  "description": "An admin role for creating and listing, and deleting users.",
+  "permissions": [
+    "ACCOUNTS_CREATE, ACCOUNTS_LIST, ACCOUNT_DELETE"
+  ]
+}
+```
+
+##### Errors (4xx)
+| Field | Description |
+| ----- | ----------- |
+| NotFoundError | The requested resource could not be found |
+``` http
+{
+  "id": "NotFoundError",
+  "message": "The requested resource could not be found."
+}
+```
 
 #### Delete role
-Needs documentation
+The delete role endpoint will delete a given user role.
 
+##### HTTP Request
+`DELETE http://central-ledger-admin/roles/374885fd-2384-429c-9355-57466aff2dd2`
+
+##### Headers
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Content-Type | String | Must be set to `application/json` |
+| Authorization | Bearer Token  | JWT based access token |
+
+##### Response 204 No Content
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+
+##### Request
+``` http
+DELETE http://central-ledge-adminr/roles/374885fd-2384-429c-9355-57466aff2dd2 HTTP/1.1
+Content-Type: application/json
+```
+
+##### Response
+``` http
+HTTP/1.1 204 NO CONTENT
+Content-Type: application/json
+```
+
+##### Errors (4xx)
+| Field | Description |
+| ----- | ----------- |
+| NotFoundError | The requested resource could not be found |
+``` http
+{
+  "id": "NotFoundError",
+  "message": "The requested resource could not be found."
+}
+```
 #### Get all roles
-Needs documentation
+The get all roles endpoint returns a list of all roles for the central ledger
+
+##### HTTP Request
+`GET http://central-ledger-admin/roles`
+
+##### Headers
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Authorization | Bearer Token  | JWT based access token |
+
+##### Response 200 OK
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Object | Array | List of [Role objects](#role-object) for the central ledger |
+
+#### Request
+``` http
+GET http://central-ledger-admin/roles HTTP/1.1
+```
+
+##### Response
+``` http
+HTTP/1.1 200 OK
+[
+  {
+    "roleId": "7d3bdc7a-2f83-456f-b174-3ad1f477c7be",
+    "name": "Account Manager",
+    "description": "Create a view accounts.",
+    "permissions": [
+      "ACCOUNTS_CREATE",
+      "ACCOUNTS_LIST"
+    ]
+  },
+  {
+    "roleId": "7d3bdc7a-2f54-456f-b174-3ad1f477c7b2",
+    "name": "User Manager",
+    "description": "Create a view users",
+    "permissions": [
+      "USERS_CREATE",
+      "USERS_LIST"
+    ]
+  }
+]
+```
+
+##### Errors (4xx)
+| Field | Description |
+| ----- | ----------- |
+| NotFoundError | The requested resource could not be found |
+``` http
+{
+  "id": "NotFoundError",
+  "message": "The requested resource could not be found."
+}
+```
 
 #### Get admin authentication token
-Needs documentation
+The get admin authentication token endpoint generates an admin authentication token
+
+##### HTTP Request
+`POST http://central-ledger-admin/auth_token`
+
+##### Headers
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Authorization | Bearer Token  | JWT based access token |
+
+##### Response 200 OK
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| token | String | The generated authentication token |
+
+#### Request
+``` http
+POST http://central-ledger-admin/auth_token HTTP/1.1
+Content-Type: application/json
+{
+  "key": "login_key"
+}
+```
+
+##### Response
+``` http
+HTTP/1.1 200 OK
+{
+  "token": "1234token4321"
+}
+```
+
+##### Errors (4xx)
+| Field | Description |
+| ----- | ----------- |
+| NotFoundError | The requested resource could not be found |
+``` http
+{
+  "id": "NotFoundError",
+  "message": "The requested resource could not be found."
+}
+```
 
 #### Create user
-Needs documentation
+The create user endpoint will create an admin user.
+
+##### HTTP Request
+`POST http://central-ledger-admin/users`
+
+##### Headers
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Content-Type | String | Must be set to `application/json` |
+| Authorization | Bearer Token  | JWT based access token |
+
+##### Request Body
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Object | User | A [User object](#user-object) to create |
+
+##### Response 201 Created
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Object | User | The newly-created [User object](#user-object) as saved |
+
+##### Request
+``` http
+POST http://central-ledger-admin/users HTTP/1.1
+Content-Type: application/json
+{
+  "firstName": "First",
+  "lastName": "Last",
+  "email": "email@central-ledger.com",
+  "key": "login_key"
+}
+```
+
+##### Response
+``` http
+HTTP/1.1 201 CREATED
+Content-Type: application/json
+{
+  "userId": "e181fc02",
+  "key": "key",
+  "lastName": "Last",
+  "firstName": "First",
+  "email": "email@central-ledger.com",
+  "isActive": true,
+  "createdDate": "2017-04-10T21:15:06.378Z"
+}
+```
+
+##### Errors (4xx)
+| Field | Description |
+| ----- | ----------- |
+| RecordExistsError | The account already exists (determined by name) |
+
+``` http
+{
+  "id": "RecordExistsError",
+  "message": "The account has already been registered"
+}
+```
 
 #### Update user
-Needs documentation
+The update user endpoint will update the give user.
+
+##### HTTP Request
+`PUT http://central-ledger-admin/users/e181fc02`
+
+##### Headers
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Content-Type | String | Must be set to `application/json` |
+| Authorization | Bearer Token  | JWT based access token |
+
+##### Request Body
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Object | User | A [User object](#user-object) to update |
+
+##### Response 200 OK
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Object | User | The update [User object](#user-object) as saved |
+
+##### Request
+``` http
+PUT http://central-ledger-admin/users HTTP/1.1
+Content-Type: application/json
+{
+  "firstName": "FirstA",
+  "lastName": "LastB",
+  "email": "email@central-ledger.com",
+  "key": "login_key"
+}
+```
+
+##### Response
+``` http
+HTTP/1.1 200 OK
+Content-Type: application/json
+{
+  "userId": "e181fc02",
+  "key": "key",
+  "lastName": "LastB",
+  "firstName": "FirstA",
+  "email": "email@central-ledger.com",
+  "isActive": true,
+  "createdDate": "2017-04-10T21:15:06.378Z"
+}
+```
+
+##### Errors (4xx)
+| Field | Description |
+| ----- | ----------- |
+| NotFoundError | The requested resource could not be found |
+``` http
+{
+  "id": "NotFoundError",
+  "message": "The requested resource could not be found."
+}
+```
 
 #### Delete user
-Needs documentation
+The get user by id endpoint returns an admin user with the given id
+
+##### HTTP Request
+`DELETE http://central-ledger-admin/users/e181fc02`
+
+##### Headers
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Authorization | Bearer Token  | JWT based access token |
+
+##### Response 200 OK
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+
+#### Request
+``` http
+DELETE http://central-ledger-admin/users/e181fc02 HTTP/1.1
+```
+
+##### Response
+``` http
+HTTP/1.1 200 OK
+{}
+```
+
+##### Errors (4xx)
+| Field | Description |
+| ----- | ----------- |
+| NotFoundError | The requested resource could not be found |
+``` http
+{
+  "id": "NotFoundError",
+  "message": "The requested resource could not be found."
+}
+```
 
 #### Get user by id
-Needs documentation
+The get user by id endpoint returns an admin user with the given id
 
-#### Get all user
-Needs documentation
+##### HTTP Request
+`GET http://central-ledger-admin/users/e181fc02`
+
+##### Headers
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Authorization | Bearer Token  | JWT based access token |
+
+##### Response 200 OK
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Object | User | [User object](#user-object) for the given id|
+
+#### Request
+``` http
+GET http://central-ledger-admin/users/e181fc02 HTTP/1.1
+```
+
+##### Response
+``` http
+HTTP/1.1 200 OK
+{
+  "userId": "e181fc02",
+  "key": "key",
+  "lastName": "lastName",
+  "firstName": "firstName",
+  "email": "email@central-ledger.com",
+  "isActive": true,
+  "createdDate": "2017-04-10T21:15:06.378Z"
+}
+```
+
+##### Errors (4xx)
+| Field | Description |
+| ----- | ----------- |
+| NotFoundError | The requested resource could not be found |
+``` http
+{
+  "id": "NotFoundError",
+  "message": "The requested resource could not be found."
+}
+```
+
+#### Get all users
+The get all users endpoint returns all admin users for the central ledger
+
+##### HTTP Request
+`GET http://central-ledger-admin/users`
+
+##### Headers
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Authorization | Bearer Token  | JWT based access token |
+
+##### Response 200 OK
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Object | Array | A list of [User objects](#user-object) for the central ledger |
+
+#### Request
+``` http
+GET http://central-ledger-admin/users HTTP/1.1
+```
+
+##### Response
+``` http
+HTTP/1.1 200 OK
+[
+  {
+  "userId": "e181fc02",
+  "key": "key",
+  "lastName": "lastName",
+  "firstName": "firstName",
+  "email": "email@central-ledger.com",
+  "isActive": true,
+  "createdDate": "2017-04-10T21:15:06.378Z"
+},
+{
+  "userId": "e181fc03",
+  "key": "key",
+  "lastName": "lastName2",
+  "firstName": "firstName2",
+  "email": "email2@central-ledger.com",
+  "isActive": false,
+  "createdDate": "2017-04-10T21:15:06.378Z"
+}
+]
+```
+
+##### Errors (4xx)
+| Field | Description |
+| ----- | ----------- |
+| NotFoundError | The requested resource could not be found |
+``` http
+{
+  "id": "NotFoundError",
+  "message": "The requested resource could not be found."
+}
+```
 
 #### Get roles assigned to user
-Needs documentation
+This endpoint returns a list of a user's roles
+
+##### HTTP Request
+`GET http://central-ledger-admin/users/e181fc02/roles`
+
+##### Headers
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Authorization | Bearer Token  | JWT based access token |
+
+##### Response 200 OK
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Object | Array | An array of [Role objects](#role-object) for the account |
+
+#### Request
+``` http
+GET http://central-ledger-admin/users/e181fc02/roles HTTP/1.1
+```
+
+##### Response
+``` http
+HTTP/1.1 200 OK
+[
+  {
+    "roleId": "7d3bdc7a-2f83-456f-b174-3ad1f477c7be",
+    "name": "Create account",
+    "description": "Role for creating and listing users",
+    "permissions": [
+      "ACCOUNTS_CREATE",
+      "ACCOUNTS_LIST"
+    ]
+  }
+]
+```
+
+##### Errors (4xx)
+| Field | Description |
+| ----- | ----------- |
+| NotFoundError | The requested resource could not be found |
+``` http
+{
+  "id": "NotFoundError",
+  "message": "The requested resource could not be found."
+}
+```
 
 #### Assign role to user
-Needs documentation
+This endpoint assigns a role to an admin user
+
+##### HTTP Request
+`POST http://central-ledger/users/e181fc02/roles`
+
+##### Headers
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Content-Type | String | Must be set to `application/json` |
+| Authorization | Bearer Token  | JWT based access token |
+
+##### Request Body
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Object | Array | An array of role ids |
+
+##### Response 200 OK
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+
+##### Request
+``` http
+POST http://central-ledger/accounts HTTP/1.1
+Content-Type: application/json
+["7d3bdc7a-2f83-456f-b174-3ad1f477c7be", "7d3bdc7a-2f83-456f-b174-3ad1f477c7cf"]
+```
+
+##### Response
+``` http
+HTTP/1.1 200 OK
+Content-Type: application/json
+{}
+```
+
+##### Errors (4xx)
+| Field | Description |
+| ----- | ----------- |
+| NotFoundError | The requested resource could not be found |
+``` http
+{
+  "id": "NotFoundError",
+  "message": "The requested resource could not be found."
+}
+```
 
 #### Reject expired transfers
-Needs documentation
+This endpoint rejects all expired transfers
+
+##### HTTP Request
+`POST http://central-ledger-admin/webhooks/reject-expired-transfers`
+
+##### Headers
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Content-Type | String | Must be set to `application/json` |
+| Authorization | Bearer Token  | JWT based access token |
+
+##### Response 200 OK
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Object | Array | A list of rejected transfer ids |
+
+##### Request
+``` http
+POST http://central-ledger-admin/webhooks/reject-expired-transfers HTTP/1.1
+Content-Type: application/json
+```
+
+##### Response
+``` http
+HTTP/1.1 200 OK
+Content-Type: application/json
+[12, 13, 14]
+```
 
 #### Reject expired tokens
-Needs documentation
+This endpoint rejects all expired tokens
+
+##### HTTP Request
+`POST http://central-ledger-admin/webhooks/reject-expired-tokens`
+
+##### Headers
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Content-Type | String | Must be set to `application/json` |
+| Authorization | Bearer Token  | JWT based access token |
+
+##### Response 200 OK
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Object | Array | A list of rejected tokens |
+
+##### Request
+``` http
+POST http://central-ledger-admin/webhooks/reject-expired-transfers HTTP/1.1
+Content-Type: application/json
+```
+
+##### Response
+``` http
+HTTP/1.1 200 OK
+Content-Type: application/json
+["123-abc", "456-def", "789-ghi"]
+```
 
 #### Settle transfers and fees
-Needs documentation
+The settle transfers and fees endpoint settles all unsettled transfers and fees
+
+##### HTTP Request
+`POST http://central-ledger-admin/webhooks/settle-transfers`
+
+##### Headers
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Content-Type | String | Must be set to `application/json` |
+| Authorization | Bearer Token  | JWT based access token |
+
+##### Response 200 OK
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| transfers | Array | A list of settled transfer ids |
+| fees | Array | A list of settled fee ids |
+
+##### Request
+``` http
+POST http://central-ledger-admin/webhooks/reject-expired-transfers HTTP/1.1
+Content-Type: application/json
+```
+
+##### Response
+``` http
+HTTP/1.1 200 OK
+Content-Type: application/json
+{
+  "transfers": [],
+  "fees": []
+}
+```
 
 #### Admin health
-Needs documentation
+Get the current status of the admin service
 
+##### HTTP Request
+`GET http://central-ledger-admin/health`
+
+##### Headers
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Authorization | Bearer Token  | JWT based access token |
+
+##### Response 200 OK
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| status | String | The status of the ledger, *OK* if the service is working |
+
+##### Request
+``` http
+GET http://central-ledger-admin/health HTTP/1.1
+```
+
+##### Response
+``` http
+HTTP/1.1 200 OK
+{
+  "status": "OK"
+}
+```
 ***
 
 ## Data Structures
@@ -1016,6 +2101,21 @@ Some fields are Read-only, meaning they are set by the API and cannot be modifie
 | is_disabled | Boolean | *Optional, Read-only* Admin users may disable/enable an account |
 | ledger | URI | *Optional, Read-only* A link to the account's ledger |
 | created | DateTime | *Optional, Read-only* Time when account was created |
+
+### User Object
+
+An user represents an admin for the central ledger.
+
+Some fields are Read-only, meaning they are set by the API and cannot be modified by clients. An user object can have the following fields:
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| userId | URI | *Read-only* User identifier |
+| firstName | String | First name of the account |
+| lastName | String | Last name for the account |
+| email | String | Email as a string |
+| isActive | Boolean | *Optional* Users may be disabled/enabled |
+| createdDate | DateTime | *Optional, Read-only* Time when account was created |
 
 ### Notification Object
 
@@ -1078,6 +2178,30 @@ A charge object can have the following fields:
 | payer | String | The account that pays the fee generated by the charge either *sender*, *receiver*, or *ledger* |
 | payee | String | The account that receives the fee generated by the charge either *sender*, *receiver*, or *ledger* |
 
+### Permission Object
+
+The central-ledger uses permissions to manage the capabilities of an admin.
+
+A permission object has the following fields:
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| key | String | The key for the permission |
+| description | String | A description of the permission |
+
+### Role Object
+
+The central-ledger uses roles to manage sets of permissions of an admin.
+
+A role object has the following fields:
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| roleId | String | Identifier for the role |
+| name | String | Name of the role |
+| description | String | Description of the role |
+| permissions | Array | A list of permission keys |
+
 ***
 
 ## Error Information
@@ -1114,3 +2238,5 @@ Content-Type: application/json
   ]
 }
 ```
+
+/

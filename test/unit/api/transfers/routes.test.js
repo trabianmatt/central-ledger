@@ -4,7 +4,7 @@ const Test = require('tape')
 const Base = require('../../base')
 
 Test('return error if required field missing on prepare', function (assert) {
-  let req = Base.buildRequest({ url: '/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204', method: 'PUT', payload: { } })
+  let req = Base.buildRequest({ url: '/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204', method: 'PUT', payload: {} })
 
   Base.setup().then(server => {
     server.inject(req, function (res) {
@@ -41,7 +41,7 @@ Test('return error if invalid content type on fulfillment', function (assert) {
 
   Base.setup().then(server => {
     server.inject(req, function (res) {
-      Base.assertInvalidHeaderError(assert, res, [ { message: 'content-type must be one of [text/plain]', params: { key: 'content-type', valids: [ 'text/plain' ] } } ])
+      Base.assertInvalidHeaderError(assert, res, [{ message: 'content-type must be one of [text/plain]', params: { key: 'content-type', valids: ['text/plain'] } }])
       assert.end()
     })
   })
