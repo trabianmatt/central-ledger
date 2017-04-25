@@ -57,6 +57,7 @@
     "argon2": "0.14.0",
     "blipp": "2.3.0",
     "bluebird": "3.4.6",
+    "continuation-local-storage": "3.2.0",
     "deasync-promise": "1.0.1",
     "decimal.js": "7.1.0",
     "eventric": "0.26.0",

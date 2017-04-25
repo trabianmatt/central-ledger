@@ -60,6 +60,7 @@ exports.updateUserCredentials = (request, reply) => {
   if (!authenticated) {
     throw new Errors.UnauthorizedError('Invalid attempt updating the password.')
   }
+
   Account.getByName(request.params.name)
     .then(handleMissingRecord)
     .then(account => Account.updateUserCredentials(account, request.payload))

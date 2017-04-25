@@ -8,6 +8,8 @@ const Db = require('../db')
 const Eventric = require('../eventric')
 const Plugins = require('./plugins')
 const Config = require('../lib/config')
+const cls = require('continuation-local-storage')
+const ns = cls.createNamespace('trace')
 
 const migrate = (runMigrations) => {
   return runMigrations ? Migrator.migrate() : P.resolve()
@@ -27,6 +29,12 @@ const createServer = (port, modules) => {
       routes: {
         validate: ErrorHandling.validateRoutes()
       }
+    })
+    server.ext('onRequest', (request, reply) => {
+      ns.run(() => {
+        ns.set('headers', request.headers)
+        reply.continue()
+      })
     })
     Plugins.registerPlugins(server)
     server.register(modules)
