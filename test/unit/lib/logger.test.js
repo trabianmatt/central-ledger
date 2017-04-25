@@ -93,8 +93,8 @@ Test('logger', loggerTest => {
     warnTest.end()
   })
 
-  loggerTest.test('generateTraceIdMessage should', traceIdTest => {
-    traceIdTest.test('return an empty string if undefined', test => {
+  loggerTest.test('generateTraceIdMessage should', generateTraceIdMessageTest => {
+    generateTraceIdMessageTest.test('return an empty string if undefined', test => {
       let cls = { getNamespace: sandbox.stub() }
       cls.getNamespace.returns(undefined)
 
@@ -106,7 +106,7 @@ Test('logger', loggerTest => {
       test.equal(args[1], 'args')
       test.end()
     })
-    traceIdTest.end()
+    generateTraceIdMessageTest.end()
   })
 
   loggerTest.end()

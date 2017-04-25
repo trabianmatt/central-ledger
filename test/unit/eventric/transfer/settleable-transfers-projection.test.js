@@ -4,7 +4,7 @@ const src = '../../../../src'
 const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const P = require('bluebird')
-const Logger = require('@leveloneproject/central-services-shared').Logger
+const Logger = require(`${src}/lib/logger`)
 const ExecutedTransfers = require(`${src}/models/executed-transfers`)
 const SettledTransfers = require(`${src}/models/settled-transfers`)
 const SettleableTransfersProjection = require(`${src}/eventric/transfer/settleable-transfers-projection`)
@@ -35,10 +35,10 @@ Test('Transfers-Projection', transfersProjectionTest => {
       let done = sandbox.stub()
 
       SettleableTransfersProjection.initialize({}, done)
-      .then(result => {
-        t.ok(done.calledOnce)
-        t.end()
-      })
+        .then(result => {
+          t.ok(done.calledOnce)
+          t.end()
+        })
     })
 
     initTest.test('log error thrown by truncateReadModel', t => {
@@ -48,11 +48,11 @@ Test('Transfers-Projection', transfersProjectionTest => {
       let done = sandbox.stub()
 
       SettleableTransfersProjection.initialize({}, done)
-      .then(result => {
-        t.notOk(done.called)
-        t.ok(Logger.error.calledWith('Error truncating read model', error))
-        t.end()
-      })
+        .then(result => {
+          t.notOk(done.called)
+          t.ok(Logger.error.calledWith('Error truncating read model', error))
+          t.end()
+        })
     })
 
     initTest.end()

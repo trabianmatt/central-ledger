@@ -1,30 +1,30 @@
 'use strict'
 
-const Logger = require('@leveloneproject/central-services-shared').Logger
+const Logger = require('../../lib/logger')
 const TransferService = require('../../domain/transfer')
 const TokenService = require('../../domain/token')
 const Config = require('../../lib/config')
 
 const rejectExpiredTransfers = () => {
   return TransferService.rejectExpired()
-  .then(x => {
-    Logger.info(`Rejected transfers: ${x}`)
-    return x
-  })
-  .catch(e => {
-    Logger.error('Error rejecting transfers', e)
-  })
+    .then(x => {
+      Logger.info(`Rejected transfers: ${x}`)
+      return x
+    })
+    .catch(e => {
+      Logger.error('Error rejecting transfers', e)
+    })
 }
 
 const rejectExpiredTokens = () => {
   return TokenService.removeExpired()
-  .then(x => {
-    Logger.info(`Rejected tokens: ${x}`)
-    return x
-  })
-  .catch(e => {
-    Logger.error('Error rejecting tokens', e)
-  })
+    .then(x => {
+      Logger.info(`Rejected tokens: ${x}`)
+      return x
+    })
+    .catch(e => {
+      Logger.error('Error rejecting tokens', e)
+    })
 }
 
 exports.rejectExpiredTransfers = rejectExpiredTransfers

@@ -4,7 +4,7 @@ const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const P = require('bluebird')
 const Uuid = require('uuid4')
-const Logger = require('@leveloneproject/central-services-shared').Logger
+const Logger = require('../../../../src/lib/logger')
 const FeeService = require('../../../../src/domain/fee')
 const FeesProjection = require('../../../../src/domain/fee/projection')
 

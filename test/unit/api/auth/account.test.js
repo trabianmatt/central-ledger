@@ -6,7 +6,7 @@ const P = require('bluebird')
 const Config = require('../../../../src/lib/config')
 const AccountService = require('../../../../src/domain/account')
 const AccountAuth = require('../../../../src/api/auth/account')
-const Logger = require('@leveloneproject/central-services-shared').Logger
+const Logger = require('../../../../src/lib/logger')
 
 Test('account auth module', authTest => {
   let sandbox

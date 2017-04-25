@@ -1,7 +1,7 @@
 'use strict'
 
 const DA = require('deasync-promise')
-const Logger = require('@leveloneproject/central-services-shared').Logger
+const Logger = require('../../lib/logger')
 const ExecutedTransfers = require('../../models/executed-transfers')
 const SettledTransfers = require('../../models/settled-transfers')
 
@@ -24,8 +24,8 @@ module.exports = {
 
   handleTransferSettled (event) {
     return DA(SettledTransfers.create({ id: event.aggregate.id, settlementId: event.payload.settlement_id })
-    .catch(err => {
-      Logger.error('Error handling TransferSettled event', err)
-    }))
+      .catch(err => {
+        Logger.error('Error handling TransferSettled event', err)
+      }))
   }
 }

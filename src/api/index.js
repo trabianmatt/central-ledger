@@ -1,7 +1,6 @@
 'use strict'
 
-const Logger = require('@leveloneproject/central-services-shared').Logger
-
+const Logger = require('../lib/logger')
 const Config = require('../lib/config')
 const Routes = require('./routes')
 const Auth = require('./auth')

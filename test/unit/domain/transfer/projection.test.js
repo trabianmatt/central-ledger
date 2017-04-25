@@ -5,7 +5,7 @@ const Sinon = require('sinon')
 const P = require('bluebird')
 const Uuid = require('uuid4')
 const Moment = require('moment')
-const Logger = require('@leveloneproject/central-services-shared').Logger
+const Logger = require('../../../../src/lib/logger')
 const UrlParser = require('../../../../src/lib/urlparser')
 const AccountService = require('../../../../src/domain/account')
 const TransferState = require('../../../../src/domain/transfer/state')
@@ -42,10 +42,10 @@ Test('Transfers-Projection', transfersProjectionTest => {
       let done = sandbox.stub()
 
       TransfersProjection.initialize({}, done)
-      .then(result => {
-        t.ok(done.calledOnce)
-        t.end()
-      })
+        .then(result => {
+          t.ok(done.calledOnce)
+          t.end()
+        })
     })
 
     initTest.test('log error thrown by truncateReadModel', t => {
@@ -55,11 +55,11 @@ Test('Transfers-Projection', transfersProjectionTest => {
       let done = sandbox.stub()
 
       TransfersProjection.initialize({}, done)
-      .then(result => {
-        t.notOk(done.called)
-        t.ok(Logger.error.calledWith('Error truncating read model', error))
-        t.end()
-      })
+        .then(result => {
+          t.notOk(done.called)
+          t.ok(Logger.error.calledWith('Error truncating read model', error))
+          t.end()
+        })
     })
 
     initTest.end()

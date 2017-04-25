@@ -7,7 +7,7 @@ const Blipp = require('blipp')
 const Good = require('good')
 
 const HapiSwagger = require('hapi-swagger')
-const Logger = require('@leveloneproject/central-services-shared').Logger
+const Logger = require('../lib/logger')
 const ErrorHandling = require('@leveloneproject/central-services-error-handling')
 const Auth = require('@leveloneproject/central-services-auth')
 
@@ -32,7 +32,7 @@ const registerPlugins = (server) => {
         winston: [{
           module: 'good-winston',
           args: [
-            Logger._logger,
+            Logger,
             {
               error_level: 'error',
               ops_level: 'debug',

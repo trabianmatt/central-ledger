@@ -2,6 +2,7 @@
 
 const Charges = require('../../domain/charge')
 const Errors = require('../../errors')
+const Logger = require('../../lib/logger')
 
 const validateRequest = (request) => {
   return Charges.getByName(request.payload.name).then(charge => {
@@ -33,6 +34,7 @@ function entityItem (charge) {
 }
 
 exports.create = (request, reply) => {
+  Logger.info('Admin Charges.create Request: %s', request)
   return validateRequest(request)
     .then(validatedRequest => Charges.create(validatedRequest.payload))
     .then(result => reply(entityItem(result)).code(201))
@@ -40,6 +42,7 @@ exports.create = (request, reply) => {
 }
 
 exports.update = (request, reply) => {
+  Logger.info('Admin Charges.update Request: %s', request)
   return validateRequest(request)
     .then(validatedRequest => {
       return Charges.update(request.params.name, validatedRequest.payload)

@@ -4,7 +4,7 @@ const _ = require('lodash')
 const P = require('bluebird')
 const Moment = require('moment')
 const DA = require('deasync-promise')
-const Logger = require('@leveloneproject/central-services-shared').Logger
+const Logger = require('../../lib/logger')
 const UrlParser = require('../../lib/urlparser')
 const Util = require('../../lib/util')
 const AccountService = require('../../domain/account')
@@ -12,7 +12,7 @@ const TransferState = require('./state')
 const TransferRejectionType = require('./rejection-type')
 const TransfersReadModel = require('./models/transfers-read-model')
 
-const saveTransferPrepared = ({aggregate, payload, timestamp}) => {
+const saveTransferPrepared = ({ aggregate, payload, timestamp }) => {
   const debitAccount = UrlParser.nameFromAccountUri(payload.debits[0].account)
   const creditAccount = UrlParser.nameFromAccountUri(payload.credits[0].account)
 
@@ -42,7 +42,7 @@ const saveTransferPrepared = ({aggregate, payload, timestamp}) => {
     })
 }
 
-const saveTransferExecuted = ({aggregate, payload, timestamp}) => {
+const saveTransferExecuted = ({ aggregate, payload, timestamp }) => {
   const fields = {
     state: TransferState.EXECUTED,
     fulfillment: payload.fulfillment,
@@ -51,7 +51,7 @@ const saveTransferExecuted = ({aggregate, payload, timestamp}) => {
   return TransfersReadModel.updateTransfer(aggregate.id, fields)
 }
 
-const saveTransferRejected = ({aggregate, payload, timestamp}) => {
+const saveTransferRejected = ({ aggregate, payload, timestamp }) => {
   const fields = {
     state: TransferState.REJECTED,
     rejectionReason: payload.rejection_reason,
