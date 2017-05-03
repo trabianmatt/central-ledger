@@ -235,7 +235,7 @@ Test('accounts handler', handlerTest => {
       Handler.updateUserCredentials(request, reply)
     })
 
-    updateUserCredentialsTest.test('reply with unauthorizd error if user credentials do not match', test => {
+    updateUserCredentialsTest.test('reply with unauthorized error if user credentials do not match', test => {
       const name = 'somename'
       const account = createAccount(name)
       Account.getByName.returns(P.resolve(account))

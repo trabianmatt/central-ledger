@@ -25,6 +25,13 @@ const handleExistingRecord = (entity) => {
   return entity
 }
 
+const handleMissingRecord = (entity) => {
+  if (!entity) {
+    throw new Errors.NotFoundError('The requested resource could not be found.')
+  }
+  return entity
+}
+
 const create = (request, reply) => {
   Logger.info('Admin Accounts.create Request: %s', request)
   Account.getByName(request.payload.name)
@@ -41,6 +48,14 @@ const getAll = (request, reply) => {
     .catch(reply)
 }
 
+const getByName = (request, reply) => {
+  Account.getByName(request.params.name)
+    .then(handleMissingRecord)
+    .then(account => entityItem(account))
+    .then(reply)
+    .catch(reply)
+}
+
 const update = (request, reply) => {
   Logger.info('Admin Accounts.update Request: %s', request)
   Account.update(request.params.name, request.payload)
@@ -51,5 +66,6 @@ const update = (request, reply) => {
 module.exports = {
   create,
   getAll,
+  getByName,
   update
 }

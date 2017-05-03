@@ -10,6 +10,7 @@ class Permission {
 const permissions = {
   ACCOUNTS_CREATE: new Permission('ACCOUNTS_CREATE', 'Create an account'),
   ACCOUNTS_LIST: new Permission('ACCOUNTS_LIST', 'List all accounts'),
+  ACCOUNTS_VIEW: new Permission('ACCOUNTS_VIEW', 'View account details'),
   ACCOUNTS_UPDATE: new Permission('ACCOUNTS_UPDATE', 'Update account'),
   CHARGES_LIST: new Permission('CHARGES_GET', 'List all charges'),
   CHARGES_CREATE: new Permission('CHARGES_CREATE', 'Create a new charge'),

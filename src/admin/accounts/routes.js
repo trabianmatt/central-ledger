@@ -17,6 +17,16 @@ module.exports = [
     config: RouteConfig.config(tags, Permissions.ACCOUNTS_LIST)
   },
   {
+    method: 'GET',
+    path: '/accounts/{name}',
+    handler: Handler.getByName,
+    config: RouteConfig.config(tags, Permissions.ACCOUNTS_VIEW, {
+      params: {
+        name: Joi.string().required().description('Account name')
+      }
+    })
+  },
+  {
     method: 'POST',
     path: '/accounts',
     handler: Handler.create,

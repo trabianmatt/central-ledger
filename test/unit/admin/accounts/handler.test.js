@@ -78,6 +78,53 @@ Test('accounts handler', handlerTest => {
     getAllTest.end()
   })
 
+  handlerTest.test('getByName should', getByNameTest => {
+    getByNameTest.test('get and format an account', test => {
+      const account1 = {
+        name: 'account1',
+        createdDate: new Date(),
+        isDisabled: false
+      }
+
+      Account.getByName.returns(P.resolve(account1))
+
+      const reply = response => {
+        test.equal(response.name, account1.name)
+        test.equal(response.id, `${hostname}/accounts/${account1.name}`)
+        test.equal(response.is_disabled, false)
+        test.equal(response.created, account1.createdDate)
+        test.equal(response._links.self, `${hostname}/accounts/${account1.name}`)
+        test.end()
+      }
+
+      Handler.getByName({ params: { name: account1.name } }, reply)
+    })
+
+    getByNameTest.test('reply with not found error if Account does not exist', test => {
+      const error = new Errors.NotFoundError('The requested resource could not be found.')
+      Account.getByName.returns(P.resolve(null))
+
+      const reply = (e) => {
+        test.deepEqual(e, error)
+        test.end()
+      }
+      Handler.getByName({ params: { name: 'name' } }, reply)
+    })
+
+    getByNameTest.test('reply with error if Account services throws', test => {
+      const error = new Error()
+      Account.getByName.returns(P.reject(error))
+
+      const reply = (e) => {
+        test.equal(e, error)
+        test.end()
+      }
+      Handler.getByName({ params: { name: 'name' } }, reply)
+    })
+
+    getByNameTest.end()
+  })
+
   handlerTest.test('updateAccount should', updateAccountTest => {
     updateAccountTest.test('update an account to disabled', test => {
       const account = {
@@ -98,7 +145,7 @@ Test('accounts handler', handlerTest => {
       }
 
       const request = {
-        payload: {is_disabled: false},
+        payload: { is_disabled: false },
         params: { name: 'name' }
       }
 
@@ -110,7 +157,7 @@ Test('accounts handler', handlerTest => {
       Account.update.returns(P.reject(error))
 
       const request = {
-        payload: {is_disabled: false},
+        payload: { is_disabled: false },
         params: { name: 'name' }
       }
 
