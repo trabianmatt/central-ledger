@@ -82,7 +82,6 @@ Test('return error if id is not a guid on rejection', function (assert) {
 
 Test('return error if rejection reason missing', function (assert) {
   let req = Base.buildRequest({ url: '/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/rejection', method: 'PUT' })
-
   Base.setup().then(server => {
     server.inject(req, function (res) {
       Base.assertBadRequestError(assert, res, [{ message: 'value must be an object', params: { key: 'value' } }])

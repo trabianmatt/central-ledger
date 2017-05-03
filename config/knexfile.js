@@ -1,10 +1,10 @@
 'use strict'
 
 const migrationsDirectory = '../migrations'
-
+const Config = require('../src/lib/config')
 module.exports = {
   client: 'pg',
-  connection: process.env.CLEDG_DATABASE_URI,
+  connection: Config.DATABASE_URI,
   migrations: {
     directory: migrationsDirectory,
     tableName: 'migrations',

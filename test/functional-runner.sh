@@ -47,7 +47,7 @@ run_test_command()
 }
 
 shutdown_and_remove() {
-  docker-compose -f $docker_compose_file -f $docker_functional_compose_file down --rmi local
+  docker-compose -f $docker_compose_file -f $docker_functional_compose_file stop
 }
 
 >&2 echo "Loading environment variables"

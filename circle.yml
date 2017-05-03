@@ -26,6 +26,7 @@ dependencies:
     - sudo pip install docker-compose==1.8.1
     - curl -udwolla:$NPM_TOKEN "https://modusbox.jfrog.io/modusbox/api/npm/level1-npm-release/auth/leveloneproject" >> .npmrc
   post:
+    - npm install github:interledgerjs/five-bells-ledger-api-tests
     - docker build -f api.Dockerfile -t $API_IMAGE .
     - docker build -f admin.Dockerfile -t $ADMIN_IMAGE .
 
@@ -37,6 +38,7 @@ test:
     - npm -s run test:coverage-check
     - npm -s run test:integration
     - npm -s run test:functional:test-only
+    - npm -s run test:spec
   post:
     - cp ./test/results/* $CIRCLE_TEST_REPORTS
     - mv ./coverage $CIRCLE_ARTIFACTS
