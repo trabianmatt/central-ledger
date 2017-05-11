@@ -3,7 +3,6 @@
 const Account = require('../../domain/account')
 const Errors = require('../../errors')
 const UrlParser = require('../../lib/urlparser')
-const Logger = require('../../lib/logger')
 
 const entityItem = ({ name, createdDate, isDisabled }) => {
   const link = UrlParser.toAccountUri(name)
@@ -33,7 +32,6 @@ const handleMissingRecord = (entity) => {
 }
 
 const create = (request, reply) => {
-  Logger.info('Admin Accounts.create Request: %s', request)
   Account.getByName(request.payload.name)
     .then(handleExistingRecord)
     .then(() => Account.create(request.payload))
@@ -57,7 +55,6 @@ const getByName = (request, reply) => {
 }
 
 const update = (request, reply) => {
-  Logger.info('Admin Accounts.update Request: %s', request)
   Account.update(request.params.name, request.payload)
     .then(result => reply(entityItem(result)))
     .catch(reply)

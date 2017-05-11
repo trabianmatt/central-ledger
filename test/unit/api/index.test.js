@@ -4,7 +4,7 @@ const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const P = require('bluebird')
 
-const Logger = require('../../../src/lib/logger')
+const Logger = require('@leveloneproject/central-services-shared').Logger
 const Config = require('../../../src/lib/config')
 const Routes = require('../../../src/api/routes')
 const Auth = require('../../../src/api/auth')

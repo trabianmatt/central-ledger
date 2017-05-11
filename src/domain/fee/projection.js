@@ -1,7 +1,7 @@
 'use strict'
 
 const DA = require('deasync-promise')
-const Logger = require('../../lib/logger')
+const Logger = require('@leveloneproject/central-services-shared').Logger
 const FeeService = require('./index')
 
 const initialize = (params, done) => {

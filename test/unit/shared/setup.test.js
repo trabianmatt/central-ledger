@@ -11,8 +11,7 @@ const Config = require('../../../src/lib/config')
 const Eventric = require('../../../src/eventric')
 const Plugins = require('../../../src/shared/plugins')
 const Setup = require('../../../src/shared/setup')
-const cls = require('continuation-local-storage')
-const Proxyquire = require('proxyquire')
+const RequestLogger = require('../../../src/lib/request-logger')
 
 Test('setup', setupTest => {
   let sandbox
@@ -25,7 +24,8 @@ Test('setup', setupTest => {
     sandbox.stub(Plugins, 'registerPlugins')
     sandbox.stub(Migrator)
     sandbox.stub(Eventric)
-    sandbox.stub(cls, 'createNamespace')
+    sandbox.stub(RequestLogger, 'logRequest')
+    sandbox.stub(RequestLogger, 'logResponse')
     Db.connect = sandbox.stub()
 
     oldDatabaseUri = Config.DATABASE_URI
@@ -74,29 +74,25 @@ Test('setup', setupTest => {
       })
     })
 
-    createServerTest.test('setup cls namespace for logging trace id', test => {
-      test.ok(cls.getNamespace('trace'))
-      test.end()
-    })
-
-    createServerTest.test('setup cls for logging trace id', test => {
+    createServerTest.test('setup onRequest ext', test => {
       const server = createServer()
       const port = 1234
-
-      let cls = { getNamespace: sandbox.stub() }
-      let ns = sandbox.stub()
-      ns.set = sandbox.stub()
-
-      cls.getNamespace.returns(ns)
-
-      let namespaceSetup = Proxyquire('../../../src/shared/setup', { 'continuation-local-storage': cls })
-
-      namespaceSetup.createServer(port).then(() => {
+      Setup.createServer(port).then(() => {
         test.ok(server.ext.calledWith(Sinon.match('onRequest', (request, reply) => {
-          ns.run(() => {
-            ns.set('headers', request.headers)
-            reply.continue()
-          })
+          RequestLogger.logRequest(request)
+          reply.continue()
+        })))
+        test.end()
+      })
+    })
+
+    createServerTest.test('setup onPreResponse ext', test => {
+      const server = createServer()
+      const port = 1234
+      Setup.createServer(port).then(() => {
+        test.ok(server.ext.calledWith(Sinon.match('onRequest', (request, reply) => {
+          RequestLogger.logResponse(request)
+          reply.continue()
         })))
         test.end()
       })

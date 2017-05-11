@@ -7,7 +7,7 @@ const Blipp = require('blipp')
 const Good = require('good')
 
 const HapiSwagger = require('hapi-swagger')
-const Logger = require('../lib/logger')
+const Logger = require('@leveloneproject/central-services-shared').Logger
 const ErrorHandling = require('@leveloneproject/central-services-error-handling')
 const Auth = require('@leveloneproject/central-services-auth')
 

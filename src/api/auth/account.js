@@ -2,7 +2,7 @@
 
 const Config = require('../../lib/config')
 const AccountService = require('../../domain/account')
-const Logger = require('../../lib/logger')
+const Logger = require('@leveloneproject/central-services-shared').Logger
 
 const validate = (request, name, password, cb) => {
   if (!password) {

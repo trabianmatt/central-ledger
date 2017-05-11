@@ -6,7 +6,6 @@ const UrlParser = require('../../lib/urlparser')
 const Util = require('../../lib/util')
 const PositionService = require('../../domain/position')
 const Errors = require('../../errors')
-const Logger = require('../../lib/logger')
 
 const buildAccount = (account) => {
   return {
@@ -46,8 +45,6 @@ const getPosition = (account) => {
 }
 
 exports.create = (request, reply) => {
-  Logger.info('Accounts.create Request: %s', request)
-
   Account.getByName(request.payload.name)
     .then(handleExistingRecord)
     .then(() => Account.create(request.payload))
@@ -56,8 +53,6 @@ exports.create = (request, reply) => {
 }
 
 exports.updateUserCredentials = (request, reply) => {
-  Logger.info('Accounts.updateUserCredentials Request: %s', request)
-
   const accountName = request.params.name
   const credentials = request.auth.credentials
   const authenticated = (credentials && (credentials.is_admin || credentials.name === accountName))
