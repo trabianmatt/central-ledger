@@ -5,6 +5,7 @@ const Sinon = require('sinon')
 const EventEmitter = require('events').EventEmitter
 const SocketValidator = require('../../../../src/api/sockets/validator')
 const WebSocket = require('../../../../src/api/sockets/websocket')
+const RequestLogger = require('../../../../src/lib/request-logger')
 
 Test('WebSocket', socketTest => {
   let sandbox
@@ -13,6 +14,7 @@ Test('WebSocket', socketTest => {
   socketTest.beforeEach(test => {
     sandbox = Sinon.sandbox.create()
     sandbox.stub(SocketValidator, 'validateSubscriptionRequest')
+    sandbox.stub(RequestLogger, 'logWebsocket')
     socketManager = {
       add: sandbox.spy()
     }
@@ -103,6 +105,25 @@ Test('WebSocket', socketTest => {
       socket.emit('message', 'some request')
 
       test.ok(socketManager.add.calledWith(socket, ...accountUris))
+      test.end()
+    })
+
+    initializeTest.test('log out websocket request', test => {
+      const socket = new EventEmitter()
+      const id = 100
+      const jsonrpc = 'jsonrpc'
+      const accountUris = ['', '']
+      socket.send = sandbox.spy()
+      socket.close = sandbox.spy()
+      const request = 'some request'
+      SocketValidator.validateSubscriptionRequest.withArgs(request).yields(null, { id, jsonrpc, accountUris })
+
+      WebSocket.initialize(socket, socketManager)
+      socket.emit('message', request)
+
+      const logArgs = RequestLogger.logWebsocket.firstCall.args[0]
+
+      test.equal(logArgs, request)
       test.end()
     })
 

@@ -37,6 +37,7 @@ const createServer = (port, modules) => {
       RequestLogger.logResponse(request)
       reply.continue()
     })
+
     Plugins.registerPlugins(server)
     server.register(modules)
     resolve(server)

@@ -1,5 +1,7 @@
 'use strict'
 
+const RequestLogger = require('./../../lib/request-logger')
+
 class SocketManager {
   constructor () {
     this._sockets = []
@@ -34,7 +36,10 @@ class SocketManager {
   send (name, message) {
     const jsonMessage = JSON.stringify(message)
     this._findSocketsForAccount(name)
-      .forEach(s => s.send(jsonMessage))
+      .forEach(s => {
+        RequestLogger.logWebsocket(JSON.stringify({ name, message }))
+        s.send(jsonMessage)
+      })
   }
 }
 

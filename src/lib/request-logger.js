@@ -18,7 +18,12 @@ const logResponse = function (request) {
   }
 }
 
+const logWebsocket = function (data) {
+  Logger.info(`Websocket: ${data}`)
+}
+
 module.exports = {
   logRequest,
-  logResponse
+  logResponse,
+  logWebsocket
 }

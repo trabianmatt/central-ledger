@@ -4,17 +4,22 @@ const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const EventEmitter = require('events').EventEmitter
 const SocketManager = require('../../../../src/api/sockets/socket-manager')
+const RequestLogger = require('../../../../src/lib/request-logger')
 
 Test('SocketManager', managerTest => {
   let manager
+  let sandbox
 
   managerTest.beforeEach(test => {
     manager = SocketManager.create()
+    sandbox = Sinon.sandbox.create()
+    sandbox.stub(RequestLogger, 'logWebsocket')
     test.end()
   })
 
   managerTest.afterEach(test => {
     manager = null
+    sandbox.restore()
     test.end()
   })
 
@@ -126,6 +131,25 @@ Test('SocketManager', managerTest => {
       test.equal(socket.send.called, false)
       manager.send(wrongAccountName, {})
       test.equal(socket.send.called, false)
+      test.end()
+    })
+
+    sendTest.test('log sent message', test => {
+      const name = 'http://test/accounts/dfsp1'
+      const message = { value: 'message' }
+      const socket = {
+        once: Sinon.spy(),
+        send: Sinon.spy()
+      }
+
+      manager.add(socket, name)
+      test.equal(socket.send.called, false)
+
+      manager.send(name, message)
+
+      const logArgs = RequestLogger.logWebsocket.firstCall.args[0]
+
+      test.equal(logArgs, JSON.stringify({ name, message }))
       test.end()
     })
 

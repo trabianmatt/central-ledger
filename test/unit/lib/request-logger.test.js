@@ -64,5 +64,18 @@ Test('logger', loggerTest => {
     responseTest.end()
   })
 
+  loggerTest.test('websocket should', requestTest => {
+    requestTest.test('send info message to the serviceslogger', test => {
+      const request = {
+        body: 'this is the body'
+      }
+      RequestLogger.logWebsocket(request)
+      const args = Logger.info.firstCall.args
+      test.equal(args[0], `Websocket: ${request}`)
+      test.end()
+    })
+    requestTest.end()
+  })
+
   loggerTest.end()
 })
