@@ -1,4 +1,4 @@
-# Central Ledger Onboarding
+# Central Ledger Setup
 ***
 ### Introduction 
 In this document we'll walk through the setup for the Level One Project Central Ledger. It consists of three sections:
