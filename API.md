@@ -1,4 +1,4 @@
-# Central Ledger API Documentation
+# Central Ledger API
 ***
 
 The central ledger has two APIs targeted at different consumers. The DFSP API is used by DFSPs to prepare and execute transfers, and for DFSPs to retrieve their current settlement position. The Admin API is used by the operational hub to manage DFSPs and ensure the health of the system.
