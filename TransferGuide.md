@@ -1,4 +1,4 @@
-# Transfer Guide
+# Working with Transfers
 ***
 
 ## Introduction
