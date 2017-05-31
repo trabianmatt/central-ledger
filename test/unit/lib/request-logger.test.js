@@ -3,6 +3,7 @@
 const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const Logger = require('@leveloneproject/central-services-shared').Logger
+const Util = require('util')
 const RequestLogger = require('../../../src/lib/request-logger')
 
 Test('logger', loggerTest => {
@@ -11,6 +12,7 @@ Test('logger', loggerTest => {
   loggerTest.beforeEach(test => {
     sandbox = Sinon.sandbox.create()
     sandbox.stub(Logger, 'info')
+    sandbox.stub(Util, 'inspect')
 
     test.end()
   })
@@ -45,11 +47,11 @@ Test('logger', loggerTest => {
     responseTest.test('send info message to the serviceslogger', test => {
       const request = {
         headers: { traceid: '123456' },
-        response: 'this is the response'
+        response: { source: 'this is the response', statusCode: '200' }
       }
       RequestLogger.logResponse(request)
       const args = Logger.info.firstCall.args
-      test.equal(args[0], `L1p-Trace-Id=${request.headers.traceid} - Response: ${request.response}`)
+      test.equal(args[0], `L1p-Trace-Id=${request.headers.traceid} - Response: ${JSON.stringify(request.response.source)} Status: ${request.response.statusCode}`)
       test.end()
     })
 
@@ -59,6 +61,18 @@ Test('logger', loggerTest => {
       }
       RequestLogger.logResponse(request)
       test.notOk(Logger.info.called)
+      test.end()
+    })
+
+    responseTest.test('use util.inspect if JSON.stringify throws', test => {
+      const request = {
+        headers: { traceid: '123456' },
+        response: { source: { body: 'this is the response' }, statusCode: '200' }
+      }
+      request.response.source.circular = request.response
+      RequestLogger.logResponse(request)
+      const args = Util.inspect.firstCall.args
+      test.equal(args[0], request.response.source)
       test.end()
     })
     responseTest.end()

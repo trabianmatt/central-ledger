@@ -9,6 +9,7 @@ const Eventric = require('../eventric')
 const Plugins = require('./plugins')
 const Config = require('../lib/config')
 const RequestLogger = require('../lib/request-logger')
+const Uuid = require('uuid4')
 
 const migrate = (runMigrations) => {
   return runMigrations ? Migrator.migrate() : P.resolve()
@@ -30,6 +31,7 @@ const createServer = (port, modules) => {
       }
     })
     server.ext('onRequest', (request, reply) => {
+      request.headers.traceid = request.headers.traceid || Uuid()
       RequestLogger.logRequest(request)
       reply.continue()
     })

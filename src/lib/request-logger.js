@@ -1,6 +1,7 @@
 'use strict'
 
 const Logger = require('@leveloneproject/central-services-shared').Logger
+const Util = require('util')
 
 const logRequest = function (request) {
   const traceId = request.headers.traceid
@@ -14,7 +15,14 @@ const logRequest = function (request) {
 const logResponse = function (request) {
   const traceId = request.headers.traceid
   if (request.response) {
-    Logger.info(`L1p-Trace-Id=${traceId} - Response: ${request.response}`)
+    let response
+    try {
+      response = JSON.stringify(request.response.source)
+    } catch (e) {
+      response = Util.inspect(request.response.source)
+    }
+
+    Logger.info(`L1p-Trace-Id=${traceId} - Response: ${response} Status: ${request.response.statusCode}`)
   }
 }
 
