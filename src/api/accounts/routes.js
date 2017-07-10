@@ -57,5 +57,25 @@ module.exports = [{
       }
     }
   }
+},
+{
+  method: 'PUT',
+  path: '/accounts/{name}/settlement',
+  handler: Handler.updateAccountSettlement,
+  config: {
+    id: 'account_update_account_settlement',
+    tags: tags,
+    description: 'Update an accounts user credentials',
+    auth: Auth.strategy(),
+    validate: {
+      params: {
+        name: nameValidator
+      },
+      payload: {
+        account_number: Joi.string().token().max(16).required().description('Account number for the settlement'),
+        routing_number: Joi.string().token().max(16).required().description('Routing number for the settlement')
+      }
+    }
+  }
 }
 ]

@@ -143,5 +143,25 @@ Test('accounts model', modelTest => {
     retrieveUserCredentialsTest.end()
   })
 
+  modelTest.test('updateAccountSettlement should', updateAccountSettlementTest => {
+    updateAccountSettlementTest.test('update settlement for a given account', test => {
+      const account = Fixtures.generateAccountName()
+      const settlement = {
+        account_number: '12345',
+        routing_number: '67890'
+      }
+      createAccount(account, '1234')
+        .then((createdAccount) => Model.updateAccountSettlement(createdAccount, settlement)
+          .then((accountSettlement) => {
+            test.equal(accountSettlement.accountId, createdAccount.accountId)
+            test.equal(accountSettlement.accountNumber, settlement.account_number)
+            test.equal(accountSettlement.routingNumber, settlement.routing_number)
+            test.end()
+          }))
+    })
+
+    updateAccountSettlementTest.end()
+  })
+
   modelTest.end()
 })

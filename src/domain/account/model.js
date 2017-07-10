@@ -26,6 +26,16 @@ exports.updateUserCredentials = (account, hashedPassword) => {
   return Db.userCredentials.update({ accountId: account.accountId }, { password: hashedPassword })
 }
 
+exports.updateAccountSettlement = (account, settlement) => {
+  return Db.accountsSettlement.findOne({ accountId: account.accountId })
+    .then(accountSettlement => {
+      if (accountSettlement) {
+        return Db.accountsSettlement.update({ accountId: account.accountId }, { accountNumber: settlement.account_number, routingNumber: settlement.routing_number })
+      }
+      return Db.accountsSettlement.insert({ accountId: account.accountId, accountNumber: settlement.account_number, routingNumber: settlement.routing_number })
+    })
+}
+
 exports.create = (account) => {
   return Db.accounts.insert({ name: account.name })
     .then(insertedAccount => {

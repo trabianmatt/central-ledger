@@ -53,6 +53,7 @@ Test('accounts handler', handlerTest => {
     sandbox.stub(Account, 'getByName')
     sandbox.stub(Account, 'getAll')
     sandbox.stub(Account, 'updateUserCredentials')
+    sandbox.stub(Account, 'updateAccountSettlement')
     sandbox.stub(PositionService, 'calculateForAccount')
     t.end()
   })
@@ -329,6 +330,89 @@ Test('accounts handler', handlerTest => {
     })
 
     createTest.end()
+  })
+
+  handlerTest.test('update settlement should', updateSettlementTest => {
+    updateSettlementTest.test('return updated settlement', assert => {
+      const name = 'dfsp1'
+      const payload = { account_number: '123', routing_number: '456' }
+      const credentials = { key: 'key', secret: 'secret' }
+      const account = createAccount(name)
+      account.credentials = credentials
+      const settlement = { accountId: account.accountId, accountNumber: payload.account_number, routingNumber: payload.routing_number }
+
+      Account.getByName.withArgs(name).returns(P.resolve(account))
+      Account.updateAccountSettlement.withArgs(account, payload).returns(P.resolve(settlement))
+
+      const reply = response => {
+        assert.equal(response.account_id, account.accountId)
+        assert.equal(response.account_number, payload.account_number)
+        assert.equal(response.routing_number, payload.routing_number)
+        assert.end()
+      }
+
+      const request = createPut(name, { name })
+      request.payload = payload
+      Handler.updateAccountSettlement(request, reply)
+    })
+
+    updateSettlementTest.test('return error if Account throws error on checking for existing account', test => {
+      const name = 'dfsp1'
+      const payload = { account_number: '123', routing_number: '456' }
+      const credentials = { key: 'key', secret: 'secret' }
+      const account = createAccount(name)
+      account.credentials = credentials
+      const error = new Error()
+
+      Account.getByName.returns(P.reject(error))
+
+      const reply = e => {
+        test.equal(e, error)
+        test.end()
+      }
+
+      const request = createPut(name, { name })
+      request.payload = payload
+      Handler.updateAccountSettlement(request, reply)
+    })
+
+    updateSettlementTest.test('return error if Account throws error on updateAccountSettlement', test => {
+      const name = 'dfsp1'
+      const payload = { account_number: '123', routing_number: '456' }
+      const credentials = { key: 'key', secret: 'secret' }
+      const account = createAccount(name)
+      account.credentials = credentials
+      const error = new Error()
+
+      Account.getByName.returns(P.resolve(account))
+      Account.updateAccountSettlement.returns(P.reject(error))
+
+      const reply = e => {
+        test.equal(e, error)
+        test.end()
+      }
+
+      const request = createPut(name, { name })
+      request.payload = payload
+      Handler.updateAccountSettlement(request, reply)
+    })
+
+    updateSettlementTest.test('return error if not authenticated', test => {
+      const name = 'dfsp1'
+      const payload = { account_number: '123', routing_number: '456' }
+
+      const request = createPut(name, { name: '1234' })
+      request.payload = payload
+      try {
+        Handler.updateAccountSettlement(request)
+      } catch (error) {
+        test.assert(error instanceof Errors.UnauthorizedError)
+        test.equal(error.message, 'Invalid attempt updating the settlement.')
+        test.end()
+      }
+    })
+
+    updateSettlementTest.end()
   })
 
   handlerTest.end()

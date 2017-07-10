@@ -92,3 +92,25 @@ Test('update an accounts passsword', test => {
         })
     })
 })
+
+Test('update an accounts settlement', test => {
+  const accountName = Fixtures.generateAccountName()
+  const password = '1234'
+  const accountNumber = '1234'
+  const routingNumber = '5678'
+
+  Base.createAccount(accountName, password)
+    .expect(201)
+    .expect('Content-Type', /json/)
+    .then(() => {
+      Base.putApi(`/accounts/${accountName}/settlement`, { account_number: accountNumber, routing_number: routingNumber })
+        .expect(200)
+        .expect('Content-Type', /json/)
+        .then(res => {
+          test.ok(res.body.account_id)
+          test.equal(res.body.account_number, accountNumber)
+          test.equal(res.body.routing_number, routingNumber)
+          test.end()
+        })
+    })
+})

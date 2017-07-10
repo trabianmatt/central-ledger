@@ -6,6 +6,7 @@ The central ledger has two APIs targeted at different consumers. The DFSP API is
 #### [DFSP API](#dfsp-api) endpoints
 * `GET` [**Get account**](#get-account)
 * `PUT` [**Update account**](#update-account)
+* `PUT` [**Update account settlement**](#update-account-settlement)
 * `POST` [**Send message to account**](#send-message-to-account)
 * `GET` [**Get position for account**](#get-position-for-account)
 * `PUT` [**Prepare transfer**](#prepare-transfer) 
@@ -140,6 +141,62 @@ The update account endpoint will update the account's credentials and return the
     "_links": {
       "self": "http://localhost:3000/accounts/dfsp1"
     }
+  }
+```
+
+##### Errors (4xx)
+| Field | Description |
+| ----- | ----------- |
+| NotFoundError | The requested resource could not be found |
+``` http
+{
+  "id": "NotFoundError",
+  "message": "The requested resource could not be found."
+}
+```
+
+#### Update account settlement
+The update account settlement endpoint will create a new account settlement with the account's id and return the newly updated account settlement.
+
+##### HTTP Request
+`PUT http://central-ledger/accounts/dfsp1/settlement`
+
+##### URL Params
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| name | String | The name for the account |
+
+##### Request body
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| account_number | String | The account number associated with the account's settlement |
+| routing_number | String | The routing number associated with the account's settlement |
+
+##### Response 200 OK
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| account_id | URI | The id for the account |
+| account_number | String | The account number associated with the account's settlement |
+| routing_number | String | The routing number associated with the account's settlement |
+
+##### Request
+``` http
+  PUT http://central-ledger/accounts/dfsp1/settlement HTTP/1.1
+  Content-Type: application/json
+  {
+    "account_number": "12345",
+    "routing_number": "1234 5678 91011",
+  }
+```
+
+##### Response
+``` http
+  HTTP/1.1 200 OK
+  Content-Type: application/json
+  {
+    "account_id": "dfsp1"
+    "account_number": "12345",
+    "routing_number": "1234 5678 91011",
   }
 ```
 

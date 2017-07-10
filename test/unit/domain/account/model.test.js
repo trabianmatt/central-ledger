@@ -24,6 +24,11 @@ Test('accounts model', modelTest => {
       findOne: sandbox.stub(),
       update: sandbox.stub()
     }
+    Db.accountsSettlement = {
+      insert: sandbox.stub(),
+      findOne: sandbox.stub(),
+      update: sandbox.stub()
+    }
 
     t.end()
   })
@@ -256,6 +261,48 @@ Test('accounts model', modelTest => {
     })
 
     retrieverUserCredsTest.end()
+  })
+
+  modelTest.test('updateAccountSettlement should', updateAccountSettlementTest => {
+    updateAccountSettlementTest.test('return created settlement for a given account', test => {
+      let accountId = '1234'
+      let accountNumber = '12345'
+      let routingNumber = '67890'
+
+      Db.accountsSettlement.findOne.returns(P.resolve(null))
+      Db.accountsSettlement.insert.returns(P.resolve({ accountId, accountNumber, routingNumber }))
+
+      Model.updateAccountSettlement({ accountId }, { account_number: accountNumber, routing_number: routingNumber })
+        .then(r => {
+          test.ok(Db.accountsSettlement.insert.withArgs({ accountId, accountNumber, routingNumber }).calledOnce)
+          test.deepEqual(r, { accountId, accountNumber, routingNumber })
+          test.end()
+        })
+        .catch(err => {
+          test.fail(err)
+        })
+    })
+
+    updateAccountSettlementTest.test('return updated settlement for a given account', test => {
+      let accountId = '1234'
+      let accountNumber = '12345'
+      let routingNumber = '67890'
+
+      Db.accountsSettlement.findOne.returns(P.resolve({ accountId, accountNumber, routingNumber }))
+      Db.accountsSettlement.update.returns(P.resolve({ accountId, accountNumber, routingNumber }))
+
+      Model.updateAccountSettlement({ accountId }, { account_number: accountNumber, routing_number: routingNumber })
+        .then(r => {
+          test.ok(Db.accountsSettlement.update.withArgs({ accountId }, { accountNumber, routingNumber }).calledOnce)
+          test.deepEqual(r, { accountId, accountNumber, routingNumber })
+          test.end()
+        })
+        .catch(err => {
+          test.fail(err)
+        })
+    })
+
+    updateAccountSettlementTest.end()
   })
 
   modelTest.end()

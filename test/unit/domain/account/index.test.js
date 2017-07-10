@@ -178,6 +178,24 @@ Test('Account service', serviceTest => {
     updateUserCredentialsTest.end()
   })
 
+  serviceTest.test('updateAccountSettlement should', updateAccountSettlementTest => {
+    updateAccountSettlementTest.test('updateAccountSettlement from Model', test => {
+      const accountId = '1'
+      const accountNumber = '12345'
+      const routingNumber = '67890'
+      const response = { accountId, accountNumber, routingNumber }
+      Model.updateAccountSettlement.returns(P.resolve(response))
+
+      AccountService.updateAccountSettlement({ accountId }, { accountNumber, routingNumber })
+        .then(result => {
+          test.deepEqual(result, response)
+          test.end()
+        })
+    })
+
+    updateAccountSettlementTest.end()
+  })
+
   serviceTest.test('update should', updateTest => {
     updateTest.test('update from Model', test => {
       const isDisabled = false

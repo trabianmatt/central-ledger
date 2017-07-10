@@ -24,6 +24,14 @@ const buildResponse = (account, { net = '0' } = {}) => {
   })
 }
 
+const settlementResponse = (settlement) => {
+  return {
+    account_id: settlement.accountId,
+    account_number: settlement.accountNumber,
+    routing_number: settlement.routingNumber
+  }
+}
+
 const handleExistingRecord = (entity) => {
   if (entity) {
     throw new Errors.RecordExistsError()
@@ -65,6 +73,23 @@ exports.updateUserCredentials = (request, reply) => {
     .then(handleMissingRecord)
     .then(account => Account.updateUserCredentials(account, request.payload))
     .then(updatedAccount => buildAccount(updatedAccount))
+    .then(reply)
+    .catch(reply)
+}
+
+exports.updateAccountSettlement = (request, reply) => {
+  const accountName = request.params.name
+  const credentials = request.auth.credentials
+  const authenticated = (credentials && (credentials.is_admin || credentials.name === accountName))
+
+  if (!authenticated) {
+    throw new Errors.UnauthorizedError('Invalid attempt updating the settlement.')
+  }
+
+  Account.getByName(request.params.name)
+    .then(handleMissingRecord)
+    .then(account => Account.updateAccountSettlement(account, request.payload))
+    .then(settlement => settlementResponse(settlement))
     .then(reply)
     .catch(reply)
 }
