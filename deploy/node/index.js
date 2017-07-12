@@ -20,6 +20,10 @@ const pushService = ({IMAGE, NAME, PORT}, version) => {
     {
       name: 'CLEDG_EXPIRES_TIMEOUT',
       value: '1800000'
+    },
+    {
+      name: 'CLEDG_ENABLE_BASIC_AUTH',
+      value: 'true'
     }
   ]
   const serviceName = `${NAME}-${Variables.ENVIRONMENT}`
