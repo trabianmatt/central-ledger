@@ -4,6 +4,7 @@
 The central ledger has two APIs targeted at different consumers. The DFSP API is used by DFSPs to prepare and execute transfers, and for DFSPs to retrieve their current settlement position. The Admin API is used by the operational hub to manage DFSPs and ensure the health of the system.
 
 #### [DFSP API](#dfsp-api) endpoints
+* `POST` [**Create account**](#create-account)
 * `GET` [**Get account**](#get-account)
 * `PUT` [**Update account**](#update-account)
 * `PUT` [**Update account settlement**](#update-account-settlement)
@@ -16,13 +17,12 @@ The central ledger has two APIs targeted at different consumers. The DFSP API is
 * `GET` [**Get transfer fulfillment**](#get-transfer-fulfillment)
 * `GET` [**Get net positions**](#get-net-positions) 
 * `GET` [**Get metadata**](#get-metadata) 
-* `POST` [**Settle fulfilled transfers**](#settle-all-currently-fulfilled-transfers) 
 * `POST` [**Get charge quote**](#get-a-charge-quote) 
 * `POST` [**Get authentication token**](#get-authentication-token)
 * `GET`  [**Health**](#health)
 
 #### [Admin API](#admin-api) endpoints
-* `POST` [**Create account**](#create-account)
+* `POST` [**Create account**](#create-account-admin)
 * `PUT`  [**Update admin account**](#update-admin-account)
 * `GET`  [**Get all accounts**](#get-all-accounts)
 * `POST` [**Create charge**](#create-charge)
@@ -62,6 +62,63 @@ Information about various errors returned can be found here:
 
 ## DFSP API
 
+#### Create account
+The create account endpoint will create an account in the ledger.
+
+##### HTTP Request
+`POST http://central-ledger/accounts`
+
+##### Headers
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Content-Type | String | Must be set to `application/json` |
+
+##### Request Body
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Object | Account | An [Account object](#account-object) to create |
+
+##### Response 201 Created
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Object | Account | The newly-created [Account object](#account-object) as saved |
+
+##### Request
+``` http
+POST http://central-ledger/accounts HTTP/1.1
+Content-Type: application/json
+{
+  "name": "dfsp1",
+  "password": "dfsp1_password"
+}
+```
+
+##### Response
+``` http
+HTTP/1.1 201 CREATED
+Content-Type: application/json
+{
+  "id": "http://central-ledger/accounts/dfsp1",
+  "name": "dfsp1",
+  "created": "2017-01-03T19:50:39.744Z",
+  "balance": "0",
+  "is_disabled": false,
+  "ledger": "http://central-ledger"
+}
+```
+
+##### Errors (4xx)
+| Field | Description |
+| ----- | ----------- |
+| RecordExistsError | The account already exists (determined by name) |
+
+``` http
+{
+  "id": "RecordExistsError",
+  "message": "The account has already been registered"
+}
+```
+
 #### Get account
 The get account endpoint will return information about the account. To successfully retrieve an account, make sure the [account has been previously created.](#create-account)
 
@@ -84,6 +141,17 @@ The get account endpoint will return information about the account. To successfu
 ```
 
 ##### Response
+``` http
+  HTTP/1.1 200 OK
+  Content-Type: application/json
+  {
+    "id": "http://central-ledger/accounts/dfsp1",
+    "name": "dfsp1",
+    "ledger": "http://central-ledger"
+  }
+```
+
+##### Response (Authenticated)
 ``` http
   HTTP/1.1 200 OK
   Content-Type: application/json
@@ -117,6 +185,11 @@ The update account endpoint will update the account's credentials and return the
 ##### URL Params
 | Field | Type | Description |
 | ----- | ---- | ----------- |
+| name | String | The unique name for the account |
+
+##### Request body
+| Field | Type | Description |
+| ----- | ---- | ----------- |
 | password | String | The new password for the account |
 
 ##### Response 200 OK
@@ -127,6 +200,10 @@ The update account endpoint will update the account's credentials and return the
 ##### Request
 ``` http
   PUT http://central-ledger/accounts/dfsp1 HTTP/1.1
+    Content-Type: application/json
+  {
+    "password": "12345"
+  }
 ```
 
 ##### Response
@@ -194,7 +271,7 @@ The update account settlement endpoint will create a new account settlement with
   HTTP/1.1 200 OK
   Content-Type: application/json
   {
-    "account_id": "dfsp1"
+    "account_id": "dfsp1",
     "account_number": "12345",
     "routing_number": "1234 5678 91011",
   }
@@ -796,28 +873,6 @@ HTTP/1.1 200 OK
 }
 ```
 
-#### Settle all currently fulfilled transfers
-Settle all currently fulfilled transfers in the ledger
-
-##### HTTP Request
-`POST http://central-ledger/webhooks/settle-transfers HTTP/1.1`
-
-##### Response 200 OK
-| Field | Type | Description |
-| ----- | ---- | ----------- |
-| N/A | Array | List of transfer ids settled for the ledger |
-
-##### Request
-``` http
-POST http://central-ledger/webhooks/settle-transfers HTTP/1.1
-```
-
-##### Response
-``` http
-HTTP/1.1 200 OK
-["3a2a1d9e-8640-4d2d-b06c-84f2cd613207", "7e10238b-4e39-49a4-93dc-c8f73afc1717"]
-```
-
 #### Get a charge quote
 Get a list of charge quotes for a given amount, that the sender would be responsible for paying
 
@@ -894,7 +949,7 @@ The get authentication endpoint generates an authentication token
 | Field | Type | Description |
 | ----- | ---- | ----------- |
 | Content-Type | String | Must be set to `application/json` |
-| Authorization | Basic  | Defaults to admin:admin | |
+| Authorization | Basic  | Defaults to admin:admin | 
 
 ##### Response 200 OK
 | Field | Type | Description |
@@ -940,7 +995,7 @@ HTTP/1.1 200 OK
 
 ## Admin API
 
-#### Create account
+#### Create account admin
 The create account endpoint will create an account in the ledger.
 
 ##### HTTP Request
@@ -994,6 +1049,56 @@ Content-Type: application/json
 {
   "id": "RecordExistsError",
   "message": "The account has already been registered"
+}
+```
+#### Get account admin
+The get account endpoint will return information about the account. To successfully retrieve an account, make sure the [account has been previously created.](#create-account)
+
+##### HTTP Request
+`GET http://central-ledger-admin/accounts/dfsp1`
+
+##### URL Params
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| name | String | The unique name for the account |
+
+##### Headers
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Authorization | Bearer Token  | JWT based access token |
+
+##### Response 200 OK
+| Field | Type | Description |
+| ----- | ---- | ----------- |
+| Object | Account | The [Account object](#account-object) as saved |
+
+##### Request
+``` http
+  GET http://central-ledger/accounts/dfsp1 HTTP/1.1
+```
+
+##### Response
+``` http
+  HTTP/1.1 200 OK
+  Content-Type: application/json
+  {
+    "id": "http://central-ledger/accounts/dfsp1",
+    "name": "dfsp1",
+    "created": "2016-09-28T17:03:37.168Z",
+    "balance": 1000000,
+    "is_disabled": false,
+    "ledger": "http://central-ledger"
+  }
+```
+
+##### Errors (4xx)
+| Field | Description |
+| ----- | ----------- |
+| NotFoundError | The requested resource could not be found |
+``` http
+{
+  "id": "NotFoundError",
+  "message": "The requested resource could not be found."
 }
 ```
 
@@ -1956,6 +2061,7 @@ This endpoint assigns a role to an admin user
 ##### Response 200 OK
 | Field | Type | Description |
 | ----- | ---- | ----------- |
+| Object | Array | An array of [Role objects](#role-object) for the account |
 
 ##### Request
 ``` http
@@ -1968,7 +2074,17 @@ Content-Type: application/json
 ``` http
 HTTP/1.1 200 OK
 Content-Type: application/json
-{}
+[
+  {
+    "roleId": "7d3bdc7a-2f83-456f-b174-3ad1f477c7be",
+    "name": "Create account",
+    "description": "Role for creating and listing users",
+    "permissions": [
+      "ACCOUNTS_CREATE",
+      "ACCOUNTS_LIST"
+    ]
+  }
+]
 ```
 
 ##### Errors (4xx)
@@ -2071,8 +2187,40 @@ Content-Type: application/json
 HTTP/1.1 200 OK
 Content-Type: application/json
 {
-  "transfers": [],
-  "fees": []
+    "transfers": [
+        {
+            "source": {
+                "account_number": "1234",
+                "routing_number": "5678"
+            },
+            "destination": {
+                "account_number": "4321",
+                "routing_number": "8765"
+            },
+            "amount": {
+                "currency_code": "$",
+                "value": "20.00",
+                "description": "dfsp2"
+            }
+        }
+    ],
+    "fees": [
+        {
+            "source": {
+                "account_number": "1234",
+                "routing_number": "5678"
+            },
+            "destination": {
+                "account_number": "4321",
+                "routing_number": "8765"
+            },
+            "amount": {
+                "currency_code": "$",
+                "value": "3",
+                "description": "dfsp2"
+            }
+        }
+    ]
 }
 ```
 
