@@ -10,15 +10,19 @@ const Db = require('../../../src/db')
 const Config = require('../../../src/lib/config')
 const Eventric = require('../../../src/eventric')
 const Plugins = require('../../../src/shared/plugins')
-const Setup = require('../../../src/shared/setup')
 const RequestLogger = require('../../../src/lib/request-logger')
-const Uuid = require('uuid4')
 const UrlParser = require('../../../src/lib/urlparser')
+const Sidecar = require('../../../src/lib/sidecar')
+const Proxyquire = require('proxyquire')
 
 Test('setup', setupTest => {
   let sandbox
+  let uuidStub
+  let oldHostName
   let oldDatabaseUri
+  let hostName = 'http://test.com'
   let databaseUri = 'some-database-uri'
+  let Setup
 
   setupTest.beforeEach(test => {
     sandbox = Sinon.sandbox.create()
@@ -26,18 +30,28 @@ Test('setup', setupTest => {
     sandbox.stub(Plugins, 'registerPlugins')
     sandbox.stub(Migrator)
     sandbox.stub(Eventric)
+    sandbox.stub(UrlParser, 'idFromTransferUri')
     sandbox.stub(RequestLogger, 'logRequest')
     sandbox.stub(RequestLogger, 'logResponse')
-    Db.connect = sandbox.stub()
 
+    Sidecar.connect = sandbox.stub()
+    Db.connect = sandbox.stub()
+    Db.disconnect = sandbox.stub()
+    uuidStub = sandbox.stub()
+
+    Setup = Proxyquire('../../../src/shared/setup', { 'uuid4': uuidStub })
+
+    oldHostName = Config.HOSTNAME
     oldDatabaseUri = Config.DATABASE_URI
     Config.DATABASE_URI = databaseUri
+    Config.HOSTNAME = hostName
 
     test.end()
   })
 
   setupTest.afterEach(test => {
     sandbox.restore()
+    Config.HOSTNAME = oldHostName
     Config.DATABASE_URI = oldDatabaseUri
     test.end()
   })
@@ -65,6 +79,7 @@ Test('setup', setupTest => {
     createServerTest.test('setup connection', test => {
       const server = createServer()
       const port = 1234
+
       Setup.createServer(port).then(() => {
         test.ok(server.connection.calledWith(Sinon.match({
           port,
@@ -76,28 +91,78 @@ Test('setup', setupTest => {
       })
     })
 
-    createServerTest.test('setup onRequest ext', test => {
+    createServerTest.test('log request and traceid', test => {
       const server = createServer()
       const port = 1234
+
+      let request = { headers: { traceid: '1234' }, url: { path: '/test' } }
+      let reply = { continue: sandbox.stub() }
+      server.ext.onFirstCall().callsArgWith(1, request, reply)
+
       Setup.createServer(port).then(() => {
-        test.ok(server.ext.calledWith(Sinon.match('onRequest', (request, reply) => {
-          RequestLogger.logRequest(request)
-          reply.continue()
-        })))
+        test.ok(RequestLogger.logRequest.calledWith(request))
+        test.ok(reply.continue.calledOnce)
         test.end()
       })
     })
 
-    createServerTest.test('setup onPreResponse ext', test => {
+    createServerTest.test('use transfer id if traceid not found', test => {
       const server = createServer()
       const port = 1234
+      const transferId = 'transfer-id'
+      const path = '/test'
+
+      UrlParser.idFromTransferUri.returns(transferId)
+
+      let request = { headers: { }, url: { path } }
+      let reply = { continue: sandbox.stub() }
+      server.ext.onFirstCall().callsArgWith(1, request, reply)
+
       Setup.createServer(port).then(() => {
-        test.ok(server.ext.calledWith(Sinon.match('onRequest', (request, reply) => {
-          const transferId = UrlParser.idFromTransferUri(`${Config.HOSTNAME}${request.url.path}`)
-          request.headers.traceid = request.headers.traceid || transferId || Uuid()
-          RequestLogger.logResponse(request)
-          reply.continue()
+        test.ok(RequestLogger.logRequest.calledWith(sandbox.match({
+          headers: {
+            traceid: transferId
+          }
         })))
+        test.ok(UrlParser.idFromTransferUri.calledWith(`${hostName}${path}`))
+        test.ok(reply.continue.calledOnce)
+        test.end()
+      })
+    })
+
+    createServerTest.test('create new uuid if traceid and transfer id not found', test => {
+      const server = createServer()
+      const port = 1234
+      const uuid = 'new-trace-id'
+
+      uuidStub.returns(uuid)
+
+      let request = { headers: { }, url: { path: '/' } }
+      let reply = { continue: sandbox.stub() }
+      server.ext.onFirstCall().callsArgWith(1, request, reply)
+
+      Setup.createServer(port).then(() => {
+        test.ok(RequestLogger.logRequest.calledWith(sandbox.match({
+          headers: {
+            traceid: uuid
+          }
+        })))
+        test.ok(reply.continue.calledOnce)
+        test.end()
+      })
+    })
+
+    createServerTest.test('log response', test => {
+      const server = createServer()
+      const port = 1234
+
+      let request = { headers: { traceid: '1234' } }
+      let reply = { continue: sandbox.stub() }
+      server.ext.onSecondCall().callsArgWith(1, request, reply)
+
+      Setup.createServer(port).then(() => {
+        test.ok(RequestLogger.logResponse.calledWith(request))
+        test.ok(reply.continue.calledOnce)
         test.end()
       })
     })
@@ -127,8 +192,23 @@ Test('setup', setupTest => {
       Migrator.migrate.returns(P.resolve())
       Db.connect.returns(P.resolve())
       Eventric.getContext.returns(P.resolve())
+      Sidecar.connect.returns(P.resolve())
       return createServer()
     }
+
+    initializeTest.test('connect to sidecar', test => {
+      const server = setupPromises()
+
+      const service = 'test'
+      Setup.initialize({ service }).then(s => {
+        test.ok(Db.connect.calledWith(databaseUri))
+        test.ok(Sidecar.connect.calledWith(service))
+        test.notOk(Eventric.getContext.called)
+        test.notOk(Migrator.migrate.called)
+        test.equal(s, server)
+        test.end()
+      })
+    })
 
     initializeTest.test('connect to db and return hapi server', test => {
       const server = setupPromises()
@@ -160,6 +240,24 @@ Test('setup', setupTest => {
         test.ok(Db.connect.called)
         test.notOk(Migrator.migrate.called)
         test.ok(Eventric.getContext.called)
+        test.end()
+      })
+    })
+
+    initializeTest.test('cleanup on error and rethrow', test => {
+      setupPromises()
+
+      let err = new Error('bad stuff')
+      Sidecar.connect.returns(P.reject(err))
+
+      const service = 'test'
+      Setup.initialize({ service }).then(s => {
+        test.fail('Should have thrown error')
+        test.end()
+      })
+      .catch(e => {
+        test.ok(Db.disconnect.calledOnce)
+        test.equal(e, err)
         test.end()
       })
     })

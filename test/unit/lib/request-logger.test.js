@@ -4,6 +4,7 @@ const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const Logger = require('@leveloneproject/central-services-shared').Logger
 const Util = require('util')
+const Sidecar = require('../../../src/lib/sidecar')
 const RequestLogger = require('../../../src/lib/request-logger')
 
 Test('logger', loggerTest => {
@@ -13,6 +14,8 @@ Test('logger', loggerTest => {
     sandbox = Sinon.sandbox.create()
     sandbox.stub(Logger, 'info')
     sandbox.stub(Util, 'inspect')
+
+    Sidecar.write = sandbox.stub()
 
     test.end()
   })
@@ -32,6 +35,7 @@ Test('logger', loggerTest => {
         body: 'this is the body'
       }
       RequestLogger.logRequest(request)
+      test.ok(Logger.info.calledThrice)
       const args = Logger.info.firstCall.args
       const args2 = Logger.info.secondCall.args
       const args3 = Logger.info.thirdCall.args
@@ -40,6 +44,19 @@ Test('logger', loggerTest => {
       test.equal(args3[0], `L1p-Trace-Id=${request.headers.traceid} - Body: ${request.body}`)
       test.end()
     })
+
+    requestTest.test('not log body if not present', test => {
+      const request = {
+        headers: { traceid: '123456' },
+        method: 'post',
+        url: { path: '/accounts' },
+        query: { token: '1234' }
+      }
+      RequestLogger.logRequest(request)
+      test.ok(Logger.info.calledTwice)
+      test.end()
+    })
+
     requestTest.end()
   })
 
@@ -52,6 +69,16 @@ Test('logger', loggerTest => {
       RequestLogger.logResponse(request)
       const args = Logger.info.firstCall.args
       test.equal(args[0], `L1p-Trace-Id=${request.headers.traceid} - Response: ${JSON.stringify(request.response.source)} Status: ${request.response.statusCode}`)
+      test.end()
+    })
+
+    responseTest.test('send log message to sidecar', test => {
+      const request = {
+        headers: { traceid: '123456' },
+        response: { source: 'this is the response', statusCode: '200' }
+      }
+      RequestLogger.logResponse(request)
+      test.ok(Sidecar.write.calledWith(`L1p-Trace-Id=${request.headers.traceid} - Headers: ${JSON.stringify(request.headers)}`))
       test.end()
     })
 

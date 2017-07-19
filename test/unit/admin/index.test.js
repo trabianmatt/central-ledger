@@ -37,7 +37,7 @@ Test('Admin index', indexTest => {
       Setup.initialize.returns(P.resolve(server))
 
       require('../../../src/admin/index').then(() => {
-        test.ok(Setup.initialize.calledWith({ port: Config.ADMIN_PORT, modules: [Auth, Routes] }))
+        test.ok(Setup.initialize.calledWith({ service: 'admin', port: Config.ADMIN_PORT, modules: [Auth, Routes] }))
         test.ok(server.start.called)
         test.ok(Logger.info.called)
         test.end()

@@ -9,5 +9,12 @@
   "AMOUNT": {
     "PRECISION": 10,
     "SCALE": 2
+  },
+  "SIDECAR": {
+    "DISABLED": false,
+    "HOST": "localhost",
+    "PORT": 5678,
+    "CONNECT_TIMEOUT": 45000,
+    "RECONNECT_INTERVAL": 5000
   }
 }

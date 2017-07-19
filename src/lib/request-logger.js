@@ -2,6 +2,7 @@
 
 const Logger = require('@leveloneproject/central-services-shared').Logger
 const Util = require('util')
+const Sidecar = require('./sidecar')
 
 const logRequest = function (request) {
   const traceId = request.headers.traceid
@@ -23,6 +24,7 @@ const logResponse = function (request) {
     }
 
     Logger.info(`L1p-Trace-Id=${traceId} - Response: ${response} Status: ${request.response.statusCode}`)
+    Sidecar.write(`L1p-Trace-Id=${traceId} - Headers: ${JSON.stringify(request.headers)}`)
   }
 }
 

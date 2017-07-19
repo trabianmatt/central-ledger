@@ -8,7 +8,7 @@ let serverPromise
 
 const setupServer = () => {
   if (!serverPromise) {
-    serverPromise = ServerSetup.createServer(3000, [ApiAuth, ApiRoutes])
+    serverPromise = ServerSetup.createServer(3000, [ApiAuth, ApiRoutes], false)
   }
   return serverPromise
 }

@@ -7,7 +7,7 @@ const Auth = require('./auth')
 
 const Setup = require('../shared/setup')
 
-module.exports = Setup.initialize({ port: Config.ADMIN_PORT, modules: [Auth, Routes] })
+module.exports = Setup.initialize({ service: 'admin', port: Config.ADMIN_PORT, modules: [Auth, Routes] })
   .then(server => server.start().then(() => {
     Logger.info('Server running at: %s', server.info.uri)
   }))

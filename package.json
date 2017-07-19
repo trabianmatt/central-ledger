@@ -51,7 +51,7 @@
   },
   "dependencies": {
     "@leveloneproject/central-services-auth": "0.4.0",
-    "@leveloneproject/central-services-database": "0.2.1",
+    "@leveloneproject/central-services-database": "0.3.0",
     "@leveloneproject/central-services-error-handling": "0.3.0",
     "@leveloneproject/central-services-shared": "0.3.0",
     "argon2": "0.14.0",

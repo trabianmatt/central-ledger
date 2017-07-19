@@ -42,7 +42,7 @@ Test('Api index', indexTest => {
       Account.createLedgerAccount.returns(P.resolve({}))
 
       require('../../../src/api/index').then(() => {
-        test.ok(Setup.initialize.calledWith({ port: Config.PORT, modules: [Auth, Routes, Sockets, Worker], loadEventric: true, runMigrations: true }))
+        test.ok(Setup.initialize.calledWith({ service: 'api', port: Config.PORT, modules: [Auth, Routes, Sockets, Worker], loadEventric: true, runMigrations: true }))
         test.ok(Account.createLedgerAccount.calledWith(Config.LEDGER_ACCOUNT_NAME, Config.LEDGER_ACCOUNT_PASSWORD))
         test.ok(server.start.called)
         test.ok(Logger.info.called)

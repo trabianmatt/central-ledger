@@ -8,6 +8,7 @@ const Db = require('../db')
 const Eventric = require('../eventric')
 const Plugins = require('./plugins')
 const Config = require('../lib/config')
+const Sidecar = require('../lib/sidecar')
 const RequestLogger = require('../lib/request-logger')
 const Uuid = require('uuid4')
 const UrlParser = require('../lib/urlparser')
@@ -22,7 +23,7 @@ const startEventric = (loadEventric) => {
   return loadEventric ? Eventric.getContext() : P.resolve()
 }
 
-const createServer = (port, modules) => {
+const createServer = (port, modules, addRequestLogging = true) => {
   return new P((resolve, reject) => {
     const server = new Hapi.Server()
     server.connection({
@@ -31,16 +32,11 @@ const createServer = (port, modules) => {
         validate: ErrorHandling.validateRoutes()
       }
     })
-    server.ext('onRequest', (request, reply) => {
-      const transferId = UrlParser.idFromTransferUri(`${Config.HOSTNAME}${request.url.path}`)
-      request.headers.traceid = request.headers.traceid || transferId || Uuid()
-      RequestLogger.logRequest(request)
-      reply.continue()
-    })
-    server.ext('onPreResponse', (request, reply) => {
-      RequestLogger.logResponse(request)
-      reply.continue()
-    })
+
+    if (addRequestLogging) {
+      server.ext('onRequest', onServerRequest)
+      server.ext('onPreResponse', onServerPreResponse)
+    }
 
     Plugins.registerPlugins(server)
     server.register(modules)
@@ -50,11 +46,32 @@ const createServer = (port, modules) => {
 
 // Migrator.migrate is called before connecting to the database to ensure all new tables are loaded properly.
 // Eventric.getContext is called to replay all events through projections (creating the read-model) before starting the server.
-const initialize = ({ port, modules = [], loadEventric = false, runMigrations = false }) => {
+const initialize = ({ service, port, modules = [], loadEventric = false, runMigrations = false }) => {
   return migrate(runMigrations)
     .then(() => connectDatabase())
+    .then(() => Sidecar.connect(service))
     .then(() => startEventric(loadEventric))
     .then(() => createServer(port, modules))
+    .catch(err => {
+      cleanup()
+      throw err
+    })
+}
+
+const onServerRequest = (request, reply) => {
+  const transferId = UrlParser.idFromTransferUri(`${Config.HOSTNAME}${request.url.path}`)
+  request.headers.traceid = request.headers.traceid || transferId || Uuid()
+  RequestLogger.logRequest(request)
+  reply.continue()
+}
+
+const onServerPreResponse = (request, reply) => {
+  RequestLogger.logResponse(request)
+  reply.continue()
+}
+
+const cleanup = () => {
+  Db.disconnect()
 }
 
 module.exports = {
