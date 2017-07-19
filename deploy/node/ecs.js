@@ -2,8 +2,9 @@
 
 const AWS = require('aws-sdk')
 const ecs = new AWS.ECS()
+const Variables = require('./variables')
 
-const registerTaskDefinition = (name, image, port, environment = []) => {
+const registerTaskDefinition = (name, service, image, port, environment = []) => {
   const params = {
     containerDefinitions: [
       {
@@ -16,6 +17,9 @@ const registerTaskDefinition = (name, image, port, environment = []) => {
             containerPort: port
           }
         ],
+        links: [
+          `${Variables.SIDECAR.NAME}:${Variables.SIDECAR.NAME}`
+        ],
         environment,
         logConfiguration: {
           logDriver: 'syslog',
@@ -25,6 +29,31 @@ const registerTaskDefinition = (name, image, port, environment = []) => {
             'tag': 'central-ledger'
           }
         }
+      },
+      {
+        name: Variables.SIDECAR.NAME,
+        image: `${Variables.AWS_ACCOUNT_ID}.dkr.ecr.${Variables.AWS_REGION}.amazonaws.com/${Variables.SIDECAR.IMAGE}:latest`,
+        essential: true,
+        memoryReservation: 200,
+        portMappings: [
+          {
+            containerPort: Variables.SIDECAR.PORT
+          }
+        ],
+        environment: [
+          {
+            name: 'SIDE_SERVICE',
+            value: service
+          },
+          {
+            name: 'SIDE_DATABASE_URI',
+            value: `postgres://${Variables.SIDECAR.POSTGRES_USER}:${Variables.SIDECAR.POSTGRES_PASSWORD}@${Variables.SIDECAR.POSTGRES_HOST}:5432/sidecar`
+          },
+          {
+            name: 'SIDE_KMS__URL',
+            value: Variables.SIDECAR.KMS_URL
+          }
+        ]
       }
     ],
     family: name

@@ -24,11 +24,15 @@ const pushService = ({IMAGE, NAME, PORT}, version) => {
     {
       name: 'CLEDG_ENABLE_BASIC_AUTH',
       value: 'true'
+    },
+    {
+      name: 'CLEDG_SIDECAR__HOST',
+      value: Variables.SIDECAR.NAME
     }
   ]
   const serviceName = `${NAME}-${Variables.ENVIRONMENT}`
   return Ecr.pushImageToEcr(IMAGE, version)
-    .then(result => Ecs.registerTaskDefinition(serviceName, result.versioned, PORT, envVariables))
+    .then(result => Ecs.registerTaskDefinition(serviceName, NAME, result.versioned, PORT, envVariables))
     .then(taskDefinition => Ecs.deployService(Variables.CLUSTER, serviceName, taskDefinition))
 }
 

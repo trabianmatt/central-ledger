@@ -24,5 +24,14 @@ module.exports = {
   JFROG_REPO: process.env.JFROG_REPO || 'modusbox-level1-docker-release.jfrog.io',
   POSTGRES_USER: process.env.DEV_POSTGRES_USER,
   POSTGRES_PASSWORD: process.env.DEV_POSTGRES_PASSWORD,
-  POSTGRES_HOST: process.env.DEV_POSTGRES_HOST
+  POSTGRES_HOST: process.env.DEV_POSTGRES_HOST,
+  SIDECAR: {
+    NAME: 'forensic-logging-sidecar',
+    IMAGE: process.env.SIDE_IMAGE || 'leveloneproject/forensic-logging-sidecar',
+    PORT: process.env.SIDE_PORT || 5678,
+    POSTGRES_USER: process.env.SIDE_POSTGRES_USER,
+    POSTGRES_PASSWORD: process.env.SIDE_POSTGRES_PASSWORD,
+    POSTGRES_HOST: process.env.SIDE_POSTGRES_HOST,
+    KMS_URL: process.env.SIDE_KMS_URL || 'ws://central-kms-test-825003705.us-west-2.elb.amazonaws.com/sidecar'
+  }
 }
