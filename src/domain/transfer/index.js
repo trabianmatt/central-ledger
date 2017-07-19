@@ -17,21 +17,21 @@ const getById = (id) => {
 
 const getFulfillment = (id) => {
   return getById(id)
-  .then(transfer => {
-    if (!transfer) {
-      throw new Errors.TransferNotFoundError()
-    }
-    if (!transfer.executionCondition) {
-      throw new Errors.TransferNotConditionalError()
-    }
-    if (transfer.state === State.REJECTED) {
-      throw new Errors.AlreadyRolledBackError()
-    }
-    if (!transfer.fulfillment) {
-      throw new Errors.MissingFulfillmentError()
-    }
-    return transfer.fulfillment
-  })
+    .then(transfer => {
+      if (!transfer) {
+        throw new Errors.TransferNotFoundError()
+      }
+      if (!transfer.executionCondition) {
+        throw new Errors.TransferNotConditionalError()
+      }
+      if (transfer.state === State.REJECTED) {
+        throw new Errors.AlreadyRolledBackError()
+      }
+      if (!transfer.fulfillment) {
+        throw new Errors.MissingFulfillmentError()
+      }
+      return transfer.fulfillment
+    })
 }
 
 const prepare = (payload) => {
@@ -69,7 +69,7 @@ const fulfill = (fulfillment) => {
     })
     .catch(Errors.ExpiredTransferError, () => {
       return expire(fulfillment.id)
-      .then(() => { throw new Errors.UnpreparedTransferError() })
+        .then(() => { throw new Errors.UnpreparedTransferError() })
     })
 }
 
@@ -83,13 +83,17 @@ const rejectExpired = () => {
 const settle = () => {
   const settlementId = SettlementsModel.generateId()
   const settledTransfers = SettlementsModel.create(settlementId, 'transfer').then(() => {
-    return SettleableTransfersReadModel.getSettleableTransfers().then(
-      transfers => transfers.map(x => Commands.settle({id: x.transferId, settlement_id: settlementId})))
+    return SettleableTransfersReadModel.getSettleableTransfers().then(transfers => {
+      transfers.forEach(transfer => {
+        Commands.settle({ id: transfer.transferId, settlement_id: settlementId })
+      })
+      return transfers
+    })
   })
 
   return P.all(settledTransfers).then(settledTransfers => {
     if (settledTransfers.length > 0) {
-      return settledTransfers.map(t => t.id)
+      return settledTransfers
     } else {
       return P.resolve([])
     }

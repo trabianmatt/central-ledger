@@ -52,7 +52,7 @@ Test('transfers read model', function (modelTest) {
           return TransfersReadModel.saveTransfer(Fixtures.buildReadModelTransfer(settledTransferId, credit, debit, TransferState.EXECUTED))
         })
         .then(() =>
-          ReadModel.getSettleableTransfers().then(result => {
+          ReadModel.getUnsettledTransfers().then(result => {
             assert.notOk(result.find(x => x.transferId === settledTransferId))
             assert.ok(result.find(x => x.transferId === unSettledTransferId))
             assert.end()
@@ -113,7 +113,7 @@ Test('transfers read model', function (modelTest) {
           return TransfersReadModel.saveTransfer(Fixtures.buildReadModelTransfer(settledTransferId, credit, debit, TransferState.EXECUTED))
         })
         .then(() =>
-          ReadModel.getSettleableTransfersByAccount(account1Id).then(result => {
+          ReadModel.getUnsettledTransfersByAccount(account1Id).then(result => {
             assert.notOk(result.find(x => x.transferId === settledTransferId))
             assert.notOk(result.find(x => x.transferId === unSettledOtherTransferId))
             assert.ok(result.find(x => x.transferId === unSettledTransferId))

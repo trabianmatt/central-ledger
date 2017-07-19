@@ -130,8 +130,8 @@ Test('fees model', modelTest => {
           .then(() => P.all([FeesModel.create(unsettledFee), FeesModel.create(settledFee), FeesModel.create(otherUnsettledFee)]))
           .then(([fee1, fee2, fee3]) => {
             return SettledFeesModel.create({ feeId: fee2.feeId, settlementId }).then(() => {
-              return FeesModel.getSettleableFees(account1).then(result => {
-                test.ok(result.find(x => x.feeId === fee3.feeId))
+              return FeesModel.getUnsettledFeesByAccount(account1).then(result => {
+                test.notOk(result.find(x => x.feeId === fee3.feeId))
                 test.notOk(result.find(x => x.feeId === fee2.feeId))
                 test.ok(result.find(x => x.feeId === fee1.feeId))
                 test.end()
@@ -167,7 +167,7 @@ Test('fees model', modelTest => {
           .then(() => P.all([FeesModel.create(unsettledFee), FeesModel.create(settledFee), FeesModel.create(otherUnsettledFee)]))
           .then(([fee1, fee2, fee3]) => {
             return SettledFeesModel.create({ feeId: fee2.feeId, settlementId }).then(() => {
-              return FeesModel.getSettleableFees(account1).then(result => {
+              return FeesModel.getUnsettledFees().then(result => {
                 test.ok(result.find(x => x.feeId === fee3.feeId))
                 test.notOk(result.find(x => x.feeId === fee2.feeId))
                 test.ok(result.find(x => x.feeId === fee1.feeId))

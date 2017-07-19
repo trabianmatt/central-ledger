@@ -124,8 +124,8 @@ Test('fees model', modelTest => {
     doesExist.end()
   })
 
-  modelTest.test('getSettleableFeesByAccount should', getSettleableFeesTest => {
-    getSettleableFeesTest.test('return settleable fees for account', test => {
+  modelTest.test('getUnsettledFeesByAccount should', getUnsettledFeesByAccountTest => {
+    getUnsettledFeesByAccountTest.test('return settleable fees for account', test => {
       const transferId = '1'
       const chargeId = '1'
       const amount = '1.00'
@@ -164,7 +164,7 @@ Test('fees model', modelTest => {
         })
       })
 
-      Model.getSettleableFeesByAccount(account)
+      Model.getUnsettledFeesByAccount(account)
         .then(foundFee => {
           test.equal(foundFee, fees)
           test.ok(builderStub.leftJoin.withArgs('settledFees AS sf', 'fees.feeId', 'sf.feeId').calledOnce)
@@ -176,7 +176,7 @@ Test('fees model', modelTest => {
         })
     })
 
-    getSettleableFeesTest.end()
+    getUnsettledFeesByAccountTest.end()
   })
 
   modelTest.test('getSettleableFeesForTransfer should', getSettleableFeesForTransferTest => {
@@ -191,6 +191,8 @@ Test('fees model', modelTest => {
       let builderStub = sandbox.stub()
       let joinPayerStub = sandbox.stub()
       let joinPayeeStub = sandbox.stub()
+      let joinAccountSettlementSourceStub = sandbox.stub()
+      let joinAccountSettlemenetDestinationStub = sandbox.stub()
       let whereNullStub = sandbox.stub()
       let distinctStub = sandbox.stub()
       let whereStub = sandbox.stub()
@@ -203,9 +205,13 @@ Test('fees model', modelTest => {
       builderStub.leftJoin.returns({
         innerJoin: joinPayeeStub.returns({
           innerJoin: joinPayerStub.returns({
-            whereNull: whereNullStub.returns({
-              distinct: distinctStub.returns({
-                where: whereStub
+            innerJoin: joinAccountSettlementSourceStub.returns({
+              innerJoin: joinAccountSettlemenetDestinationStub.returns({
+                whereNull: whereNullStub.returns({
+                  distinct: distinctStub.returns({
+                    where: whereStub
+                  })
+                })
               })
             })
           })
@@ -227,8 +233,8 @@ Test('fees model', modelTest => {
     getSettleableFeesForTransferTest.end()
   })
 
-  modelTest.test('getSettleableFees should', getSettleableFeesTest => {
-    getSettleableFeesTest.test('return settleable fees', test => {
+  modelTest.test('getUnsettledFees should', getUnsettledFeesTest => {
+    getUnsettledFeesTest.test('return settleable fees', test => {
       const transferId = '1'
       const chargeId = '1'
       const amount = '1.00'
@@ -255,7 +261,7 @@ Test('fees model', modelTest => {
         })
       })
 
-      Model.getSettleableFees()
+      Model.getUnsettledFees()
         .then(foundFee => {
           test.equal(foundFee, fees)
           test.ok(builderStub.leftJoin.withArgs('settledFees AS sf', 'fees.feeId', 'sf.feeId').calledOnce)
@@ -267,7 +273,7 @@ Test('fees model', modelTest => {
         })
     })
 
-    getSettleableFeesTest.end()
+    getUnsettledFeesTest.end()
   })
 
   modelTest.end()

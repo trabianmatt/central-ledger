@@ -21,6 +21,8 @@ Test('POST /webhooks/settle-transfers', settleTest => {
       payee: 'receiver'
     }
 
+    const response = { fees: [{ amount: { currency_code: 'USD', description: Base.account1Name, value: charge.rate }, destination: { account_number: Base.account2AccountNumber, routing_number: Base.account2RoutingNumber }, source: { account_number: Base.account1AccountNumber, routing_number: Base.account1RoutingNumber } }], transfers: [{ amount: { currency_code: 'USD', description: Base.account1Name, value: '101.00' }, destination: { account_number: Base.account2AccountNumber, routing_number: Base.account2RoutingNumber }, source: { account_number: Base.account1AccountNumber, routing_number: Base.account1RoutingNumber } }] }
+
     Base.createCharge(charge)
       .then(() => Base.prepareTransfer(transferId, transfer))
       .then(() => Base.fulfillTransfer(transferId, 'oAKAAA'))
@@ -29,8 +31,7 @@ Test('POST /webhooks/settle-transfers', settleTest => {
           .expect(200)
           .expect('Content-Type', /json/)
           .then(res => {
-            test.ok(res.body.transfers.includes(transferId))
-            test.equal(res.body.fees.length, 1)
+            test.deepEqual(res.body, response)
             test.end()
           })
       })

@@ -89,16 +89,16 @@ Test('Transfer Service tests', serviceTest => {
       TransferQueries.getById.withArgs(id).returns(P.resolve(model))
 
       Service.getFulfillment(id)
-      .then(() => {
-        test.fail('expected exception')
-      })
-      .catch(Errors.TransferNotConditionalError, e => {
-        test.pass()
-      })
-      .catch(e => {
-        test.fail('Exepected TransferNotConditionalError')
-      })
-      .then(test.end)
+        .then(() => {
+          test.fail('expected exception')
+        })
+        .catch(Errors.TransferNotConditionalError, e => {
+          test.pass()
+        })
+        .catch(e => {
+          test.fail('Exepected TransferNotConditionalError')
+        })
+        .then(test.end)
     })
 
     getFulfillmentTest.test('throw AlreadyRolledBackError if transfer rejected', test => {
@@ -107,16 +107,16 @@ Test('Transfer Service tests', serviceTest => {
       TransferQueries.getById.withArgs(id).returns(P.resolve(transfer))
 
       Service.getFulfillment(id)
-      .then(() => {
-        test.fail('expected exception')
-      })
-      .catch(Errors.AlreadyRolledBackError, e => {
-        test.pass()
-      })
-      .catch(e => {
-        test.fail('Exepected AlreadyRolledBackError')
-      })
-      .then(test.end)
+        .then(() => {
+          test.fail('expected exception')
+        })
+        .catch(Errors.AlreadyRolledBackError, e => {
+          test.pass()
+        })
+        .catch(e => {
+          test.fail('Exepected AlreadyRolledBackError')
+        })
+        .then(test.end)
     })
 
     getFulfillmentTest.test('throw MissingFulfillmentError if transfer does not have fulfillment', test => {
@@ -125,16 +125,16 @@ Test('Transfer Service tests', serviceTest => {
       TransferQueries.getById.withArgs(id).returns(P.resolve(transfer))
 
       Service.getFulfillment(id)
-      .then(() => {
-        test.fail('expected exception')
-      })
-      .catch(Errors.MissingFulfillmentError, e => {
-        test.equal(e.message, 'This transfer has not yet been fulfilled')
-      })
-      .catch(e => {
-        test.fail('Exepected MissingFulfillmentError')
-      })
-      .then(test.end)
+        .then(() => {
+          test.fail('expected exception')
+        })
+        .catch(Errors.MissingFulfillmentError, e => {
+          test.equal(e.message, 'This transfer has not yet been fulfilled')
+        })
+        .catch(e => {
+          test.fail('Exepected MissingFulfillmentError')
+        })
+        .then(test.end)
     })
 
     getFulfillmentTest.test('return transfer fulfillment', test => {
@@ -143,10 +143,10 @@ Test('Transfer Service tests', serviceTest => {
       const transfer = { id, fulfillment, executionCondition: 'condition', state: TransferState.EXECUTED }
       TransferQueries.getById.returns(P.resolve(transfer))
       Service.getFulfillment(id)
-      .then(result => {
-        test.equal(result, fulfillment)
-        test.end()
-      })
+        .then(result => {
+          test.equal(result, fulfillment)
+          test.end()
+        })
     })
     getFulfillmentTest.end()
   })
@@ -160,13 +160,13 @@ Test('Transfer Service tests', serviceTest => {
         TransferTranslator.toTransfer.onCall(i).returns({ id: x.transferUuid })
       })
       Service.rejectExpired()
-      .then(x => {
-        transfers.forEach(t => {
-          test.ok(Commands.reject.calledWith({ id: t.transferUuid, rejection_reason: RejectionType.EXPIRED }))
+        .then(x => {
+          transfers.forEach(t => {
+            test.ok(Commands.reject.calledWith({ id: t.transferUuid, rejection_reason: RejectionType.EXPIRED }))
+          })
+          test.deepEqual(x, transfers.map(t => t.transferUuid))
+          test.end()
         })
-        test.deepEqual(x, transfers.map(t => t.transferUuid))
-        test.end()
-      })
     })
     rejectTest.end()
   })
@@ -185,13 +185,13 @@ Test('Transfer Service tests', serviceTest => {
       })
 
       Service.settle()
-      .then(x => {
-        transfers.forEach(t => {
-          test.ok(Commands.settle.calledWith({id: t.transferId, settlement_id: settlementId}))
+        .then(x => {
+          transfers.forEach(t => {
+            test.ok(Commands.settle.calledWith({ id: t.transferId, settlement_id: settlementId }))
+          })
+          test.deepEqual(x, transfers)
+          test.end()
         })
-        test.deepEqual(x, transfers.map(t => t.id))
-        test.end()
-      })
     })
 
     settleTest.test('return empty array if no settleable transfers exist', test => {
@@ -202,10 +202,10 @@ Test('Transfer Service tests', serviceTest => {
       SettleableTransfersReadModel.getSettleableTransfers.returns(P.resolve([]))
 
       Service.settle()
-      .then(x => {
-        test.deepEqual(x, [])
-        test.end()
-      })
+        .then(x => {
+          test.deepEqual(x, [])
+          test.end()
+        })
     })
 
     settleTest.end()
@@ -300,15 +300,15 @@ Test('Transfer Service tests', serviceTest => {
       Commands.fulfill.withArgs(payload).returns(P.reject(new Errors.ExpiredTransferError()))
       Commands.reject.returns(P.resolve({ transfer }))
       Service.fulfill(payload)
-      .then(() => {
-        assert.fail('Expected exception')
-        assert.end()
-      })
-      .catch(e => {
-        assert.ok(Commands.reject.calledWith({ id: transfer.id, rejection_reason: RejectionType.EXPIRED }))
-        assert.equal(e.name, 'UnpreparedTransferError')
-        assert.end()
-      })
+        .then(() => {
+          assert.fail('Expected exception')
+          assert.end()
+        })
+        .catch(e => {
+          assert.ok(Commands.reject.calledWith({ id: transfer.id, rejection_reason: RejectionType.EXPIRED }))
+          assert.equal(e.name, 'UnpreparedTransferError')
+          assert.end()
+        })
     })
 
     fulfillTest.end()

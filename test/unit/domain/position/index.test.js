@@ -22,10 +22,10 @@ Test('Position Service tests', (serviceTest) => {
     Config.HOSTNAME = hostname
     sandbox.stub(Account, 'getAll')
     sandbox.stub(Account, 'getById')
-    sandbox.stub(SettleableTransfersReadModel, 'getSettleableTransfers')
-    sandbox.stub(SettleableTransfersReadModel, 'getSettleableTransfersByAccount')
-    sandbox.stub(Fee, 'getSettleableFeesByAccount')
-    sandbox.stub(Fee, 'getSettleableFees')
+    sandbox.stub(SettleableTransfersReadModel, 'getUnsettledTransfers')
+    sandbox.stub(SettleableTransfersReadModel, 'getUnsettledTransfersByAccount')
+    sandbox.stub(Fee, 'getUnsettledFeesByAccount')
+    sandbox.stub(Fee, 'getUnsettledFees')
     Account.getAll.returns(P.resolve(accounts))
     t.end()
   })
@@ -83,15 +83,15 @@ Test('Position Service tests', (serviceTest) => {
         buildTransfer(accounts[0].name, 3, accounts[1].name, 3)
       ]
 
-      SettleableTransfersReadModel.getSettleableTransfers.returns(P.resolve(transfers))
-      Fee.getSettleableFees.returns(P.resolve([]))
+      SettleableTransfersReadModel.getUnsettledTransfers.returns(P.resolve(transfers))
+      Fee.getUnsettledFees.returns(P.resolve([]))
 
       let expected = []
       Service.calculateForAllAccounts()
         .then(positions => {
           test.ok(Account.getAll.called)
-          test.notOk(SettleableTransfersReadModel.getSettleableTransfers.called)
-          test.notOk(Fee.getSettleableFees.called)
+          test.notOk(SettleableTransfersReadModel.getUnsettledTransfers.called)
+          test.notOk(Fee.getUnsettledFees.called)
           test.deepEqual(positions, expected)
           test.end()
         })
@@ -105,14 +105,14 @@ Test('Position Service tests', (serviceTest) => {
         buildEmptyPosition(accounts[3].name)
       ]
 
-      SettleableTransfersReadModel.getSettleableTransfers.returns(P.resolve([]))
-      Fee.getSettleableFees.returns(P.resolve([]))
+      SettleableTransfersReadModel.getUnsettledTransfers.returns(P.resolve([]))
+      Fee.getUnsettledFees.returns(P.resolve([]))
 
       Service.calculateForAllAccounts()
         .then(positions => {
           assert.ok(Account.getAll.called)
-          assert.ok(SettleableTransfersReadModel.getSettleableTransfers.called)
-          assert.ok(Fee.getSettleableFees.called)
+          assert.ok(SettleableTransfersReadModel.getUnsettledTransfers.called)
+          assert.ok(Fee.getUnsettledFees.called)
           assert.equal(positions.length, accounts.length)
           assert.deepEqual(positions, expected)
           assert.end()
@@ -129,8 +129,8 @@ Test('Position Service tests', (serviceTest) => {
         buildFee(accounts[2].name, 6, accounts[0].name, 6)
       ]
 
-      SettleableTransfersReadModel.getSettleableTransfers.returns(P.resolve(transfers))
-      Fee.getSettleableFees.returns(P.resolve(fees))
+      SettleableTransfersReadModel.getUnsettledTransfers.returns(P.resolve(transfers))
+      Fee.getUnsettledFees.returns(P.resolve(fees))
 
       let expected = [
         buildPosition(accounts[0].name, '5', '0', '-5', '1', '6', '5', '0'),
@@ -142,8 +142,8 @@ Test('Position Service tests', (serviceTest) => {
       Service.calculateForAllAccounts()
         .then(positions => {
           assert.ok(Account.getAll.called)
-          assert.ok(SettleableTransfersReadModel.getSettleableTransfers.calledOnce)
-          assert.ok(Fee.getSettleableFees.calledOnce)
+          assert.ok(SettleableTransfersReadModel.getUnsettledTransfers.calledOnce)
+          assert.ok(Fee.getUnsettledFees.calledOnce)
           assert.deepEqual(positions, expected)
           assert.end()
         })
@@ -172,13 +172,13 @@ Test('Position Service tests', (serviceTest) => {
         name: 'dfsp1',
         id: 11
       }
-      SettleableTransfersReadModel.getSettleableTransfersByAccount.returns(P.resolve([]))
-      Fee.getSettleableFeesByAccount.returns(P.resolve([]))
+      SettleableTransfersReadModel.getUnsettledTransfersByAccount.returns(P.resolve([]))
+      Fee.getUnsettledFeesByAccount.returns(P.resolve([]))
 
       Service.calculateForAccount(account)
         .then(positions => {
-          test.ok(SettleableTransfersReadModel.getSettleableTransfersByAccount.called)
-          test.ok(Fee.getSettleableFeesByAccount.called)
+          test.ok(SettleableTransfersReadModel.getUnsettledTransfersByAccount.called)
+          test.ok(Fee.getUnsettledFeesByAccount.called)
           test.deepEqual(positions, expected)
           test.end()
         })
@@ -194,8 +194,8 @@ Test('Position Service tests', (serviceTest) => {
         buildFee(accounts[2].name, 6, accounts[0].name, 6)
       ]
 
-      SettleableTransfersReadModel.getSettleableTransfersByAccount.returns(P.resolve(transfers))
-      Fee.getSettleableFeesByAccount.returns(P.resolve(fees))
+      SettleableTransfersReadModel.getUnsettledTransfersByAccount.returns(P.resolve(transfers))
+      Fee.getUnsettledFeesByAccount.returns(P.resolve(fees))
 
       let expected = {
         account: `${hostname}/accounts/${accounts[0].name}`,
@@ -217,8 +217,8 @@ Test('Position Service tests', (serviceTest) => {
       }
       Service.calculateForAccount(account)
         .then(positions => {
-          test.ok(SettleableTransfersReadModel.getSettleableTransfersByAccount.calledOnce)
-          test.ok(Fee.getSettleableFeesByAccount.calledOnce)
+          test.ok(SettleableTransfersReadModel.getUnsettledTransfersByAccount.calledOnce)
+          test.ok(Fee.getUnsettledFeesByAccount.calledOnce)
           test.deepEqual(positions, expected)
           test.end()
         })

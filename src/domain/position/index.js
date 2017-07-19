@@ -80,7 +80,7 @@ exports.calculateForAccount = (account) => {
   const transferPositionMap = new Map().set(accountUri, buildEmptyPosition())
   const feePositionMap = new Map().set(accountUri, buildEmptyPosition())
 
-  return P.all([SettleableTransfersReadmodel.getSettleableTransfersByAccount(account.accountId), Fee.getSettleableFeesByAccount(account)]).then(([transfers, fees]) => {
+  return P.all([SettleableTransfersReadmodel.getUnsettledTransfersByAccount(account.accountId), Fee.getUnsettledFeesByAccount(account)]).then(([transfers, fees]) => {
     const transferPositions = buildResponse(calculatePositions(transfers, transferPositionMap)).find(x => x.account === accountUri)
     const feePositions = buildResponse(calculatePositions(fees.map(mapFeeToExecuted), feePositionMap)).find(x => x.account === accountUri)
 
@@ -102,7 +102,7 @@ exports.calculateForAllAccounts = () => {
         feePositionMap.set(UrlParser.toAccountUri(account.name), buildEmptyPosition())
       })
 
-      return P.all([SettleableTransfersReadmodel.getSettleableTransfers(), Fee.getSettleableFees()]).then(([transfers, fees]) => {
+      return P.all([SettleableTransfersReadmodel.getUnsettledTransfers(), Fee.getUnsettledFees()]).then(([transfers, fees]) => {
         const transferPositions = buildResponse(calculatePositions(transfers, transferPositionMap))
         const feePositions = buildResponse(calculatePositions(fees.map(mapFeeToExecuted), feePositionMap))
 

@@ -31,9 +31,9 @@ Test('Fee service', serviceTest => {
     sandbox.stub(Model, 'create')
     sandbox.stub(Model, 'doesExist')
     sandbox.stub(Model, 'getAllForTransfer')
-    sandbox.stub(Model, 'getSettleableFeesByAccount')
+    sandbox.stub(Model, 'getUnsettledFeesByAccount')
     sandbox.stub(Model, 'getSettleableFeesForTransfer')
-    sandbox.stub(Model, 'getSettleableFees')
+    sandbox.stub(Model, 'getUnsettledFees')
     sandbox.stub(SettlementsModel, 'create')
     sandbox.stub(SettledFeeService, 'create')
     sandbox.stub(Charges, 'getAllForTransfer')
@@ -211,8 +211,8 @@ Test('Fee service', serviceTest => {
     getAllForTransferTest.end()
   })
 
-  serviceTest.test('getSettleableFees should', getSettleableFeesTest => {
-    getSettleableFeesTest.test('return fees from Model', test => {
+  serviceTest.test('getUnsettledFees should', getUnsettledFeesTest => {
+    getUnsettledFeesTest.test('return fees from Model', test => {
       const charge = {
         name: 'charge',
         chargeId: '1',
@@ -244,8 +244,8 @@ Test('Fee service', serviceTest => {
       fee2.feeId = 1
       const fees = [fee1, fee2]
 
-      Model.getSettleableFees.returns(P.resolve(fees))
-      FeeService.getSettleableFees()
+      Model.getUnsettledFees.returns(P.resolve(fees))
+      FeeService.getUnsettledFees()
         .then(result => {
           test.equal(result.length, 2)
           test.equal(result[0].feeId, fee1.feeId)
@@ -264,11 +264,11 @@ Test('Fee service', serviceTest => {
         })
     })
 
-    getSettleableFeesTest.end()
+    getUnsettledFeesTest.end()
   })
 
-  serviceTest.test('getSettleableFeesByAccount should', getSettleableFeesByAccountTest => {
-    getSettleableFeesByAccountTest.test('return settleable fees from Model by account', test => {
+  serviceTest.test('getUnsettledFeesByAccount should', getUnsettledFeesByAccountTest => {
+    getUnsettledFeesByAccountTest.test('return settleable fees from Model by account', test => {
       const charge = {
         name: 'charge',
         chargeId: '1',
@@ -303,8 +303,8 @@ Test('Fee service', serviceTest => {
       fee2.feeId = 1
       const fees = [fee1, fee2]
 
-      Model.getSettleableFeesByAccount.returns(P.resolve(fees))
-      FeeService.getSettleableFeesByAccount(account)
+      Model.getUnsettledFeesByAccount.returns(P.resolve(fees))
+      FeeService.getUnsettledFeesByAccount(account)
         .then(result => {
           test.equal(result.length, 2)
           test.equal(result[0].feeId, fee1.feeId)
@@ -323,7 +323,7 @@ Test('Fee service', serviceTest => {
         })
     })
 
-    getSettleableFeesByAccountTest.end()
+    getUnsettledFeesByAccountTest.end()
   })
 
   serviceTest.test('settleFee should', settleTest => {
@@ -354,7 +354,7 @@ Test('Fee service', serviceTest => {
       FeeService.settleFeesForTransfers(['1234', '1234'])
         .then(result => {
           test.equal(result.length, 1)
-          test.equal(result[0], fee.feeId)
+          test.deepEqual(result[0], fee)
           test.end()
         })
     })

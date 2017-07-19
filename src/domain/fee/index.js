@@ -72,16 +72,16 @@ const generateFeesForTransfer = (event) => {
   })
 }
 
-const getSettleableFees = () => {
-  return Model.getSettleableFees()
+const getUnsettledFees = () => {
+  return Model.getUnsettledFees()
 }
 
-const getSettleableFeesByAccount = (account) => {
-  return Model.getSettleableFeesByAccount(account)
+const getUnsettledFeesByAccount = (account) => {
+  return Model.getUnsettledFeesByAccount(account)
 }
 
 const settleFee = (fee, settlement) => {
-  return SettledFee.create({ feeId: fee.feeId, settlementId: settlement.settlementId }).then(settledFee => settledFee.feeId)
+  return SettledFee.create({ feeId: fee.feeId, settlementId: settlement.settlementId }).then(settledFee => fee)
 }
 
 const reduceFees = (unflattenedFees) => {
@@ -111,7 +111,7 @@ const settleFeesForTransfers = (transfers) => {
 module.exports = {
   getAllForTransfer,
   generateFeesForTransfer,
-  getSettleableFees,
-  getSettleableFeesByAccount,
+  getUnsettledFees,
+  getUnsettledFeesByAccount,
   settleFeesForTransfers
 }
