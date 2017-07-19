@@ -12,6 +12,8 @@ const Eventric = require('../../../src/eventric')
 const Plugins = require('../../../src/shared/plugins')
 const Setup = require('../../../src/shared/setup')
 const RequestLogger = require('../../../src/lib/request-logger')
+const Uuid = require('uuid4')
+const UrlParser = require('../../../src/lib/urlparser')
 
 Test('setup', setupTest => {
   let sandbox
@@ -91,6 +93,8 @@ Test('setup', setupTest => {
       const port = 1234
       Setup.createServer(port).then(() => {
         test.ok(server.ext.calledWith(Sinon.match('onRequest', (request, reply) => {
+          const transferId = UrlParser.idFromTransferUri(`${Config.HOSTNAME}${request.url.path}`)
+          request.headers.traceid = request.headers.traceid || transferId || Uuid()
           RequestLogger.logResponse(request)
           reply.continue()
         })))
