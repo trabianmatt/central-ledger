@@ -5,6 +5,7 @@ const Sinon = require('sinon')
 const P = require('bluebird')
 const Handler = require('../../../../src/api/token/handler')
 const TokenService = require('../../../../src/domain/token')
+const Sidecar = require('../../../../src/lib/sidecar')
 
 Test('token handler', handlerTest => {
   let sandbox
@@ -12,6 +13,7 @@ Test('token handler', handlerTest => {
   handlerTest.beforeEach(test => {
     sandbox = Sinon.sandbox.create()
     sandbox.stub(TokenService)
+    sandbox.stub(Sidecar, 'logRequest')
     test.end()
   })
 
@@ -33,6 +35,7 @@ Test('token handler', handlerTest => {
 
       const reply = (response) => {
         test.equal(response, token)
+        test.ok(Sidecar.logRequest.calledWith(request))
         test.end()
       }
 

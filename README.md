@@ -18,7 +18,7 @@ Contents:
 
 ## Deployment
 
-See the [Onboarding guide](LevelOneOnboarding.md) for running the service locally.
+See the [Onboarding guide](LevelOneOnboarding.md)for running the service locally.
 
 ## Configuration
 

@@ -8,6 +8,7 @@ const TransferService = require('../../../../src/domain/transfer')
 const FeeService = require('../../../../src/domain/fee')
 const TokenService = require('../../../../src/domain/token')
 const Handler = require('../../../../src/admin/webhooks/handler')
+const Sidecar = require('../../../../src/lib/sidecar')
 
 function createRequest (id, payload) {
   let requestId = id || Uuid()
@@ -54,6 +55,7 @@ Test('Handler Test', handlerTest => {
     sandbox.stub(TransferService, 'settle')
     sandbox.stub(FeeService, 'settleFeesForTransfers')
     sandbox.stub(TokenService, 'removeExpired')
+    sandbox.stub(Sidecar, 'logRequest')
     t.end()
   })
 
@@ -69,6 +71,7 @@ Test('Handler Test', handlerTest => {
 
       let reply = response => {
         test.equal(response, transferIds)
+        test.ok(Sidecar.logRequest.calledWith({}))
         test.end()
       }
 
@@ -162,6 +165,7 @@ Test('Handler Test', handlerTest => {
 
       let reply = response => {
         test.deepEqual(response, { transfers: settledTransfers, fees: settledFees })
+        test.ok(Sidecar.logRequest.calledWith({}))
         test.end()
       }
 
@@ -190,6 +194,7 @@ Test('Handler Test', handlerTest => {
 
       let reply = response => {
         test.equal(response, tokenIds)
+        test.ok(Sidecar.logRequest.calledWith({}))
         test.end()
       }
 

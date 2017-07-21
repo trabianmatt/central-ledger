@@ -26,7 +26,7 @@ const registerTaskDefinition = (name, service, image, port, environment = []) =>
           options: {
             'syslog-address': 'tcp://127.0.0.1:514',
             'syslog-facility': 'daemon',
-            'tag': 'central-ledger'
+            'tag': service
           }
         }
       },
@@ -53,7 +53,15 @@ const registerTaskDefinition = (name, service, image, port, environment = []) =>
             name: 'SIDE_KMS__URL',
             value: Variables.SIDECAR.KMS_URL
           }
-        ]
+        ],
+        logConfiguration: {
+          logDriver: 'syslog',
+          options: {
+            'syslog-address': 'tcp://127.0.0.1:514',
+            'syslog-facility': 'daemon',
+            'tag': `sidecar-${service}`
+          }
+        }
       }
     ],
     family: name

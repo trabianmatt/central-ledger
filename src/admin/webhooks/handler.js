@@ -5,6 +5,7 @@ const Util = require('../../../src/lib/util')
 const TransferService = require('../../domain/transfer')
 const FeeService = require('../../domain/fee')
 const TokenService = require('../../domain/token')
+const Sidecar = require('../../lib/sidecar')
 
 const mapToSettlement = (settlement) => {
   return {
@@ -78,12 +79,14 @@ const flattenSettlements = (settlementMap) => {
 }
 
 exports.rejectExpired = function (request, reply) {
+  Sidecar.logRequest(request)
   return TransferService.rejectExpired()
     .then(response => reply(response))
     .catch(e => reply(e))
 }
 
 exports.settle = function (request, reply) {
+  Sidecar.logRequest(request)
   return TransferService.settle()
     .then(settledTransfers => {
       return FeeService.settleFeesForTransfers(settledTransfers)
@@ -97,6 +100,7 @@ exports.settle = function (request, reply) {
 }
 
 exports.rejectExpiredTokens = function (request, reply) {
+  Sidecar.logRequest(request)
   return TokenService.removeExpired()
     .then(response => reply(response))
     .catch(e => reply(e))

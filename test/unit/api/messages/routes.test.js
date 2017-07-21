@@ -6,11 +6,12 @@ const P = require('bluebird')
 const Base = require('../../base')
 const Config = require('../../../../src/lib/config')
 const Accounts = require('../../../../src/domain/account')
+const Sidecar = require('../../../../src/lib/sidecar')
 
 const toAccount = 'http://central-ledger/accounts/to'
 const fromAccount = 'http://central-ledger/accounts/from'
 
-const createPayload = ({ledger = Config.HOSTNAME, from = fromAccount, to = toAccount, data = {}}) => {
+const createPayload = ({ ledger = Config.HOSTNAME, from = fromAccount, to = toAccount, data = {} }) => {
   return {
     ledger,
     from,
@@ -29,6 +30,7 @@ Test('POST /messages', postTest => {
   postTest.beforeEach(test => {
     sandbox = Sinon.sandbox.create()
     sandbox.stub(Accounts, 'exists')
+    sandbox.stub(Sidecar, 'logRequest')
     Accounts.exists.returns(P.resolve({}))
     test.end()
   })

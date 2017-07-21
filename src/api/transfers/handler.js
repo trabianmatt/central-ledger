@@ -5,6 +5,7 @@ const TransferService = require('../../domain/transfer')
 const TransferRejectionType = require('../../domain/transfer/rejection-type')
 const TransferTranslator = require('../../domain/transfer/translator')
 const NotFoundError = require('../../errors').NotFoundError
+const Sidecar = require('../../lib/sidecar')
 
 const buildGetTransferResponse = (record) => {
   if (!record) {
@@ -14,6 +15,7 @@ const buildGetTransferResponse = (record) => {
 }
 
 exports.prepareTransfer = function (request, reply) {
+  Sidecar.logRequest(request)
   return Validator.validate(request.payload, request.params.id)
     .then(TransferService.prepare)
     .then(result => reply(result.transfer).code((result.existing === true) ? 200 : 201))
@@ -21,6 +23,7 @@ exports.prepareTransfer = function (request, reply) {
 }
 
 exports.fulfillTransfer = function (request, reply) {
+  Sidecar.logRequest(request)
   const fulfillment = {
     id: request.params.id,
     fulfillment: request.payload
@@ -32,6 +35,7 @@ exports.fulfillTransfer = function (request, reply) {
 }
 
 exports.rejectTransfer = function (request, reply) {
+  Sidecar.logRequest(request)
   const rejection = {
     id: request.params.id,
     rejection_reason: TransferRejectionType.CANCELLED,

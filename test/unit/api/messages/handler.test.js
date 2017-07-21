@@ -6,6 +6,7 @@ const P = require('bluebird')
 const Handler = require('../../../../src/api/messages/handler')
 const Validator = require('../../../../src/api/messages/validator')
 const Events = require('../../../../src/lib/events')
+const Sidecar = require('../../../../src/lib/sidecar')
 
 Test('Message Handler', handlerTest => {
   let sandbox
@@ -14,6 +15,7 @@ Test('Message Handler', handlerTest => {
     sandbox = Sinon.sandbox.create()
     sandbox.stub(Validator, 'validate')
     sandbox.stub(Events, 'sendMessage')
+    sandbox.stub(Sidecar, 'logRequest')
     Validator.validate.returns(P.resolve({}))
     test.end()
   })
@@ -46,6 +48,7 @@ Test('Message Handler', handlerTest => {
       Validator.validate.withArgs(request.payload).returns(P.resolve(message))
       Handler.sendMessage(request, () => {
         test.ok(Events.sendMessage.calledWith(message))
+        test.ok(Sidecar.logRequest.calledWith(request))
         return {
           code: () => {
             test.end()

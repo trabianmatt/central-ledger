@@ -4,7 +4,6 @@ const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
 const Logger = require('@leveloneproject/central-services-shared').Logger
 const Util = require('util')
-const Sidecar = require('../../../src/lib/sidecar')
 const RequestLogger = require('../../../src/lib/request-logger')
 
 Test('logger', loggerTest => {
@@ -14,8 +13,6 @@ Test('logger', loggerTest => {
     sandbox = Sinon.sandbox.create()
     sandbox.stub(Logger, 'info')
     sandbox.stub(Util, 'inspect')
-
-    Sidecar.write = sandbox.stub()
 
     test.end()
   })
@@ -69,16 +66,6 @@ Test('logger', loggerTest => {
       RequestLogger.logResponse(request)
       const args = Logger.info.firstCall.args
       test.equal(args[0], `L1p-Trace-Id=${request.headers.traceid} - Response: ${JSON.stringify(request.response.source)} Status: ${request.response.statusCode}`)
-      test.end()
-    })
-
-    responseTest.test('send log message to sidecar', test => {
-      const request = {
-        headers: { traceid: '123456' },
-        response: { source: 'this is the response', statusCode: '200' }
-      }
-      RequestLogger.logResponse(request)
-      test.ok(Sidecar.write.calledWith(`L1p-Trace-Id=${request.headers.traceid} - Headers: ${JSON.stringify(request.headers)}`))
       test.end()
     })
 

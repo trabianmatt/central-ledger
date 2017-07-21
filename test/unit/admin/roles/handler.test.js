@@ -6,6 +6,7 @@ const P = require('bluebird')
 const Uuid = require('uuid4')
 const SecurityService = require('../../../../src/domain/security')
 const Handler = require('../../../../src/admin/roles/handler')
+const Sidecar = require('../../../../src/lib/sidecar')
 
 Test('Security handler', handlerTest => {
   let sandbox
@@ -13,6 +14,7 @@ Test('Security handler', handlerTest => {
   handlerTest.beforeEach(test => {
     sandbox = Sinon.sandbox.create()
     sandbox.stub(SecurityService)
+    sandbox.stub(Sidecar, 'logRequest')
     test.end()
   })
 
@@ -58,6 +60,7 @@ Test('Security handler', handlerTest => {
 
       const reply = (response) => {
         test.deepEqual(response, role)
+        test.ok(Sidecar.logRequest.calledWith(request))
         test.end()
       }
 
@@ -83,6 +86,7 @@ Test('Security handler', handlerTest => {
 
       const reply = (response) => {
         test.deepEqual(response, role)
+        test.ok(Sidecar.logRequest.calledWith(request))
         test.end()
       }
 
@@ -97,18 +101,19 @@ Test('Security handler', handlerTest => {
       const roleId = Uuid()
       SecurityService.deleteRole.withArgs(roleId).returns(P.resolve())
 
+      const request = {
+        params: { id: roleId }
+      }
+
       const reply = response => {
         test.notOk(response)
+        test.ok(Sidecar.logRequest.calledWith(request))
         return {
           code: statusCode => {
             test.equal(statusCode, 204)
             test.end()
           }
         }
-      }
-
-      const request = {
-        params: { id: roleId }
       }
 
       Handler.deleteRole(request, reply)

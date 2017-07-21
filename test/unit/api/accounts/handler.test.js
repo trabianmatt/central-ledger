@@ -8,6 +8,7 @@ const Handler = require('../../../../src/api/accounts/handler')
 const Account = require('../../../../src/domain/account')
 const PositionService = require('../../../../src/domain/position')
 const Errors = require('../../../../src/errors')
+const Sidecar = require('../../../../src/lib/sidecar')
 
 const createGet = (name, credentials = null) => {
   return {
@@ -55,6 +56,7 @@ Test('accounts handler', handlerTest => {
     sandbox.stub(Account, 'updateUserCredentials')
     sandbox.stub(Account, 'updateAccountSettlement')
     sandbox.stub(PositionService, 'calculateForAccount')
+    sandbox.stub(Sidecar, 'logRequest')
     t.end()
   })
 
@@ -80,6 +82,7 @@ Test('accounts handler', handlerTest => {
       Account.getByName.returns(P.resolve(account))
       PositionService.calculateForAccount.withArgs(account).returns(P.resolve(buildPosition(account.name, '50', '0', '-50')))
 
+      const request = createGet(name, { name })
       const reply = response => {
         test.equal(response.id, `${hostname}/accounts/${response.name}`)
         test.equal(response.name, name)
@@ -90,10 +93,11 @@ Test('accounts handler', handlerTest => {
         test.notOk(response.hasOwnProperty('key'))
         test.notOk(response.hasOwnProperty('secret'))
         test.notOk(response.hasOwnProperty('credentials'))
+        test.ok(Sidecar.logRequest.calledWith(request))
         test.end()
       }
 
-      Handler.getByName(createGet(name, { name }), reply)
+      Handler.getByName(request, reply)
     })
 
     getByNameTest.test('get account by name and set balance to position if admin', test => {
@@ -221,6 +225,8 @@ Test('accounts handler', handlerTest => {
       Account.getByName.returns(P.resolve(account))
       Account.updateUserCredentials.returns(P.resolve(account))
 
+      const request = createPut(name, { name })
+      request.payload = { password: '1234' }
       const reply = response => {
         test.equal(response.id, `${hostname}/accounts/${response.name}`)
         test.equal(response.name, name)
@@ -228,11 +234,10 @@ Test('accounts handler', handlerTest => {
         test.notOk(response.hasOwnProperty('key'))
         test.notOk(response.hasOwnProperty('secret'))
         test.notOk(response.hasOwnProperty('credentials'))
+        test.ok(Sidecar.logRequest.calledWith(request))
         test.end()
       }
 
-      const request = createPut(name, { name })
-      request.payload = { password: '1234' }
       Handler.updateUserCredentials(request, reply)
     })
 
@@ -265,6 +270,7 @@ Test('accounts handler', handlerTest => {
       Account.getByName.withArgs(payload.name).returns(P.resolve(null))
       Account.create.withArgs(payload).returns(P.resolve(account))
 
+      const request = createPost(payload)
       const reply = response => {
         assert.equal(response.id, `${hostname}/accounts/${account.name}`)
         assert.equal(response.name, account.name)
@@ -274,6 +280,7 @@ Test('accounts handler', handlerTest => {
         assert.equal(response.ledger, hostname)
         assert.equal(response.credentials.key, credentials.key)
         assert.equal(response.credentials.secret, credentials.secret)
+        assert.ok(Sidecar.logRequest.calledWith(request))
         return {
           code: (statusCode) => {
             assert.equal(statusCode, 201)
@@ -282,7 +289,7 @@ Test('accounts handler', handlerTest => {
         }
       }
 
-      Handler.create(createPost(payload), reply)
+      Handler.create(request, reply)
     })
 
     createTest.test('return RecordExistsError if name already registered', test => {
@@ -344,15 +351,16 @@ Test('accounts handler', handlerTest => {
       Account.getByName.withArgs(name).returns(P.resolve(account))
       Account.updateAccountSettlement.withArgs(account, payload).returns(P.resolve(settlement))
 
+      const request = createPut(name, { name })
+      request.payload = payload
       const reply = response => {
         assert.equal(response.account_id, account.accountId)
         assert.equal(response.account_number, payload.account_number)
         assert.equal(response.routing_number, payload.routing_number)
+        assert.ok(Sidecar.logRequest.calledWith(request))
         assert.end()
       }
 
-      const request = createPut(name, { name })
-      request.payload = payload
       Handler.updateAccountSettlement(request, reply)
     })
 

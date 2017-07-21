@@ -5,6 +5,7 @@ const Sinon = require('sinon')
 const P = require('bluebird')
 const JWT = require('../../../../src/domain/security/jwt')
 const Handler = require('../../../../src/admin/token/handler')
+const Sidecar = require('../../../../src/lib/sidecar')
 
 Test('token handler', handlerTest => {
   let sandbox
@@ -12,6 +13,7 @@ Test('token handler', handlerTest => {
   handlerTest.beforeEach(test => {
     sandbox = Sinon.sandbox.create()
     sandbox.stub(JWT)
+    sandbox.stub(Sidecar, 'logRequest')
     test.end()
   })
 
@@ -37,6 +39,7 @@ Test('token handler', handlerTest => {
 
       const reply = (response) => {
         test.deepEqual(response, { token })
+        test.ok(Sidecar.logRequest.calledWith(request))
         test.end()
       }
 

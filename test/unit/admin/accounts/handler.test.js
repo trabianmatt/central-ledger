@@ -8,6 +8,7 @@ const Errors = require('../../../../src/errors')
 const UrlParser = require('../../../../src/lib/urlparser')
 const Handler = require('../../../../src/admin/accounts/handler')
 const Account = require('../../../../src/domain/account')
+const Sidecar = require('../../../../src/lib/sidecar')
 
 Test('accounts handler', handlerTest => {
   let sandbox
@@ -19,6 +20,7 @@ Test('accounts handler', handlerTest => {
     originalHostName = Config.HOSTNAME
     Config.HOSTNAME = hostname
     sandbox.stub(Account)
+    sandbox.stub(Sidecar, 'logRequest')
     t.end()
   })
 
@@ -136,17 +138,18 @@ Test('accounts handler', handlerTest => {
 
       Account.update.returns(P.resolve(account))
 
+      const request = {
+        payload: { is_disabled: false },
+        params: { name: 'name' }
+      }
+
       const reply = response => {
         test.equal(response.name, account.name)
         test.equal(response.id, `${hostname}/accounts/${account.name}`)
         test.equal(response.is_disabled, account.isDisabled)
         test.equal(response.created, account.createdDate)
+        test.ok(Sidecar.logRequest.calledWith(request))
         test.end()
-      }
-
-      const request = {
-        payload: { is_disabled: false },
-        params: { name: 'name' }
       }
 
       Handler.update(request, reply)
@@ -183,6 +186,7 @@ Test('accounts handler', handlerTest => {
         test.equal(response.id, accountId)
         test.equal(response.is_disabled, account.isDisabled)
         test.equal(response.created, account.createdDate)
+        test.ok(Sidecar.logRequest.calledWith({ payload }))
         return {
           code: (statusCode) => {
             test.equal(statusCode, 201)

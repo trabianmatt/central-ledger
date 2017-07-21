@@ -6,6 +6,7 @@ const P = require('bluebird')
 const Uuid = require('uuid4')
 const SecurityService = require('../../../../src/domain/security')
 const Handler = require('../../../../src/admin/users/handler')
+const Sidecar = require('../../../../src/lib/sidecar')
 
 Test('User handler', handlerTest => {
   let sandbox
@@ -13,6 +14,7 @@ Test('User handler', handlerTest => {
   handlerTest.beforeEach(test => {
     sandbox = Sinon.sandbox.create()
     sandbox.stub(SecurityService)
+    sandbox.stub(Sidecar, 'logRequest')
     test.end()
   })
 
@@ -26,13 +28,14 @@ Test('User handler', handlerTest => {
 
     SecurityService.createUser.returns(P.resolve(user))
 
-    const reply = (response) => {
-      test.equal(response, user)
-      test.end()
-    }
-
     const request = {
       payload: user
+    }
+
+    const reply = (response) => {
+      test.equal(response, user)
+      test.ok(Sidecar.logRequest.calledWith(request))
+      test.end()
     }
 
     Handler.create(request, reply)
@@ -68,13 +71,15 @@ Test('User handler', handlerTest => {
 
     SecurityService.deleteUser.returns(P.resolve({}))
 
+    const request = { params: { id: userId } }
     const reply = (response) => {
       test.deepEqual(response, {})
+      test.ok(Sidecar.logRequest.calledWith(request))
       test.ok(SecurityService.deleteUser.calledWith(userId))
       test.end()
     }
 
-    Handler.remove({ params: { id: userId } }, reply)
+    Handler.remove(request, reply)
   })
 
   handlerTest.test('update should update user by id', test => {
@@ -90,6 +95,7 @@ Test('User handler', handlerTest => {
 
     const reply = (response) => {
       test.deepEqual(response, user)
+      test.ok(Sidecar.logRequest.calledWith(request))
       test.ok(SecurityService.updateUser.calledWith(userId, details))
       test.end()
     }
@@ -119,6 +125,7 @@ Test('User handler', handlerTest => {
 
     const reply = (response) => {
       test.deepEqual(response, updatedRoles)
+      test.ok(Sidecar.logRequest.calledWith(request))
       test.end()
     }
 

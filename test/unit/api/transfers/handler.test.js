@@ -12,6 +12,7 @@ const Handler = require('../../../../src/api/transfers/handler')
 const TransferService = require('../../../../src/domain/transfer')
 const TransferState = require('../../../../src/domain/transfer/state')
 const executionCondition = 'ni:///sha-256;47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU?fpt=preimage-sha-256&cost=0'
+const Sidecar = require('../../../../src/lib/sidecar')
 
 const createRequest = (id, payload) => {
   const requestId = id || Uuid()
@@ -44,6 +45,7 @@ Test('transfer handler', handlerTest => {
     sandbox.stub(TransferService, 'reject')
     sandbox.stub(TransferService, 'fulfill')
     sandbox.stub(TransferService, 'getFulfillment')
+    sandbox.stub(Sidecar, 'logRequest')
     originalHostName = Config.HOSTNAME
     Config.HOSTNAME = hostname
     t.end()
@@ -88,17 +90,19 @@ Test('transfer handler', handlerTest => {
 
       TransferService.prepare.returns(P.resolve({ transfer, existing: true }))
 
+      const request = createRequest(Uuid(), payload)
       const reply = response => {
         test.equal(response.id, transfer.id)
         return {
           code: statusCode => {
             test.equal(statusCode, 200)
+            test.ok(Sidecar.logRequest.calledWith(request))
             test.end()
           }
         }
       }
 
-      Handler.prepareTransfer(createRequest(Uuid(), payload), reply)
+      Handler.prepareTransfer(request, reply)
     })
 
     prepareTransferTest.test('reply with status code 201 if transfer does not exist', test => {
@@ -153,13 +157,16 @@ Test('transfer handler', handlerTest => {
       const transferId = Uuid()
       const error = new Errors.ValidationError(errorMessage)
       sandbox.stub(Validator, 'validate').withArgs(payload, transferId).returns(P.reject(error))
+      sandbox.stub(Sidecar, 'logRequest')
 
+      const request = createRequest(transferId, payload)
       const reply = response => {
         test.equal(response, error)
+        test.ok(Sidecar.logRequest.calledWith(request))
         test.end()
       }
 
-      Handler.prepareTransfer(createRequest(transferId, payload), reply)
+      Handler.prepareTransfer(request, reply)
     })
 
     prepareTransferTest.test('return error if transfer prepare throws', test => {
@@ -222,8 +229,10 @@ Test('transfer handler', handlerTest => {
 
       TransferService.fulfill.returns(P.resolve(transfer))
 
+      const request = createRequest(fulfillment.id, fulfillment.fulfillment)
       const reply = response => {
         test.equal(response.id, transfer.id)
+        test.ok(Sidecar.logRequest.calledWith(request))
         return {
           code: statusCode => {
             test.equal(statusCode, 200)
@@ -232,7 +241,7 @@ Test('transfer handler', handlerTest => {
         }
       }
 
-      Handler.fulfillTransfer(createRequest(fulfillment.id, fulfillment.fulfillment), reply)
+      Handler.fulfillTransfer(request, reply)
     })
 
     fulfillTransferTest.test('return error if transfer service fulfill throws', test => {
@@ -266,6 +275,7 @@ Test('transfer handler', handlerTest => {
       const reply = response => {
         test.deepEqual(response, rejectionMessage)
         test.ok(TransferService.reject.calledWith(Sinon.match({ id: transferId, rejection_reason: 'cancelled', message: rejectionMessage })))
+        test.ok(Sidecar.logRequest.calledWith(request))
         return {
           code: statusCode => {
             test.equal(statusCode, 201)

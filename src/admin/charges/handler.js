@@ -2,6 +2,7 @@
 
 const Charges = require('../../domain/charge')
 const Errors = require('../../errors')
+const Sidecar = require('../../lib/sidecar')
 
 const validateRequest = (request) => {
   return Charges.getByName(request.payload.name).then(charge => {
@@ -33,6 +34,7 @@ function entityItem (charge) {
 }
 
 exports.create = (request, reply) => {
+  Sidecar.logRequest(request)
   return validateRequest(request)
     .then(validatedRequest => Charges.create(validatedRequest.payload))
     .then(result => reply(entityItem(result)).code(201))
@@ -40,6 +42,7 @@ exports.create = (request, reply) => {
 }
 
 exports.update = (request, reply) => {
+  Sidecar.logRequest(request)
   return validateRequest(request)
     .then(validatedRequest => {
       return Charges.update(request.params.name, validatedRequest.payload)

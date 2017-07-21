@@ -6,6 +6,7 @@ const P = require('bluebird')
 const Config = require('../../../../src/lib/config')
 const Handler = require('../../../../src/admin/charges/handler')
 const Charge = require('../../../../src/domain/charge')
+const Sidecar = require('../../../../src/lib/sidecar')
 
 function createCharge (name = 'charge') {
   return {
@@ -35,6 +36,7 @@ Test('charges handler', handlerTest => {
     sandbox.stub(Charge, 'create')
     sandbox.stub(Charge, 'update')
     sandbox.stub(Charge, 'getByName')
+    sandbox.stub(Sidecar, 'logRequest')
     t.end()
   })
 
@@ -128,6 +130,7 @@ Test('charges handler', handlerTest => {
         test.equal(response.code, charge.code)
         test.equal(response.is_active, charge.isActive)
         test.equal(response.created, charge.createdDate)
+        test.ok(Sidecar.logRequest.calledWith({ payload }))
         return {
           code: (statusCode) => {
             test.equal(statusCode, 201)
@@ -268,6 +271,7 @@ Test('charges handler', handlerTest => {
         test.equal(response.code, charge.code)
         test.equal(response.is_active, charge.isActive)
         test.equal(response.created, charge.createdDate)
+        test.ok(Sidecar.logRequest.calledWith(request))
         test.end()
       }
 

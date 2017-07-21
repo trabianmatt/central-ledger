@@ -1,10 +1,13 @@
 'use strict'
 
-const Client = require('./client')
+const Client = require('@leveloneproject/forensic-logging-client')
 const NullClient = require('./null-client')
 const Config = require('../config')
+const Moment = require('moment')
 
-const createClient = () => {
+const sidecar = createClient()
+
+function createClient () {
   if (Config.SIDECAR_DISABLED) {
     return NullClient.create()
   }
@@ -17,4 +20,21 @@ const createClient = () => {
   })
 }
 
-module.exports = createClient()
+exports.connect = () => {
+  return sidecar.connect()
+}
+
+exports.write = (msg) => {
+  return sidecar.write(msg)
+}
+
+exports.logRequest = (request) => {
+  const msg = {
+    method: request.method,
+    timestamp: Moment.utc().toISOString(),
+    url: request.url.path,
+    body: request.body,
+    auth: request.auth
+  }
+  return sidecar.write(JSON.stringify(msg))
+}

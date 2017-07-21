@@ -6,6 +6,7 @@ const UrlParser = require('../../lib/urlparser')
 const Util = require('../../lib/util')
 const PositionService = require('../../domain/position')
 const Errors = require('../../errors')
+const Sidecar = require('../../lib/sidecar')
 
 const buildAccount = (account) => {
   return {
@@ -53,6 +54,7 @@ const getPosition = (account) => {
 }
 
 exports.create = (request, reply) => {
+  Sidecar.logRequest(request)
   Account.getByName(request.payload.name)
     .then(handleExistingRecord)
     .then(() => Account.create(request.payload))
@@ -61,6 +63,7 @@ exports.create = (request, reply) => {
 }
 
 exports.updateUserCredentials = (request, reply) => {
+  Sidecar.logRequest(request)
   const accountName = request.params.name
   const credentials = request.auth.credentials
   const authenticated = (credentials && (credentials.is_admin || credentials.name === accountName))
@@ -78,6 +81,7 @@ exports.updateUserCredentials = (request, reply) => {
 }
 
 exports.updateAccountSettlement = (request, reply) => {
+  Sidecar.logRequest(request)
   const accountName = request.params.name
   const credentials = request.auth.credentials
   const authenticated = (credentials && (credentials.is_admin || credentials.name === accountName))
@@ -95,6 +99,7 @@ exports.updateAccountSettlement = (request, reply) => {
 }
 
 exports.getByName = (request, reply) => {
+  Sidecar.logRequest(request)
   const accountName = request.params.name
   const credentials = request.auth.credentials
   const authenticated = (credentials && (credentials.is_admin || credentials.name === accountName))

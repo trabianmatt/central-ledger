@@ -3,6 +3,7 @@
 const src = '../../../../src'
 const Test = require('tapes')(require('tape'))
 const Sinon = require('sinon')
+const Moment = require('moment')
 const Config = require(`${src}/lib/config`)
 const Proxyquire = require('proxyquire')
 
@@ -11,20 +12,21 @@ Test('Sidecar', sidecarTest => {
   let sidecarSettings = { HOST: 'local', PORT: 1234, CONNECT_TIMEOUT: 10000, RECONNECT_INTERVAL: 2000 }
   let sandbox
   let stubs
-  let clientCreateStub
   let nullClientCreateStub
+  let clientCreateStub
 
   sidecarTest.beforeEach(t => {
     sandbox = Sinon.sandbox.create()
+    sandbox.stub(Moment, 'utc')
 
     oldSidecar = Config.SIDECAR
     Config.SIDECAR = sidecarSettings
     Config.SIDECAR_DISABLED = false
 
-    clientCreateStub = sandbox.stub()
     nullClientCreateStub = sandbox.stub()
+    clientCreateStub = sandbox.stub()
 
-    stubs = { './client': { create: clientCreateStub }, './null-client': { create: nullClientCreateStub } }
+    stubs = { './null-client': { create: nullClientCreateStub }, '@leveloneproject/forensic-logging-client': { create: clientCreateStub } }
 
     t.end()
   })
@@ -60,6 +62,62 @@ Test('Sidecar', sidecarTest => {
     })
 
     importTest.end()
+  })
+
+  sidecarTest.test('connect should', connectTest => {
+    connectTest.test('call sidecar client connect', test => {
+      let sidecarStub = sandbox.stub()
+      sidecarStub.connect = sandbox.stub()
+      clientCreateStub.returns(sidecarStub)
+
+      let Sidecar = Proxyquire(`${src}/lib/sidecar`, stubs)
+
+      Sidecar.connect()
+      test.ok(sidecarStub.connect.calledOnce)
+      test.end()
+    })
+
+    connectTest.end()
+  })
+
+  sidecarTest.test('write should', writeTest => {
+    writeTest.test('write to sidecar client', test => {
+      let sidecarStub = sandbox.stub()
+      sidecarStub.write = sandbox.stub()
+      clientCreateStub.returns(sidecarStub)
+
+      let Sidecar = Proxyquire(`${src}/lib/sidecar`, stubs)
+
+      const msg = 'message'
+      Sidecar.write(msg)
+      test.ok(sidecarStub.write.calledWith(msg))
+      test.end()
+    })
+
+    writeTest.end()
+  })
+
+  sidecarTest.test('logRequest should', logRequestTest => {
+    logRequestTest.test('write to sidecar client with request message', test => {
+      let sidecarStub = sandbox.stub()
+      sidecarStub.write = sandbox.stub()
+      clientCreateStub.returns(sidecarStub)
+
+      let Sidecar = Proxyquire(`${src}/lib/sidecar`, stubs)
+
+      let now = new Date()
+      Moment.utc.returns(now)
+
+      const request = { method: 'post', url: { path: 'path' }, body: 'body', auth: 'auth' }
+      const msgJson = { method: 'post', timestamp: now.toISOString(), url: 'path', body: 'body', auth: 'auth' }
+      const msg = JSON.stringify(msgJson)
+
+      Sidecar.logRequest(request)
+      test.ok(sidecarStub.write.calledWith(msg))
+      test.end()
+    })
+
+    logRequestTest.end()
   })
 
   sidecarTest.end()
