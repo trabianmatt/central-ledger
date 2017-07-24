@@ -12,12 +12,18 @@ function createClient () {
     return NullClient.create()
   }
 
-  return Client.create({
+  let sc = Client.create({
     host: Config.SIDECAR.HOST,
     port: Config.SIDECAR.PORT,
     connectTimeout: Config.SIDECAR.CONNECT_TIMEOUT,
     reconnectInterval: Config.SIDECAR.RECONNECT_INTERVAL
   })
+
+  sc.on('close', () => {
+    throw new Error('Sidecar connection closed')
+  })
+
+  return sc
 }
 
 exports.connect = () => {
