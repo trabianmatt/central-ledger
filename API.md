@@ -262,7 +262,7 @@ The update account settlement endpoint will create a new account settlement with
   Content-Type: application/json
   {
     "account_number": "12345",
-    "routing_number": "1234 5678 91011",
+    "routing_number": "1234567891011",
   }
 ```
 
@@ -271,9 +271,9 @@ The update account settlement endpoint will create a new account settlement with
   HTTP/1.1 200 OK
   Content-Type: application/json
   {
-    "account_id": "dfsp1",
+    "account_id": "http://localhost:3000/accounts/dfsp1",
     "account_number": "12345",
-    "routing_number": "1234 5678 91011",
+    "routing_number": "1234567891011",
   }
 ```
 

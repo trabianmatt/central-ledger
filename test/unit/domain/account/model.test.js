@@ -268,14 +268,15 @@ Test('accounts model', modelTest => {
       let accountId = '1234'
       let accountNumber = '12345'
       let routingNumber = '67890'
+      let name = 'name'
 
       Db.accountsSettlement.findOne.returns(P.resolve(null))
       Db.accountsSettlement.insert.returns(P.resolve({ accountId, accountNumber, routingNumber }))
 
-      Model.updateAccountSettlement({ accountId }, { account_number: accountNumber, routing_number: routingNumber })
+      Model.updateAccountSettlement({ accountId, name }, { account_number: accountNumber, routing_number: routingNumber })
         .then(r => {
           test.ok(Db.accountsSettlement.insert.withArgs({ accountId, accountNumber, routingNumber }).calledOnce)
-          test.deepEqual(r, { accountId, accountNumber, routingNumber })
+          test.deepEqual(r, { accountName: name, accountNumber, routingNumber })
           test.end()
         })
         .catch(err => {
@@ -287,14 +288,15 @@ Test('accounts model', modelTest => {
       let accountId = '1234'
       let accountNumber = '12345'
       let routingNumber = '67890'
+      let name = 'name'
 
       Db.accountsSettlement.findOne.returns(P.resolve({ accountId, accountNumber, routingNumber }))
       Db.accountsSettlement.update.returns(P.resolve({ accountId, accountNumber, routingNumber }))
 
-      Model.updateAccountSettlement({ accountId }, { account_number: accountNumber, routing_number: routingNumber })
+      Model.updateAccountSettlement({ accountId, name }, { account_number: accountNumber, routing_number: routingNumber })
         .then(r => {
           test.ok(Db.accountsSettlement.update.withArgs({ accountId }, { accountNumber, routingNumber }).calledOnce)
-          test.deepEqual(r, { accountId, accountNumber, routingNumber })
+          test.deepEqual(r, { accountName: name, accountNumber, routingNumber })
           test.end()
         })
         .catch(err => {

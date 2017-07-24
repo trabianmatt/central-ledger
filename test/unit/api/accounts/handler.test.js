@@ -346,7 +346,7 @@ Test('accounts handler', handlerTest => {
       const credentials = { key: 'key', secret: 'secret' }
       const account = createAccount(name)
       account.credentials = credentials
-      const settlement = { accountId: account.accountId, accountNumber: payload.account_number, routingNumber: payload.routing_number }
+      const settlement = { accountName: account.name, accountNumber: payload.account_number, routingNumber: payload.routing_number }
 
       Account.getByName.withArgs(name).returns(P.resolve(account))
       Account.updateAccountSettlement.withArgs(account, payload).returns(P.resolve(settlement))
@@ -354,7 +354,7 @@ Test('accounts handler', handlerTest => {
       const request = createPut(name, { name })
       request.payload = payload
       const reply = response => {
-        assert.equal(response.account_id, account.accountId)
+        assert.equal(response.account_id, `${hostname}/accounts/${account.name}`)
         assert.equal(response.account_number, payload.account_number)
         assert.equal(response.routing_number, payload.routing_number)
         assert.ok(Sidecar.logRequest.calledWith(request))

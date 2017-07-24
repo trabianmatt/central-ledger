@@ -27,7 +27,7 @@ const buildResponse = (account, { net = '0' } = {}) => {
 
 const settlementResponse = (settlement) => {
   return {
-    account_id: settlement.accountId,
+    account_id: UrlParser.toAccountUri(settlement.accountName),
     account_number: settlement.accountNumber,
     routing_number: settlement.routingNumber
   }

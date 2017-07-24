@@ -30,9 +30,21 @@ exports.updateAccountSettlement = (account, settlement) => {
   return Db.accountsSettlement.findOne({ accountId: account.accountId })
     .then(accountSettlement => {
       if (accountSettlement) {
-        return Db.accountsSettlement.update({ accountId: account.accountId }, { accountNumber: settlement.account_number, routingNumber: settlement.routing_number })
+        return Db.accountsSettlement.update({ accountId: account.accountId }, { accountNumber: settlement.account_number, routingNumber: settlement.routing_number }).then(updatedSettlement => {
+          return {
+            accountName: account.name,
+            accountNumber: updatedSettlement.accountNumber,
+            routingNumber: updatedSettlement.routingNumber
+          }
+        })
       }
-      return Db.accountsSettlement.insert({ accountId: account.accountId, accountNumber: settlement.account_number, routingNumber: settlement.routing_number })
+      return Db.accountsSettlement.insert({ accountId: account.accountId, accountNumber: settlement.account_number, routingNumber: settlement.routing_number }).then(insertedSettlement => {
+        return {
+          accountName: account.name,
+          accountNumber: insertedSettlement.accountNumber,
+          routingNumber: insertedSettlement.routingNumber
+        }
+      })
     })
 }
 
