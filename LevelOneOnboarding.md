@@ -1,7 +1,7 @@
 # Central Ledger Setup
 ***
 ### Introduction 
-In this document we'll walk through the setup for the Level One Project Central Ledger. It consists of three sections:
+In this document walk through the setup for the Level One Project Central Ledger. It consists of three sections:
 
 * [Software List](#software-list)
 * [Setup](#setup)
@@ -51,45 +51,45 @@ services:
      - POSTGRES_PASSWORD=postgres
      - POSTGRES_USER=postgres
 ```
-* run `docker-compose up -d` from the folder where *docker-compose.yml* is located.
-* PostgreSQL 9.4 should now be installed
-* run `docker ps` to verify Docker is running
-* to install *pgAdmin4*, run `brew cask pgAdmin4`
+* Run `docker-compose up -d` from the folder where *docker-compose.yml* is located.
+* PostgreSQL 9.4 should now be installed.
+* Run `docker ps` to verify Docker is running.
+* To install *pgAdmin4*, run `brew cask pgAdmin4`
 
 ##### Setup pgAdmin4
-* create a central_ledger user by right clicking on **Login/Group Roles** and then **Create**
-* right click on the central_ledger user and select **Properties**
-* make sure the username and password match the username and password in the .env file
-* click on privileges and set **Can login?** to **Yes**
+* Create a central_ledger user by right clicking on **Login/Group Roles** and then **Create**
+* Right click on the central_ledger user and select **Properties**
+* Make sure the username and password match the username and password in the .env file
+* Click on privileges and set **Can login?** to **Yes**
 
 ##### Setup nvm & npm
-* run `curl -udwolla:AP6vR3LGrB6zm8WQjLvJHnQzjJp "https://modusbox.jfrog.io/modusbox/api/npm/level1-npm/auth/leveloneproject" >> ~/.npmrc`
-* run `cp ~/.npmrc .npmrc` which will allow you to run the functional tests on your machine
-* to install nvm run `curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.32.1/install.sh | bash`
-* create a *.bash_profile* file with `touch ~/.bash_profile` and verify your *.bash_profile* looks like this:
+* Run `curl -udwolla:AP6vR3LGrB6zm8WQjLvJHnQzjJp "https://modusbox.jfrog.io/modusbox/api/npm/level1-npm/auth/leveloneproject" >> ~/.npmrc`
+* Run `cp ~/.npmrc .npmrc` which will allow you to run the functional tests on your machine.
+* To install nvm run `curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.32.1/install.sh | bash`
+* Create a *.bash_profile* file with `touch ~/.bash_profile` and verify your *.bash_profile* looks like this:
 ```
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" # This loads nvm
 export CLEDG_DATABASE_URI=postgres://central_ledger:cVq8iFqaLuHy8jjKuA@localhost:5432/central_ledger
 ```
 
-* cd into the central_ledger project
-* run `nvm install 6.5.0`
-* run `nvm use`
-* run `npm install -g node-gyp`
-* run `brew install libtool autoconf automake`
-* run `npm install`
-* run `source ~/.bash_profile`
-* run `npm rebuild`
-* run `npm start` *(to run it locally)* or `npm run dev` *(to run it on your Docker host)*
+* cd into the central_ledger project.
+* Run `nvm install 6.5.0`
+* Run `nvm use`
+* Run `npm install -g node-gyp`
+* Run `brew install libtool autoconf automake`
+* Run `npm install`
+* Run `source ~/.bash_profile`
+* Run `npm rebuild`
+* Run `npm start` *(to run it locally)* or `npm run dev` *(to run it on your Docker host)*.
 
 ##### Setup Postman
-* open *Postman*
-* click **Import** and then **Import File**
-* navigate to the central_ledger directory and select [postman.json](./postman.json)
-* click on **Central Ledger** and then **Prepare transfer**
-* click **Send**
-* if you get a valid response, you should be ready to go
+* Open *Postman*.
+* Click **Import** and then **Import File**.
+* Navigate to the central_ledger directory and select [postman.json](./postman.json).
+* Click **Central Ledger** and then **Prepare transfer**.
+* Click **Send**.
+* If you get a valid response, you should be ready to go.
 
 ### Errors On Setup
 * `./src/argon2_node.cpp:6:10: fatal error: 'tuple' file not found` 
