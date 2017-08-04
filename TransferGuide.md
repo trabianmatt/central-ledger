@@ -2,7 +2,7 @@
 ***
 
 ## Introduction
-In this guide, we'll walk through the different steps of successfully executing a transfer:
+In this guide, we walk through the steps of successfully executing a transfer:
 * [**Creating accounts**](#step-1-creating-accounts)
 * [**Preparing a transfer**](#step-2-preparing-a-transfer) 
 * [**Executing a transfer**](#step-3-executing-a-transfer)
@@ -14,7 +14,7 @@ In this guide, we'll walk through the different steps of successfully executing 
 To get started, you'll need to create two accounts, one to credit to and one to debit from.  
 
 ### Create account **dfsp1**
-Start off by creating an account with the name **dfsp1**. Simply provide the account's name and password then make a call to the create account endpoint. More detail about the response and errors can be found in the [API documentation.](API.md#create-account)
+Start off by creating an account with the name **dfsp1**. Provide the account's name and password then make a call to the create account endpoint. More detail about the response and errors can be found in the [API documentation.](API.md#create-account)
 
 #### Request
 ```
@@ -40,7 +40,7 @@ HTTP/1.1 201 Created
 ```
 
 ### Create account **dfsp2**
-Next, create an account with the name **dfsp2**. Like before, provide the account's name and password then make a call to the create account endpoint.
+Next, create an account with the name **dfsp2**. As before, provide the account's name and password then make a call to the create account endpoint.
 
 #### Request
 ```
@@ -116,7 +116,7 @@ HTTP/1.1 201 Created
 ```
 
 ## Step 3: Executing a transfer
-Now that the transfer is prepared, you are free to execute the transfer. This consists of either fulfilling or cancelling the transfer. For this example, you will be fulfilling the transfer, because the transfer was prepared with an execution\_condition as opposed to a cancellation\_condition. Like before, more information can be found in the [API documentation.](API.md) 
+Now that the transfer is prepared, you can execute the transfer. This consists of either fulfilling or cancelling the transfer. For this example, you will be fulfilling the transfer, because the transfer was prepared with an execution\_condition as opposed to a cancellation\_condition. Like before, more information can be found in the [API documentation.](API.md) 
 
 #### Request
 ```
