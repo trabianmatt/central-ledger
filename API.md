@@ -1,7 +1,7 @@
 # Central Ledger API
 ***
 
-The central ledger has two APIs targeted at different consumers. The DFSP API is used by DFSPs to prepare and execute transfers, and for DFSPs to retrieve their current settlement position. The Admin API is used by the operational hub to manage DFSPs and ensure the health of the system.
+The central ledger has two APIs, each targeted at different consumers. The DFSP API is used by DFSPs to prepare and execute transfers, and by DFSPs to retrieve their current settlement position. The Admin API is used by the operational hub to manage DFSPs and ensure the health of the system.
 
 #### [DFSP API](#dfsp-api) endpoints
 * `POST` [**Create account**](#create-account)
@@ -55,7 +55,7 @@ The API endpoints often deal with these [data structures](#data-structures):
 * [**Position Object**](#position-object)
 * [**Charge Object**](#charge-object)
 
-Information about various errors returned can be found here:
+Information about errors returned can be found here:
 * [**Error Information**](#error-information)
 
 ***
@@ -63,7 +63,7 @@ Information about various errors returned can be found here:
 ## DFSP API
 
 #### Create account
-The create account endpoint will create an account in the ledger.
+The create account endpoint creates an account in the ledger.
 
 ##### HTTP Request
 `POST http://central-ledger/accounts`
@@ -177,7 +177,7 @@ The get account endpoint will return information about the account. To successfu
 ```
 
 #### Update account
-The update account endpoint will update the account's credentials and return the newly updated Account object.
+The update account endpoint updates the account's credentials and returns the newly updated Account object.
 
 ##### HTTP Request
 `PUT http://central-ledger/accounts/dfsp1`
@@ -233,7 +233,7 @@ The update account endpoint will update the account's credentials and return the
 ```
 
 #### Update account settlement
-The update account settlement endpoint will create a new account settlement with the account's id and return the newly updated account settlement.
+The update account settlement endpoint creates a new account settlement with the account's id and returns the newly updated account settlement.
 
 ##### HTTP Request
 `PUT http://central-ledger/accounts/dfsp1/settlement`
@@ -487,7 +487,7 @@ Content-Type: application/json
 ```
 
 #### Fulfill transfer 
-The fulfill transfer endpoint will either execute or cancel a transfer, depending on the existence of an *execution_condition* or *cancellation_condition*. To successfully fulfill a transfer, make sure the [transfer has previously been prepared.](#prepare-transfer) 
+The fulfill transfer endpoint either executes or cancels a transfer, depending on the existence of an *execution_condition* or *cancellation_condition*. To successfully fulfill a transfer, make sure the [transfer has previously been prepared.](#prepare-transfer) 
 
 ##### HTTP Request
 `PUT http://central-ledger/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/fulfillment`
@@ -707,7 +707,7 @@ HTTP/1.1 200 OK
 ```
 
 #### Get transfer fulfillment
-The get transfer fulfillment endpoint will return the fulfillment for a transfer that has been executed or cancelled. To successfully retrieve a transfer fulfillment, make sure the [transfer has previously been fulfilled.](#fulfill-transfer)
+The get transfer fulfillment endpoint returns the fulfillment for a transfer that has been executed or cancelled. To successfully retrieve a transfer fulfillment, make sure the [transfer has previously been fulfilled.](#fulfill-transfer)
 
 ##### HTTP Request
 `GET http://central-ledger/transfers/3a2a1d9e-8640-4d2d-b06c-84f2cd613204/fulfillment`
@@ -940,7 +940,7 @@ Content-Type: application/json
 ```
 
 #### Get authentication token
-The get authentication endpoint generates an authentication token
+The get authentication endpoint generates an authentication token.
 
 ##### HTTP Request
 `GET http://central-ledger/auth_token`
@@ -1103,7 +1103,7 @@ The get account endpoint will return information about the account. To successfu
 ```
 
 #### Update admin account
-The update admin account endpoint will update the account's 'is_disabled' field and return the newly updated Account object.
+The update admin account endpoint updates the account's 'is_disabled' field and returns the newly updated Account object.
 
 ##### HTTP Request
 `PUT http://central-ledger-admin/accounts/dfsp1`
