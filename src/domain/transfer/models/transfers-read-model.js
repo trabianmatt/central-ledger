@@ -13,6 +13,10 @@ const saveTransfer = (record) => {
   return Db.transfers.insert(record)
 }
 
+const getAll = () => {
+  return Db.transfers.find({}, {})
+}
+
 const updateTransfer = (transferId, fields) => {
   return Db.transfers.update({ transferUuid: transferId }, fields)
 }
@@ -35,6 +39,7 @@ const getById = (id) => {
 module.exports = {
   findExpired,
   saveTransfer,
+  getAll,
   updateTransfer,
   truncateTransfers,
   getById

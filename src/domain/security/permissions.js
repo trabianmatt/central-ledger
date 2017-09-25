@@ -23,6 +23,7 @@ const permissions = {
   TOKENS_REJECT_EXPIRED: new Permission('TOKENS_REJECT_EXPIRED', 'Reject expired tokens'),
   TRANSFERS_REJECT_EXPIRED: new Permission('TRANSFSER_REJECT_EXPIRED', 'Reject expired transfers'),
   TRANSFERS_SETTLE: new Permission('TRANSFERS_SETTLE', 'Settle fulfilled transfers'),
+  TRANSFERS_LIST: new Permission('TRANSFERS_LIST', 'List all transfers'),
   USERS_CREATE: new Permission('USERS_CREATE', 'Create new user'),
   USERS_DELETE: new Permission('USERS_DELETE', 'Delete user'),
   USERS_LIST: new Permission('USERS_LIST', 'List users'),
