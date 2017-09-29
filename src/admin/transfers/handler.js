@@ -3,7 +3,7 @@
 const Transfer = require('../../domain/transfer')
 
 function entityItem (transfer) {
-  return [{
+  return {
     transferUuid: transfer.transferUuid,
     state: transfer.state,
     ledger: transfer.ledger,
@@ -24,7 +24,7 @@ function entityItem (transfer) {
     preparedDate: transfer.preparedDate,
     executedDate: transfer.executedDate,
     rejectedDate: transfer.rejectedDate
-  }]
+  }
 }
 
 const getAll = (request, reply) => {
