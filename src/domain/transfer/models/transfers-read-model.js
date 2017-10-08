@@ -13,8 +13,17 @@ const saveTransfer = (record) => {
   return Db.transfers.insert(record)
 }
 
+// const getAll = () => {
+//   return Db.transfers.find({}, {})
+// }
+
 const getAll = () => {
-  return Db.transfers.find({}, {})
+  return Db.transfers.query(builder => {
+    return builder
+      .innerJoin('accounts AS ca', 'transfers.creditAccountId', 'ca.accountId')
+      .innerJoin('accounts AS da', 'transfers.debitAccountId', 'da.accountId')
+      .select('transfers.*', 'ca.name AS creditAccountName', 'da.name AS debitAccountName')
+  })
 }
 
 const updateTransfer = (transferId, fields) => {
