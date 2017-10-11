@@ -136,6 +136,44 @@ Test('transfer model', modelTest => {
     getByIdTest.end()
   })
 
+  modelTest.test('getAllShould', getAllTest => {
+    getAllTest.test('return all transfers', test => {
+      const transferId1 = Uuid()
+      const transferId2 = Uuid()
+      const transfers = [{ transferUuid: transferId1 }, { transferUuid: transferId2 }]
+
+      // let builderStub = sandbox.stub()
+      // let joinDebitStub = sandbox.stub()
+      // let joinCreditStub = sandbox.stub()
+      // let selectStub = sandbox.stub()
+
+      // builderStub.where = sandbox.stub()
+
+      Db.transfers.query.returns(P.resolve(transfers))
+
+      // builderStub.where.returns({
+      //   innerJoin: joinCreditStub.returns({
+      //     innerJoin: joinDebitStub.returns({
+      //       select: selectStub.returns({
+      //         all: sandbox.stub()
+      //       })
+      //     })
+      //   })
+      // })
+
+      TransfersReadModel.getAll()
+        .then(found => {
+          test.equal(found, transfers)
+          // test.ok(builderStub.calledOnce)
+          // test.ok(joinCreditStub.withArgs('accounts AS ca', 'transfers.creditAccountId', 'ca.accountId').calledOnce)
+          // test.ok(joinDebitStub.withArgs('accounts AS da', 'transfers.debitAccountId', 'da.accountId').calledOnce)
+          // test.ok(selectStub.withArgs('transfers.*', 'ca.name AS creditAccountName', 'da.name AS debitAccountName').calledOnce)
+          test.end()
+        })
+    })
+    getAllTest.end()
+  })
+
   modelTest.test('findExpired should', findExpiredTest => {
     findExpiredTest.test('find transfer by state and expires_at', test => {
       let transfer1 = { id: Uuid() }
