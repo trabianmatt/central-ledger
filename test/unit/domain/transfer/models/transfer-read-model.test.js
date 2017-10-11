@@ -147,16 +147,14 @@ Test('transfer model', modelTest => {
       // let joinCreditStub = sandbox.stub()
       // let selectStub = sandbox.stub()
 
-      // builderStub.where = sandbox.stub()
+      // builderStub.all = sandbox.stub()
 
       Db.transfers.query.returns(P.resolve(transfers))
 
-      // builderStub.where.returns({
+      // builderStub.all.returns({
       //   innerJoin: joinCreditStub.returns({
       //     innerJoin: joinDebitStub.returns({
-      //       select: selectStub.returns({
-      //         all: sandbox.stub()
-      //       })
+      //       select: sandbox.stub()
       //     })
       //   })
       // })
@@ -164,7 +162,7 @@ Test('transfer model', modelTest => {
       TransfersReadModel.getAll()
         .then(found => {
           test.equal(found, transfers)
-          // test.ok(builderStub.calledOnce)
+          // test.ok(builderStub.all.calledOnce)
           // test.ok(joinCreditStub.withArgs('accounts AS ca', 'transfers.creditAccountId', 'ca.accountId').calledOnce)
           // test.ok(joinDebitStub.withArgs('accounts AS da', 'transfers.debitAccountId', 'da.accountId').calledOnce)
           // test.ok(selectStub.withArgs('transfers.*', 'ca.name AS creditAccountName', 'da.name AS debitAccountName').calledOnce)
