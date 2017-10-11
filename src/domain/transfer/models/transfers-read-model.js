@@ -13,10 +13,6 @@ const saveTransfer = (record) => {
   return Db.transfers.insert(record)
 }
 
-// const getAll = () => {
-//   return Db.transfers.find({}, {})
-// }
-
 const getAll = () => {
   return Db.transfers.query(builder => {
     return builder
