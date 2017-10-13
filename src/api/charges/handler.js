@@ -9,8 +9,8 @@ function entityItem (charge) {
     charge_type: charge.charge_type,
     code: charge.code,
     amount: Util.formatAmount(charge.amount),
-    currency_code: 'USD',
-    currency_symbol: '$'
+    currency_code: 'TZS',
+    currency_symbol: 'S'
   }
 }
 

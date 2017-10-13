@@ -18,7 +18,7 @@ const mapToSettlement = (settlement) => {
       routing_number: settlement.destinationRoutingNumber
     },
     amount: {
-      currency_code: 'USD',
+      currency_code: 'TZS',
       value: settlement.creditAmount || settlement.payerAmount,
       description: settlement.debitAccountName || settlement.payerAccountName
     }
@@ -52,7 +52,6 @@ const calculateSettlements = (settlement, settlementMap) => {
 
 const flattenSettlements = (settlementMap) => {
   const flattenedSettlements = []
-
   settlementMap.forEach(settlement => {
     const inverseKey = `${settlement.destination.account_number}${settlement.destination.routing_number}to${settlement.source.account_number}${settlement.source.routing_number}`
     const inverseSettlement = settlementMap.get(inverseKey)
