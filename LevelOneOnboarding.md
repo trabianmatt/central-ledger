@@ -54,7 +54,7 @@ services:
 * run `docker-compose up -d` from the folder where *docker-compose.yml* is located.
 * PostgreSQL 9.4 should now be installed
 * run `docker ps` to verify Docker is running
-* to install *pgAdmin4*, run `brew cask pgAdmin4`
+* to install *pgAdmin4*, run `brew cask install pgAdmin4`
 
 ##### Setup pgAdmin4
 * create a central_ledger user by right clicking on **Login/Group Roles** and then **Create**
